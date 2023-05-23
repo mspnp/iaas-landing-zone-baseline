@@ -1,6 +1,6 @@
 # Networking resource templates
 
-> Note: This is part of the Azure Kubernetes Service (AKS) baseline cluster reference implementation. For more information check out the [readme file in the root](../README.md).
+> Note: This is part of the IaaS baseline reference implementation. For more information check out the [readme file in the root](../README.md).
 
 These files are the Bicep templates used in the deployment of this reference implementation. This reference implementation uses a standard hub-spoke model.
 
@@ -14,7 +14,7 @@ Your organization will likely have its own standards for their hub-spoke impleme
 
 ## Topology details
 
-See the [AKS baseline network topology](./topology.md) for specifics on how this hub-spoke model has its subnets defined and IP space allocation concerns accounted for.
+See the [IaaS baseline network topology](./topology.md) for specifics on how this hub-spoke model has its subnets defined and IP space allocation concerns accounted for.
 
 ## See also
 

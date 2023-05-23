@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <style>
+      .path {
+         color: black;
+         animation:  glow 5s infinite;
+      }
+      @keyframes glow {
+         0% {
+            text-shadow:  0 0 10px black;
+            color: white;
+         }
+
+         15% {
+            text-shadow: 2px 2px 10px rgb(0, 0, 0, 1),
+                        -2px -2px 10px rgba(0, 0, 0, 1);
+            color: white;
+         }
+         30% {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, .7),
+                        -2px -2px 4px rgba(0, 0, 0, .7);
+            background-color: green;
+            color: white;
+         }
+         50% {
+            text-shadow: 20px 20px 50px rgba(0, 0, 0, .5),
+                        -20px -20px 50px rgba(0, 0, 0, .5);
+            background-color: white;
+            color: black;
+         }
+      }
+   </style>
+</head>
+<body>
+   <h2>Welcome to the Contoso WebApp! Your request has been load balanced through [frontend] and [backend].</h2>
+   <pre id="diagram">
+                     ┌────────────────┐                ┌───────────────────────────┐                       ┌────────────────┐                ┌───────────────────────────┐
+                     │                │                │                           │                       │                │                │                           │
+                     │                │       ┌<span id="f1-agw">───────►</span>│       <span id="f1">frontend</span>      ├<span id="f1-ilb">────────</span>┐              │                │       ┌<span id="b1-ilb">───────►</span>│       <span id="b1">backend</span>       │
+                     │                │       │        │                           │        │              │                │       │        │                           │
+                     │                │       │        └───────────────────────────┘        │              │                │       │        └───────────────────────────┘
+                     │                │       │                                             │              │                │       │
+                     │                │       │        ┌───────────────────────────┐        │              │                │       │        ┌───────────────────────────┐
+https://contoso.com  │                │       │        │                           │        │  10.240.4.4  │                │       │        │                           │
+<span class="path">────────────────────►</span>│     App Gw     ├<span class="path">───────</span>┼<span id="f2-agw">───────►</span>│       <span id="f2">frontend</span>      ├<span id="f2-ilb">────────</span>┼<span class="path">─────────────►</span>│      ILB       ├<span class="path">───────</span>┼<span id="b2-ilb">───────►</span>│       <span id="b2">backend</span>       │
+                     │                │       │        │                           │        │              │                │       │        │                           │
+                     │                │       │        └───────────────────────────┘        │              │                │       │        └───────────────────────────┘
+                     │                │       │                                             │              │                │       │
+                     │                │       │        ┌───────────────────────────┐        │              │                │       │        ┌───────────────────────────┐
+                     │                │       │        │                           │        │              │                │       │        │                           │
+                     │                │       └<span id="f3-agw">───────►</span>│       <span id="f3">frontend</span>      ├<span id="f3-ilb">────────</span>┘              │                │       └<span id="b3-ilb">───────►</span>│       <span id="b3">backend</span>       │
+                     │                │                │                           │                       │                │                │                           │
+                     └────────────────┘                └───────────────────────────┘                       └────────────────┘                └───────────────────────────┘
+   </pre>
+   <input type="hidden" id="loadBalancedfrontendInstanceName" name="textContent" value="[frontend]">
+   <input type="hidden" id="loadBalancedBackendInstance" name="textContent" value="[backend]">
+   <script>
+      const instances = [
+         [
+            document.getElementById('f1'),
+            document.getElementById('f1-agw'),
+            document.getElementById('f1-ilb')
+         ],
+         [
+            document.getElementById('f2'),
+            document.getElementById('f2-agw'),
+            document.getElementById('f2-ilb')
+         ],
+         [
+            document.getElementById('f3'),
+            document.getElementById('f3-agw'),
+            document.getElementById('f3-ilb')
+         ],
+         [
+            document.getElementById('b1'),
+            document.getElementById('b1-ilb')
+         ],
+         [
+            document.getElementById('b2'),
+            document.getElementById('b2-ilb')
+         ],
+         [
+            document.getElementById('b3'),
+            document.getElementById('b3-ilb')
+         ]
+      ]
+
+      const params = new URLSearchParams(location.search);
+      let instNames = params.get("instanceNames");
+      if (instNames !== null)
+      {
+         let lbFrontendName = document.getElementById('loadBalancedfrontendInstanceName').value;
+         let lbBackendName = document.getElementById('loadBalancedBackendInstance').value;
+
+         const names = instNames.split(';');
+         for (let i = 0; i < names.length; i++) {
+            instances[i][0].textContent = names[i];
+            if (instances[i][0].textContent == lbFrontendName
+               || instances[i][0].textContent == lbBackendName)
+                  instances[i].forEach(e => {e.className = 'path';});
+         }
+      }
+      else
+      {
+         document.getElementById('diagram').style.visibility = 'hidden';
+      }
+   </script>
+</body>
+</html>

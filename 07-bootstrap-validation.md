@@ -1,78 +1,101 @@
-# Validate your cluster is bootstrapped and enrolled in GitOps
+# Validate your compute infrastructure is bootstrapped
 
-Now that [the AKS cluster](./06-aks-cluster.md) has been deployed, the next step to validate that your cluster has been placed under a GitOps management solution, Flux in this case.
+Now that [the compute infrastructure](./06-compute-infra.md) has been deployed, the next step to validate that your VMs are running.
 
 ## Steps
 
-GitOps allows a team to author Kubernetes manifest files, persist them in their git repo, and have them automatically apply to their cluster as changes occur. This reference implementation is focused on the baseline cluster, so Flux is managing cluster-level concerns. This is distinct from workload-level concerns, which would be possible as well to manage via Flux, and would typically be done by additional Flux configuration in the cluster. The namespace `cluster-baseline-settings` will be used to provide a logical division of the cluster bootstrap configuration from workload configuration. Examples of manifests that are applied:
-
-* Cluster Role Bindings for the AKS-managed Azure AD integration
-* Cluster-wide configuration of Azure Monitor for Containers
-* the workload's namespace named `a0008`
-
-1. Install `kubectl` 1.24 or newer. (`kubectl` supports ±1 Kubernetes version.)
+1. Check all your recently created VMs at the rg-bu0001a0008 resources group are in `running` power state
 
    ```bash
-   sudo az aks install-cli
-   kubectl version --client
+   az graph query -q "resources | where type =~ 'Microsoft.Compute/virtualMachines' and resourceGroup contains 'rg-bu0001a0008' | extend ['8-PowerState'] = properties.extended.instanceView.powerState.code, ['1-Zone'] = tostring(zones[0]), ['2-Name'] = name, ['4-OSType'] = tostring(properties.storageProfile.osDisk.osType), ['5-OSDiskSizeGB'] = properties.storageProfile.osDisk.diskSizeGB, ['7-DataDiskSizeDB'] = tostring(properties.storageProfile.dataDisks[0].diskSizeGB), ['6-DataDiskType'] = tostring(properties.storageProfile.dataDisks[0].managedDisk.storageAccountType), ['3-VMSize'] = tostring(properties.hardwareProfile.vmSize) | project ['8-PowerState'], ['1-Zone'], ['2-Name'], ['4-OSType'], ['5-OSDiskSizeGB'], ['7-DataDiskSizeGB'], ['6-DataDiskType'], ['3-VMSize'] | sort by ['1-Zone'] asc, ['4-OSType'] asc" -o table
+   ````
+
+   ```output
+   1-Zone    2-Name                     3-VMSize         4-OSType    5-OSDiskSizeGB    6-DataDiskType    7-DataDiskSizeDB    8-PowerState
+   --------  -------------------------  ---------------  ----------  ----------------  ----------------  ------------------  ------------------
+   1         vmss-frontend-00_e49497b3  Standard_D4s_v3  Linux       30                                                      PowerState/running
+   1         vmss-backend-00_c454e7bb   Standard_E2s_v3  Windows     30                Premium_LRS       4                   PowerState/running
+   2         vmss-frontend-00_187eb769  Standard_D4s_v3  Linux       30                                                      PowerState/running
+   2         vmss-backend-00_e4057ba4   Standard_E2s_v3  Windows     30                Premium_LRS       4                   PowerState/running
+   3         vmss-frontend-00_9d738714  Standard_D4s_v3  Linux       30                                                      PowerState/running
+   3         vmss-backend-00_6e781ed7   Standard_E2s_v3  Windows     30                Premium_LRS       4                   PowerState/running
    ```
 
-   > Starting with `kubectl` 1.24, you must also have the `kubelogin` credential (exec) plugin available for Azure AD authentication. Installing `kubectl` via `az aks install-cli` does this already, but if you install `kubectl` in a different way, please make sure `kubelogin` is [installed](https://github.com/Azure/kubelogin#getting-started).
+   :bulb: From the `Zone` column you can easily understand how you VMs were spread at provisioning time in the Azure Availablity Zones. Additionally, you will notice that only backend machines are attached with managed data disks. This list also gives you the current power state of every machine in your VMSS instances.
 
-1. Get the cluster name.
+1. Validate all your VMs have been able to sucessfully install all the desired VM extensions
 
    ```bash
-   AKS_CLUSTER_NAME=$(az aks list -g rg-bu0001a0008 --query '[0].name' -o tsv)
-   echo AKS_CLUSTER_NAME: $AKS_CLUSTER_NAME
+   az graph query -q "Resources | where type == 'microsoft.compute/virtualmachines' and resourceGroup contains 'rg-bu0001a0008' | extend JoinID = toupper(id), ComputerName = tostring(properties.osProfile.computerName), VMName = name | join kind=leftouter( Resources | where type == 'microsoft.compute/virtualmachines/extensions' | extend VMId = toupper(substring(id, 0, indexof(id, '/extensions'))), ExtensionName = name ) on \$left.JoinID == \$right.VMId | summarize Extensions = make_list(ExtensionName) by VMName, ComputerName | order by tolower(ComputerName) asc" -o table --query "[].[Name: VMName, ComputerName, Extensions[]]"
    ```
 
-1. Get AKS `kubectl` credentials.
+   ```output
+   Column1                    Column2         Column3
+   -------------------------  --------------  ------------------------------------------------------------------------------------------------------------------------
+   vmss-backend-00_e4057ba4   backend7RGXGC   ['KeyVaultForWindows', 'AzureMonitorWindowsAgent', 'CustomScript', 'DependencyAgentWindows', 'ApplicationHealthWindows']
+   vmss-backend-00_c454e7bb   backendGK0DHH   ['DependencyAgentWindows', 'KeyVaultForWindows', 'CustomScript', 'ApplicationHealthWindows', 'AzureMonitorWindowsAgent']
+   vmss-backend-00_6e781ed7   backendUNG2C7   ['CustomScript', 'ApplicationHealthWindows', 'DependencyAgentWindows', 'AzureMonitorWindowsAgent', 'KeyVaultForWindows']
+   vmss-frontend-00_187eb769  frontend6SO8YX  ['KeyVaultForLinux', 'AzureMonitorLinuxAgent', 'CustomScript', 'HealthExtension', 'DependencyAgentLinux']
+   vmss-frontend-00_e49497b3  frontend7LVWP9  ['DependencyAgentLinux', 'KeyVaultForLinux', 'CustomScript', 'AzureMonitorLinuxAgent', 'HealthExtension']
+   vmss-frontend-00_9d738714  frontendRCDIWC  ['CutomScript', 'AzureMonitorLinuxAgent', 'KeyVaultForLinux', 'HealthExtension', 'DependencyAgentLinux']
+   ```
 
-   > In the [Azure Active Directory Integration](03-aad.md) step, we placed our cluster under AAD group-backed RBAC. This is the first time we are seeing this used. `az aks get-credentials` sets your `kubectl` context so that you can issue commands against your cluster. Even when you have enabled Azure AD integration with your AKS cluster, an Azure user has sufficient permissions on the cluster resource can still access your AKS cluster by using the `--admin` switch to this command. Using this switch _bypasses_ Azure AD and uses client certificate authentication instead; that isn't what we want to happen. So in order to prevent that practice, local account access (e.g. `clusterAdmin` or `clusterMonitoringUser`) is expressly disabled.
-   >
-   > In a following step, you'll log in with a user that has been added to the Azure AD security group used to back the Kubernetes RBAC admin role. Executing the first `kubectl` command below will invoke the AAD login process to authorize the _user of your choice_, which will then be authenticated against Kubernetes RBAC to perform the action. The user you choose to log in with _must be a member of the AAD group bound_ to the `cluster-admin` ClusterRole. For simplicity you could either use the "break-glass" admin user created in [Azure Active Directory Integration](03-aad.md) (`bu0001a0008-admin`) or any user you assigned to the `cluster-admin` group assignment in your [`cluster-rbac.yaml`](cluster-manifests/cluster-rbac.yaml) file.
+   :bulb: From some of the extension names in `Column3` you can easily spot that the backend VMs are `Windows` machines and the frontend VMs are `Linux` machines. For more information about the VM extensions please take a look at https://learn.microsoft.com/azure/virtual-machines/extensions/overview
+
+1. Query Application Heath Extension substatus and see whether your application is healthy
 
    ```bash
-   az aks get-credentials -g rg-bu0001a0008 -n $AKS_CLUSTER_NAME
+   az vm get-instance-view --resource-group rg-bu0001a0008 --name <VMNAME> --query "[name, instanceView.extensions[?name=='HealthExtension'].substatuses[].message]"
    ```
 
-   :warning: At this point two important steps are happening:
+   :bulb: this reports you back on application health from inside the virtual machine instance probing on a local application endpoint that happens to be `./favicon.ico` over HTTPS. This health status is used by Azure to initiate repairs on unhealthy instances and to determine if an instance is eligible for upgrade operations. Additionally, this extension can be used in situations where an external probe such as the Azure Load Balancer health probes can't be used.
 
-      * The `az aks get-credentials` command will be fetch a `kubeconfig` containing references to the AKS cluster you have created earlier.
-      * To _actually_ use the cluster you will need to authenticate. For that, run any `kubectl` commands which at this stage will prompt you to authenticate against Azure Active Directory. For example, run the following command:
+
+1. Get the regional hub Azure Bastion name.
 
    ```bash
-   kubectl get nodes
+   AB_NAME_HUB=$(az deployment group show -g rg-enterprise-networking-hubs -n hub-regionA --query properties.outputs.abName.value -o tsv)
+   echo AB_NAME_HUB: $AB_NAME_HUB
    ```
 
-   Once the authentication happens successfully, some new items will be added to your `kubeconfig` file such as an `access-token` with an expiration period. For more information on how this process works in Kubernetes please refer to [the related documentation](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens).
-
-1. Validate your cluster is bootstrapped.
-
-   The bootstrapping process that already happened due to the usage of the Flux extension for AKS has set up the following, amoung other things
-
-   * the workload's namespace named `a0008`
-   * installed kured
+1. Remote ssh using Bastion into a frontend VM
 
    ```bash
-   kubectl get namespaces
-   kubectl get all -n cluster-baseline-settings
+   az network bastion ssh -n $AB_NAME_HUB -g rg-enterprise-networking-hubs --username opsuser01 --ssh-key ~/.ssh/opsuser01.pem --auth-type ssh-key --target-resource-id $(az graph query -q "resources | where type =~ 'Microsoft.Compute/virtualMachines' | where resourceGroup contains 'rg-bu0001a0008' and name contains 'vmss-frontend'| project id" --query [0].id -o tsv)
    ```
 
-   These commands will show you results that were due to the automatic bootstrapping process your cluster experienced due to the Flux GitOps extension. This content mirrors the content found in [`cluster-manifests`](./cluster-manifests), and commits made there will reflect in your cluster within minutes of making the change.
+1. Validate your workload (a Nginx instance) is running in the frontend
 
-The end result of all of this is that `kubectl` was not required for any part of the bootstrapping process of a cluster. The usage of `kubectl`-based access should be reserved for emergency break-fix situations and not for day-to-day configuration operations on this cluster. Between templates for Azure Resource definitions, and the bootstrapping of manifests via the GitOps extension, all normal configuration activities can be performed without the need to use `kubectl`. You will however see us use it for the upcoming workload deployment. This is because the SDLC component of workloads are not in scope for this reference implementation, as this is focused the infrastructure and baseline configuration.
+   ```bash
+   curl https://bu0001a0008-00-frontend.iaas-ingress.contoso.com/ --resolve bu0001a0008-00-frontend.iaas-ingress.contoso.com:443:127.0.0.1 -k
+   ```
 
-## Alternatives
+1. Exit the ssh session from the frontend VM
 
-Using the AKS extension for Flux gives you a seemless bootstrapping process that applies immediately after the cluster resource is created in Azure. It also supports the inclusion of that bootstrapping as resource templates to align with your IaC strategy. Alterantively you could apply bootstrapping as a secondary step after the cluster is deployed and manage that process external to the lifecycle of the cluster. Doing so will open your cluster up to a prolonged window between the cluster being deployed and your bootstrapping being applied.
+   ```bash
+   exit
+   ```
 
-Furthermore, Flux doesn't need to be installed as an extension and instead the GitOps operator of your choice (such as ArgoCD) could be installed as part of your external bootstrapping process.
+1. Remote to a Windows backend VM using Bastion
 
-## Recommendations
+   ```bash
+   az network bastion rdp -n $AB_NAME_HUB -g rg-enterprise-networking-hubs --target-resource-id $(az graph query -q "resources | where type =~ 'Microsoft.Compute/virtualMachines' | where resourceGroup contains 'rg-bu0001a0008' and name contains 'vmss-backend'| project id" --query [0].id -o tsv)
+   ```
 
-It is recommended to have a clearly defined bootstrapping process that occurs as close as practiable to the actual cluster deployment for immediate enrollment of your cluster into your internal processes and tooling. GitOps lends itself well to this desired outcome, and you're encouraged to explore its usage for your cluster bootstrapping process and optionally also workload-level concerns. GitOps is often positioned best for fleet (many clusters) management for uniformity and its simplicity at scale; a more manual (via deployment pipelines) bootstrapping is common on small instance-count AKS deployments. Either process can work with either cluster topologies. Use a bootstrapping process that aligns with your desired objectives and constraints found within your organization and team.
+   :warning: the bastion rdp command will work from Windows machines. Other platforms might need to remote your VM Windows machines from [Azure portal using Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview)
+
+1. Validate your backend workload (another Nginx instance) is running in the backend
+
+   ```bash
+   curl http://127.0.0.1
+   ```
+
+1. Exit the RDP session from the backend VM
+
+   ```bash
+   exit
+   ```
 
 ### Next step
 
-:arrow_forward: [Prepare for the workload by installing its prerequisites](./08-workload-prerequisites.md)
+:arrow_forward: [End to end infrastructure and workload validation](./11-validation.md)

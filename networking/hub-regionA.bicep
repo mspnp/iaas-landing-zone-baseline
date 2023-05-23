@@ -2,9 +2,9 @@ targetScope = 'resourceGroup'
 
 /*** PARAMETERS ***/
 
-@description('Subnet resource IDs for all AKS clusters nodepools in all attached spokes to allow necessary outbound traffic through the firewall.')
+@description('Resource IDs for all VMSS subnets in all attached spokes to allow necessary outbound traffic through the firewall.')
 @minLength(1)
-param nodepoolSubnetResourceIds array
+param vmssSubnetResourceIds array
 
 @allowed([
   'australiaeast'
@@ -313,6 +313,69 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   resource azureFirewallSubnet 'subnets' existing = {
     name: 'AzureFirewallSubnet'
   }
+
+  resource azureBastionSubnet 'subnets' existing = {
+    name: 'AzureBastionSubnet'
+  }
+}
+
+@description('The public IP for the regional hub\'s Azure Bastion service.')
+resource pipAzureBastion 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
+  name: 'pip-ab-${location}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  zones: [
+    '1'
+    '2'
+    '3'
+  ]
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    idleTimeoutInMinutes: 4
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+@description('This regional hub\'s Azure Bastion service.')
+resource azureBastion 'Microsoft.Network/bastionHosts@2021-05-01' = {
+  name: 'ab-${location}'
+  location: location
+  properties: {
+    enableTunneling: true
+    ipConfigurations: [
+      {
+        name: 'hub-subnet'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: vnetHub::azureBastionSubnet.id
+          }
+          publicIPAddress: {
+            id: pipAzureBastion.id
+          }
+        }
+      }
+    ]
+  }
+  sku: {
+    name: 'Standard'
+  }
+}
+
+resource azureBastion_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: azureBastion
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        category: 'BastionAuditLogs'
+        enabled: true
+      }
+    ]
+  }
 }
 
 resource vnetHub_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
@@ -369,12 +432,12 @@ resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettin
   }
 }]
 
-// This holds IP addresses of known nodepool subnets in spokes.
-resource ipgNodepoolSubnet 'Microsoft.Network/ipGroups@2021-05-01' = {
-  name: 'ipg-${location}-AksNodepools'
+// This holds IP address prefixes of known VMSS subnets in spokes.
+resource ipgVmssSubnets 'Microsoft.Network/ipGroups@2021-05-01' = {
+  name: 'ipg-${location}-vmss'
   location: location
   properties: {
-    ipAddresses: [for nodepoolSubnetResourceId in nodepoolSubnetResourceIds: '${reference(nodepoolSubnetResourceId, '2020-05-01').addressPrefix}']
+    ipAddresses: [for vmssSubnetResourceId in vmssSubnetResourceIds: '${reference(vmssSubnetResourceId, '2020-05-01').addressPrefix}']
   }
 }
 
@@ -383,7 +446,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
   name: 'fw-policies-${location}'
   location: location
   dependsOn: [
-    ipgNodepoolSubnet
+    ipgVmssSubnets
   ]
   properties: {
     sku: {
@@ -456,7 +519,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
         }
         {
           ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-          name: 'AKS-Global-Requirements'
+          name: 'Vmss-Workload-Requirements'
           priority: 200
           action: {
             type: 'Allow'
@@ -464,43 +527,43 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
           rules: [
             {
               ruleType: 'NetworkRule'
-              name: 'pods-to-api-server-konnectivity'
-              description: 'This allows pods to communicate with the API server. Ensure your API server\'s allowed IP ranges support all of this firewall\'s public IPs.'
+              name: 'AllowAzureUbuntuArchive'
+              description: 'Allow 80/443 outbound to azure.archive.ubuntu.com'
               ipProtocols: [
                 'TCP'
               ]
               sourceAddresses: []
               sourceIpGroups: [
-                ipgNodepoolSubnet.id
+                ipgVmssSubnets.id
               ]
-              destinationAddresses: [
-                'AzureCloud.${location}' // Ideally you'd list your AKS server endpoints in appliction rules, instead of this wide-ranged rule
-              ]
+              destinationAddresses: []
               destinationIpGroups: []
-              destinationFqdns: []
+              destinationFqdns: [
+                'azure.archive.ubuntu.com'
+              ]
               destinationPorts: [
+                '80'
                 '443'
               ]
             }
-            // NOTE: This rule is only required for for clusters not yet running in konnectivity mode and can be removed once it has been fully rolled out.
             {
               ruleType: 'NetworkRule'
-              name: 'pod-to-api-server_udp-1194'
-              description: 'This allows pods to communicate with the API server. Only needed if your cluster is not yet using konnectivity.'
+              name: 'AllowAzureUbuntuArchiveUDP'
+              description: 'Allow UDP outbound to azure.archive.ubuntu.com'
               ipProtocols: [
                 'UDP'
               ]
               sourceAddresses: []
               sourceIpGroups: [
-                ipgNodepoolSubnet.id
+                ipgVmssSubnets.id
               ]
-              destinationAddresses: [
-                'AzureCloud.${location}' // Ideally you'd list your AKS server endpoints in appliction rules, instead of this wide-ranged rule
-              ]
+              destinationAddresses: []
               destinationIpGroups: []
-              destinationFqdns: []
+              destinationFqdns: [
+                'azure.archive.ubuntu.com'
+              ]
               destinationPorts: [
-                '1194'
+                '123'
               ]
             }
           ]
@@ -520,7 +583,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
       ruleCollections: [
         {
           ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-          name: 'AKS-Global-Requirements'
+          name: 'Vmss-Global-Requirements'
           priority: 200
           action: {
             type: 'Allow'
@@ -528,8 +591,8 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
           rules: [
             {
               ruleType: 'ApplicationRule'
-              name: 'azure-monitor-addon'
-              description: 'Supports required communication for the Azure Monitor addon in AKS'
+              name: 'azure-monitor-extension'
+              description: 'Supports required communication for the Azure Monitor extensions in Vmss'
               protocols: [
                 {
                   protocolType: 'Https'
@@ -539,6 +602,8 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
               fqdnTags: []
               webCategories: []
               targetFqdns: [
+                'global.handler.control.monitor.azure.com'
+                '${location}.handler.control.monitor.azure.com'
                 '*.ods.opinsights.azure.com'
                 '*.oms.opinsights.azure.com'
                 '${location}.monitoring.azure.com'
@@ -548,13 +613,13 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
               terminateTLS: false
               sourceAddresses: []
               sourceIpGroups: [
-                ipgNodepoolSubnet.id
+                ipgVmssSubnets.id
               ]
             }
             {
               ruleType: 'ApplicationRule'
-              name: 'azure-policy-addon'
-              description: 'Supports required communication for the Azure Policy addon in AKS'
+              name: 'azure-policy'
+              description: 'Supports required communication for the Azure Policy in Vmss'
               protocols: [
                 {
                   protocolType: 'Https'
@@ -572,30 +637,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
               terminateTLS: false
               sourceAddresses: []
               sourceIpGroups: [
-                ipgNodepoolSubnet.id
-              ]
-            }
-            {
-              ruleType: 'ApplicationRule'
-              name: 'service-requirements'
-              description: 'Supports required core AKS functionality. Could be replaced with individual rules if added granularity is desired.'
-              protocols: [
-                {
-                  protocolType: 'Https'
-                  port: 443
-                }
-              ]
-              fqdnTags: [
-                'AzureKubernetesService'
-              ]
-              webCategories: []
-              targetFqdns: []
-              targetUrls: []
-              destinationAddresses: []
-              terminateTLS: false
-              sourceAddresses: []
-              sourceIpGroups: [
-                ipgNodepoolSubnet.id
+                ipgVmssSubnets.id
               ]
             }
           ]
@@ -623,45 +665,15 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
               targetFqdns: [
                 'github.com'
                 'api.github.com'
+                'raw.githubusercontent.com'
+                'nginx.org'
               ]
               targetUrls: []
               destinationAddresses: []
               terminateTLS: false
               sourceAddresses: []
               sourceIpGroups: [
-                ipgNodepoolSubnet.id
-              ]
-            }
-            {
-              ruleType: 'ApplicationRule'
-              name: 'flux-extension-runtime-requirements'
-              description: 'Supports required communication for the Flux v2 extension operate and contains allowances for our applications deployed to the cluster.'
-              protocols: [
-                {
-                  protocolType: 'Https'
-                  port: 443
-                }
-              ]
-              fqdnTags: []
-              webCategories: []
-              targetFqdns: [
-                '${location}.dp.kubernetesconfiguration.azure.com'
-                'mcr.microsoft.com'
-                '${split(environment().resourceManager, '/')[2]}' // Prevent the linter from getting upset at management.azure.com - https://github.com/Azure/bicep/issues/3080
-                '${split(environment().authentication.loginEndpoint, '/')[2]}' // Prevent the linter from getting upset at login.microsoftonline.com
-                '*.blob.${environment().suffixes.storage}' // required for the extension installer to download the helm chart install flux. This storage account is not predictable, but does look like eusreplstore196 for example.
-                'azurearcfork8s.azurecr.io' // required for a few of the images installed by the extension.
-                '*.docker.io' // Only required if you use the default bootstrapping manifests included in this repo.
-                '*.docker.com' // Only required if you use the default bootstrapping manifests included in this repo.
-                'ghcr.io' // Only required if you use the default bootstrapping manifests included in this repo. Kured is sourced from here by default.
-                'pkg-containers.githubusercontent.com' // Only required if you use the default bootstrapping manifests included in this repo. Kured is sourced from here by default.
-              ]
-              targetUrls: []
-              destinationAddresses: []
-              terminateTLS: false
-              sourceAddresses: []
-              sourceIpGroups: [
-                ipgNodepoolSubnet.id
+                ipgVmssSubnets.id
               ]
             }
           ]
@@ -685,7 +697,7 @@ resource hubFirewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
     // Ref: https://learn.microsoft.com/azure/firewall-manager/quick-firewall-policy
     fwPolicy::defaultApplicationRuleCollectionGroup
     fwPolicy::defaultNetworkRuleCollectionGroup
-    ipgNodepoolSubnet
+    ipgVmssSubnets
   ]
   properties: {
     sku: {
@@ -732,3 +744,4 @@ resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2
 /*** OUTPUTS ***/
 
 output hubVnetId string = vnetHub.id
+output abName string = azureBastion.name

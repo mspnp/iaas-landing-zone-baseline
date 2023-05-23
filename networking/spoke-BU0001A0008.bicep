@@ -75,17 +75,218 @@ resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2021-05-01' = {
   }
 }
 
-// Default NSG on the AKS nodepools. Feel free to constrict further.
-resource nsgNodepoolSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-nodepools'
+// Default ASG on the vmss frontend. Feel free to constrict further.
+resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' = {
+  name: 'asg-frontend'
+  location: location
+}
+
+// Default ASG on the vmss backend. Feel free to constrict further.
+resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' = {
+  name: 'asg-backend'
+  location: location
+}
+
+// Default NSG on the vmss frontend. Feel free to constrict further.
+resource nsgVmssFrontendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+  name: 'nsg-${clusterVNetName}-frontend'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowAppGwToToFrontendInbound'
+        properties: {
+          description: 'Allow AppGw traffic inbound.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '10.240.5.0/24'
+          destinationPortRange: '*'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgVmssFrontend.id
+            }
+          ]
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 100
+        }
+      }
+      {
+        name: 'AllowHealthProbesInbound'
+        properties: {
+          description: 'Allow Azure Health Probes in.'
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 110
+        }
+      }
+      {
+        name: 'AllowBastionSubnetSshInbound'
+        properties: {
+          description: 'Allow Azure Azure Bastion in.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '10.200.0.128/26'
+          destinationPortRange: '22'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgVmssFrontend.id
+            }
+          ]
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 120
+        }
+      }
+      {
+        name: 'DenyAllInbound'
+        properties: {
+          description: 'No further inbound traffic allowed.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowAllOutbound'
+        properties: {
+          description: 'Allow all outbound'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
   }
 }
 
-resource nsgNodepoolSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: nsgNodepoolSubnet
+// Default NSG on the vmss backend. Feel free to constrict further.
+resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+  name: 'nsg-${clusterVNetName}-backend'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowIlbToToBackenddApplicationSecurityGroupHTTPSInbound'
+        properties: {
+          description: 'Allow frontend ASG traffic into 443.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceApplicationSecurityGroups: [
+            {
+              id: asgVmssFrontend.id
+            }
+          ]
+          destinationPortRange: '443'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgVmssBackend.id
+            }
+          ]
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 100
+        }
+      }
+      {
+        name: 'AllowHealthProbesInbound'
+        properties: {
+          description: 'Allow Azure Health Probes in.'
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 110
+        }
+      }
+      {
+        name: 'AllowBastionSubnetSshInbound'
+        properties: {
+          description: 'Allow Azure Azure Bastion in.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '10.200.0.128/26'
+          destinationPortRange: '22'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgVmssBackend.id
+            }
+          ]
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 120
+        }
+      }
+      {
+        name: 'AllowBastionSubnetRdpInbound'
+        properties: {
+          description: 'Allow Azure Azure Bastion in.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '10.200.0.128/26'
+          destinationPortRange: '3389'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgVmssBackend.id
+            }
+          ]
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 121
+        }
+      }
+      {
+        name: 'DenyAllInbound'
+        properties: {
+          description: 'No further inbound traffic allowed.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowAllOutbound'
+        properties: {
+          description: 'Allow all outbound'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
+}
+
+resource nsgVmssFrontendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: nsgVmssFrontendSubnet
   name: 'default'
   properties: {
     workspaceId: laHub.id
@@ -98,12 +299,87 @@ resource nsgNodepoolSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSet
   }
 }
 
-// Default NSG on the AKS internal load balancer subnet. Feel free to constrict further.
+resource nsgVmssBackendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: nsgVmssBackendSubnet
+  name: 'default'
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
+// Default NSG on the Vmss Backend internal load balancer subnet. Feel free to constrict further.
 resource nsgInternalLoadBalancerSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-aksilbs'
+  name: 'nsg-${clusterVNetName}-ilbs'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowFrontendApplicationSecurityGroupHTTPSInbound'
+        properties: {
+          description: 'Allow Frontend ASG web traffic into 443.'
+          protocol: 'Tcp'
+          sourceApplicationSecurityGroups: [
+            {
+              id: asgVmssFrontend.id
+            }
+          ]
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          destinationAddressPrefix: '10.240.4.4'
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 100
+        }
+      }
+      {
+        name: 'AllowHealthProbesInbound'
+        properties: {
+          description: 'Allow Azure Health Probes in.'
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          direction: 'Inbound'
+          access: 'Allow'
+          priority: 110
+        }
+      }
+      {
+        name: 'DenyAllInbound'
+        properties: {
+          description: 'No further inbound traffic allowed.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'AllowAllOutbound'
+        properties: {
+          description: 'Allow all outbound'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
   }
 }
 
@@ -279,7 +555,7 @@ resource nsgPrivateLinkEndpointsSubnet_diagnosticsSettings 'Microsoft.Insights/d
 }
 
 // The spoke virtual network.
-// 65,536 (-reserved) IPs available to the workload, split across two subnets for AKS,
+// 65,536 (-reserved) IPs available to the workload, split across subnets four subnets for Compute,
 // one for App Gateway and one for Private Link endpoints.
 resource vnetSpoke 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   name: clusterVNetName
@@ -292,21 +568,35 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2021-05-01' = {
     }
     subnets: [
       {
-        name: 'snet-clusternodes'
+        name: 'snet-frontend'
         properties: {
-          addressPrefix: '10.240.0.0/22'
+          addressPrefix: '10.240.0.0/24'
           routeTable: {
             id: routeNextHopToFirewall.id
           }
           networkSecurityGroup: {
-            id: nsgNodepoolSubnet.id
+            id: nsgVmssFrontendSubnet.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
       {
-        name: 'snet-clusteringressservices'
+        name: 'snet-backend'
+        properties: {
+          addressPrefix: '10.240.1.0/24'
+          routeTable: {
+            id: routeNextHopToFirewall.id
+          }
+          networkSecurityGroup: {
+            id: nsgVmssBackendSubnet.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+        }
+      }
+      {
+        name: 'snet-ilbs'
         properties: {
           addressPrefix: '10.240.4.0/28'
           routeTable: {
@@ -314,17 +604,6 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2021-05-01' = {
           }
           networkSecurityGroup: {
             id: nsgInternalLoadBalancerSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Disabled'
-        }
-      }
-      {
-        name: 'snet-applicationgateway'
-        properties: {
-          addressPrefix: '10.240.5.0/24'
-          networkSecurityGroup: {
-            id: nsgAppGwSubnet.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
@@ -341,11 +620,26 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2021-05-01' = {
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
+      {
+        name: 'snet-applicationgateway'
+        properties: {
+          addressPrefix: '10.240.5.0/24'
+          networkSecurityGroup: {
+            id: nsgAppGwSubnet.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+        }
+      }
     ]
   }
 
-  resource snetClusterNodes 'subnets' existing = {
-    name: 'snet-clusternodes'
+  resource snetFrontend 'subnets' existing = {
+    name: 'snet-frontend'
+  }
+
+  resource snetBackend 'subnets' existing = {
+    name: 'snet-backend'
   }
 }
 
@@ -388,19 +682,15 @@ resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@202
   }
 }
 
-// Used as primary public entry point for cluster. Expected to be assigned to an Azure Application Gateway.
+// Used as primary public entry point for the workload. Expected to be assigned to an Azure Application Gateway.
 // This is a public facing IP, and would be best behind a DDoS Policy (not deployed simply for cost considerations)
-resource pipPrimaryClusterIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
+resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
   name: 'pip-${orgAppId}-00'
   location: location
   sku: {
     name: 'Standard'
   }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   properties: {
     publicIPAllocationMethod: 'Static'
     idleTimeoutInMinutes: 4
@@ -408,9 +698,9 @@ resource pipPrimaryClusterIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = 
   }
 }
 
-resource pipPrimaryClusterIp_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  {
+resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  {
   name: 'default'
-  scope: pipPrimaryClusterIp
+  scope: pipPrimaryWorkloadIp
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -430,8 +720,9 @@ resource pipPrimaryClusterIp_diagnosticSetting 'Microsoft.Insights/diagnosticSet
 
 /*** OUTPUTS ***/
 
-output clusterVnetResourceId string = vnetSpoke.id
-output nodepoolSubnetResourceIds array = [
-  vnetSpoke::snetClusterNodes.id
+output spokeVnetResourceId string = vnetSpoke.id
+output vmssSubnetResourceIds array = [
+  vnetSpoke::snetFrontend.id
+  vnetSpoke::snetBackend.id
 ]
-output appGwPublicIpAddress string = pipPrimaryClusterIp.properties.ipAddress
+output appGwPublicIpAddress string = pipPrimaryWorkloadIp.properties.ipAddress
