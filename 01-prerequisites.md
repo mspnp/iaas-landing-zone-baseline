@@ -1,8 +1,8 @@
 # Prerequisites
 
-This is the starting point for the instructions on deploying the [IaaS baseline reference implementation](./README.md). There is required access and tooling you'll need in order to accomplish this. Follow the instructions below and on the subsequent pages so that you can get your environment ready to proceed with the VMSS/VMs creation.
+This is the starting point for the instructions on deploying the [IaaS baseline reference implementation](./README.md). There is required access and tooling you'll need in order to accomplish this. Follow the instructions below and on the subsequent pages so that you can get your environment ready.
 
-| :clock10: | These steps are intentionally verbose, intermixed with context, narrative, and guidance. The deployments are all conducted via [Bicep templates](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview), but they are executed manually via `az cli` commands. We strongly encourage you to dedicate time to walk through these instructions, with a focus on learning. We do not provide any "one click" method to complete all deployments.<br><br>Once you understand the components involved and have identified the shared responsibilities between your team and your greater organization, you are encouraged to build suitable, repeatable deployment processes around your final infrastructure and bootstrapping. The [DevOps archicture design](https://learn.microsoft.com/azure/architecture/guide/devops/devops-start-here) is a great place to learn best practices to build your own automation pipelines. |
+| :clock10: | These steps are intentionally verbose, intermixed with context, narrative, and guidance. The deployments are all conducted via [Bicep templates](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview), but they are executed manually via `az cli` commands. We strongly encourage you to dedicate time to walk through these instructions, with a focus on learning. We do not provide any "one click" method to complete all deployments.<br><br>Once you understand the components involved and have identified the shared responsibilities between your workload team and your platform team, you are encouraged to build suitable, repeatable deployment processes around your final infrastructure and bootstrapping. The [DevOps archicture design](https://learn.microsoft.com/azure/architecture/guide/devops/devops-start-here) is a great place to learn best practices to build your own automation pipelines. |
 |-----------|:--------------------------|
 
 ## Steps
@@ -11,6 +11,8 @@ This is the starting point for the instructions on deploying the [IaaS baseline 
 
    The subscription used in this deployment cannot be a [free account](https://azure.microsoft.com/free); it must be a standard EA, pay-as-you-go, or Visual Studio benefit subscription. This is because the resources deployed here are beyond the quotas of free subscriptions.
 
+   This subscription is expected to NOT be an actual Azure landing zone workload subscription. This ideally would be deployed within a sandbox subscription offered by your organization, as long as it meets the following requirements.
+
    > :warning: The user or service principal initiating the deployment process _must_ have the following minimal set of Azure Role-Based Access Control (RBAC) roles:
    >
    > * [Contributor role](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor) is _required_ at the subscription level to have the ability to create resource groups and perform deployments.
@@ -18,6 +20,8 @@ This is the starting point for the instructions on deploying the [IaaS baseline 
    > * [Resource Policy Contributor role](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#resource-policy-contributor) is _required_ at the subscription level since you'll be creating custom Azure policy definitions to govern resources in your compute.
 
 1. An Azure AD tenant to associate your compute authentication to.
+
+   **TODO-CK: Align this with final requirements**
 
    > :warning: The user or service principal initiating the deployment process _must_ have the following minimal set of Azure AD permissions assigned:
    >
@@ -30,11 +34,9 @@ This is the starting point for the instructions on deploying the [IaaS baseline 
 
 1. Clone/download this repo locally, or even better fork this repository.
 
-   > :twisted_rightwards_arrows: If you have forked this reference implementation repo, you'll be able to customize some of the files and commands for a more personalized and production-like experience; ensure references to this git repository mentioned throughout the walk-through are updated to use your own fork.
-
    ```bash
-   git clone https://github.com/mspnp/iaas-baseline.git
-   cd iaas-baseline
+   git clone https://github.com/mspnp/iaas-landing-zone-baseline.git
+   cd iaas-landing-zone-baseline
    ```
 
    > :bulb: The steps shown here and elsewhere in the reference implementation use Bash shell commands. On Windows, you can use the [Windows Subsystem for Linux](https://learn.microsoft.com/windows/wsl/about) to run Bash.
