@@ -40,7 +40,7 @@ Typically your subscription vending process would yield identities that can then
    > :book: TODO-CK
 
    ```bash
-   # [This takes about two minutes to run.]
+   # [This takes about four minutes to run.]
    az deployment sub create -l eastus2 -f platform-landing-zone/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 

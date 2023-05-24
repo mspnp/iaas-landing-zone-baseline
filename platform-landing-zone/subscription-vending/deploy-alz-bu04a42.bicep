@@ -38,7 +38,7 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 @description('Spoke resource group. This typically would be in a dedicated subscription for the workload.')
 resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-alz-bu04a42-spoke'
-  location: location  //TODO: move back to location
+  location: location
 }
 
 @description('Deploy the application landing zone (specifically just the network part)')
