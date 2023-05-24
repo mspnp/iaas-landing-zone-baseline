@@ -123,12 +123,6 @@ resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' exi
   }
 }
 
-// Log Analytics Workspace
-resource la 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' existing = {
-  scope: resourceGroup()
-  name: 'la-${vmssName}'
-}
-
 // Default ASG on the vmss frontend. Feel free to constrict further.
 resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' existing = {
   scope: targetResourceGroup
@@ -142,6 +136,18 @@ resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01'
 }
 
 /*** RESOURCES ***/
+
+resource la 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+  name: 'la-vmss-${subRgUniqueString}'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
 
 resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2021-05-01' = {
   name: 'waf-${vmssName}'
