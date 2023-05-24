@@ -4,7 +4,9 @@ In the prior step, you [deployed a fairly basic network hub](./02-connectivity-s
 
 ## Expected results
 
-We're going to take the core workload requirements from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) and capture them as if it was part of the ITSM tooling or portal experience that your landging zone subscripting vending process follows. There will be no resources deployed in this step.
+We're going to take the core workload requirements from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) and capture them as if it was part of the ITSM tooling or portal experience that your landging zone subscripting vending process follows.
+
+**There will be no resources deployed in this step.**
 
 ## Steps
 

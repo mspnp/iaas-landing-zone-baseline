@@ -1,6 +1,8 @@
-# Deploy shared services
+# Deploy long-lived services [Workload team]
 
-Now that the [hub-spoke network is provisioned](./04-networking.md), the next step in the [IaaS baseline reference implementation](./) is preparing what your spoke should be bootstrapped with before receiving the compute resources.
+Now that you have a [mock application landing zone deployed](./04-subscription-vending-execute.md), the next step in the [IaaS baseline reference implementation](./) is to deploy some resources whose lifecycle isn't tied to the....
+
+**TODO-CK I think I'm going to take this out of the flow as well.**
 
 ## Expected results
 

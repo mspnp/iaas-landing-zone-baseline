@@ -78,7 +78,7 @@ You are not the platform team, and you are not deploying this into an existing A
 - [ ] Begin by ensuring you [install and meet the prerequisites](./01-prerequisites.md)
 - [ ] [Deploy mock connectitity subscription](./02-connectivity-subscription.md)
 
-### 2. Request a application landing zone
+### 2. Request an application landing zone
 
 All landing zone deployments eventually need the actual subscription(s) the workload resources will be deployed to. Most organizations have a subscription vending process to create these application landing zone subscriptions. Let's walk through the request and fulfillment
 
@@ -92,7 +92,6 @@ This is the heart of the guidance in this reference implementation; paired with 
 **TODO-CK: Reflow as the narative builds out.**
 
 - [ ] [Procure client-facing and VM TLS certificates](./05-ca-certificates.md)
-- [ ] [Prep for VMs bootstrapping](./06-bootstrap-prep.md)
 - [ ] [Deploy the VMs, workload, and supporting services](./06-compute-infra.md)
 
 We perform the prior steps manually here for you to understand the involved components, but we advocate for an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
