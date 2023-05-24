@@ -48,7 +48,7 @@ The hub will be a virtual network-based hub, containing common shared resources 
 
    ```bash
    # [This takes about six minutes to run.]
-   az deployment group create -g rg-plz-enterprise-networking-hubs -f platform-landing-zone/hub-default.bicep -p location=eastus2
+   az deployment group create -g rg-plz-enterprise-networking-hubs -f platform-team/hub-default.bicep -p location=eastus2
    ```
 
    ```bash
