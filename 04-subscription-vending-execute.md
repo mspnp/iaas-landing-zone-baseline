@@ -34,7 +34,7 @@ Typically your subscription vending process would yield identities that can then
 
    ```bash
    # [This takes less than one minute to run.]
-   az group create -n rg-alz-bu04A42-spoke -l centralus
+   az group create -n rg-alz-bu04a42-spoke -l centralus
 
 1. Create the spoke that will be home to the application team's compute and its adjacent resources.
 
@@ -45,7 +45,7 @@ Typically your subscription vending process would yield identities that can then
 
    ```bash
    # [This takes about four minutes to run.]
-   az deployment group create -g rg-alz-bu04A42-spoke -f networking/spoke-BU0001A0008.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   az deployment group create -g rg-alz-bu04a42-spoke -f platform-landing-zone/app-landing-zone-BU04A42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 
    TODO-CK: Capture in env variables

@@ -52,7 +52,7 @@ The hub will be a virtual network-based hub, containing common shared resources 
    ```
 
    ```bash
-   RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-enterprise-networking-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
+   export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-enterprise-networking-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
    echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 
