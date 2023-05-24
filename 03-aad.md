@@ -1,4 +1,15 @@
-------------------------------------|---------------------------------------------------------|
+# Prep for Azure Active Directory integration
+
+In the prior step, you [generated the user-facing TLS certificate](./02-ca-certificates.md); now we'll prepare Azure AD for role-based access control (RBAC). This will ensure you have an Azure AD security group(s) and user(s) assigned for group-based control plane access.
+
+**TODO-CK: Figure out what we need to do here.  Taking out of user flow for now.**
+
+## Expected results
+
+Following the steps below you will result in an Azure AD configuration that will be used for Kubernetes control plane (Cluster API) authorization.
+
+| Object                             | Purpose                                                 |
+|------------------------------------|---------------------------------------------------------|------------------------------------|---------------------------------------------------------|
 | A Compute Ops Security Group       | Represents the group of operations that will logically gather all operation admin users      |
 | A Compute Admin User               | Represents at least one break-glass compute admin user. |
 

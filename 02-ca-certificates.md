@@ -80,4 +80,4 @@ Now that you have an [application landing zone awaiting your worklad](./04-subsc
 
 ### Next step
 
-:arrow_forward: [Prep for Azure Active Directory integration](./03-aad.md)
+:arrow_forward: [Deploy long-lived resources](./05-bootstrap-prep.md)
