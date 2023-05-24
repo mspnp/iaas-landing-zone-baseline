@@ -1,10 +1,10 @@
 # Deploy a new application landing zone [Platform team]
 
-As the platform team, you've [received a request from a new workload team](./03-subscription-vending-request.md) looking to stand up an application landing zone. Let's run this through a manual subscription vending process and hand the keys to the subscription back over to the application team.
+As the platform team, you've [received a request from a new workload team](./03-subscription-vending-request.md) looking to stand up an application landing zone. Let's run this through a mock subscription vending process and hand the keys to the subscription back over to the application team.
 
 ## Subscription vending
 
-The process below is manual in this deployment guide, it's likely your platform team has [automated](https://learn.microsoft.com/azure/architecture/landing-zones/subscription-vending) your [subscription vending process](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/subscription-vending).
+The process below is manual in this deployment guide, it's likely your platform team has [automated](https://learn.microsoft.com/azure/architecture/landing-zones/subscription-vending) your [subscription vending process](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/subscription-vending). For this deployment guide, you are not expected to use your existing subscription vending process.
 
 ## Expected results
 
@@ -22,9 +22,16 @@ The platform team provides the workload team one or more virtual networks to the
 
 Azure Firewall egress rules often need to be updated based on the gathered requirements. An example of those updates are deployed as part of this step.
 
-### Identity resources
+- One virtual network (/16)  TODO-CK
+  - No subnets
+  - DNS configured for regional hub
+  - Peered to regional hub
+- Two IP Groups to capture agreed upon starting egress firewall rules
+- One UDR that is expected to be applied to subnets that will be egressing traffic, so that it will flow to the firewall.
 
-Typically your subscription vending process would yield identities that can then be used in your pipelines. This deployment guide will not be simulating this part.
+### Identity and role-based access control (RBAC)
+
+Typically your subscription vending process would yield identities that can then be used in your pipelines. This deployment guide will not be simulating this part.  Also, it would be expected that you do not have full control over the network resources deployed. The network resources have a shared ownership/manipulation model between the application team and the platform team.
 
 ## Steps
 
@@ -36,7 +43,6 @@ Typically your subscription vending process would yield identities that can then
    # [This takes about two minutes to run.]
    az deployment sub create -l eastus2 -f platform-landing-zone/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
-
 
    > TODO-CK
    >
