@@ -2,10 +2,6 @@ targetScope = 'resourceGroup'
 
 /*** PARAMETERS ***/
 
-@description('Resource IDs for all VMSS subnets in all attached spokes to allow necessary outbound traffic through the firewall.')
-@minLength(1)
-param vmssSubnetResourceIds array
-
 @allowed([
   'australiaeast'
   'canadacentral'
@@ -26,458 +22,101 @@ param vmssSubnetResourceIds array
 @description('The hub\'s regional affinity. All resources tied to this hub will also be homed in this region. The network team maintains this approved regional list which is a subset of zones with Availability Zone support.')
 param location string = 'eastus2'
 
-@description('Optional. A /24 to contain the regional firewall, management, and gateway subnet. Defaults to 10.200.0.0/24')
-@maxLength(18)
-@minLength(10)
-param hubVirtualNetworkAddressSpace string = '10.200.0.0/24'
+@description('TODO')
+@minLength(70)
+param spokeVirtualNetworkResourceId string
 
-@description('Optional. A /26 under the virtual network address space for the regional Azure Firewall. Defaults to 10.200.0.0/26')
-@maxLength(18)
-@minLength(10)
-param hubVirtualNetworkAzureFirewallSubnetAddressSpace string = '10.200.0.0/26'
+// A designator that represents a business unit id and application id
+var orgAppId = 'bu04a42'
 
-@description('Optional. A /27 under the virtual network address space for our regional On-Prem Gateway. Defaults to 10.200.0.64/27')
-@maxLength(18)
-@minLength(10)
-param hubVirtualNetworkGatewaySubnetAddressSpace string = '10.200.0.64/27'
+/*** EXISTING RESOURCES ***/
 
-@description('Optional. A /26 under the virtual network address space for regional Azure Bastion. Defaults to 10.200.0.128/26')
-@maxLength(18)
-@minLength(10)
-param hubVirtualNetworkBastionSubnetAddressSpace string = '10.200.0.128/26'
+resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  name: 'vnet-hub-${location}'
+}
+
+resource fwPolicy2 'Microsoft.Network/firewallPolicies@2022-11-01' existing = {
+  name: 'fw-policies-${location}'
+
+  resource defaultNetworkRuleCollectionGroup 'ruleCollectionGroups' = {
+    name: 'DefaultNetworkRuleCollectionGroup'
+  }
+
+  resource defaultApplicationRuleCollectionGroup 'ruleCollectionGroups' = {
+    name: 'DefaultApplicationRuleCollectionGroup'
+  }
+}
+
+resource ipGroupTemp 'Microsoft.Network/ipGroups@2022-11-01' existing = {
+  name: 'temp'
+}
 
 /*** RESOURCES ***/
 
-// This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion.
-// Log analytics is a regional resource, as such there will be one workspace per hub (region)
-resource laHub 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
-  name: 'la-hub-${location}'
-  location: location
+resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-11-01' = {
+  parent: fwPolicy2
+  name: 'alz-${orgAppId}-1'
   properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: 30
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
-    forceCmkForQuery: false
-    features: {
-      disableLocalAuth: true
-      enableLogAccessUsingOnlyResourcePermissions: true
-    }
-    workspaceCapping: {
-      dailyQuotaGb: -1
-    }
-  }
-}
-
-resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
-  scope: laHub
-  properties: {
-    workspaceId: laHub.id
-    logs: [
+    priority: 210
+    ruleCollections: [
       {
-        categoryGroup: 'audit'
-        enabled: true
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-  }
-}
-
-// NSG around the Azure Bastion Subnet.
-resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${location}-bastion'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'AllowWebExperienceInbound'
-        properties: {
-          description: 'Allow our users in. Update this to be as restrictive as possible.'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: 'Internet'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 100
-          direction: 'Inbound'
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'alz-1'
+        action: {
+          type: 'Allow'
         }
-      }
-      {
-        name: 'AllowControlPlaneInbound'
-        properties: {
-          description: 'Service Requirement. Allow control plane access. Regional Tag not yet supported.'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: 'GatewayManager'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 110
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'AllowHealthProbesInbound'
-        properties: {
-          description: 'Service Requirement. Allow Health Probes.'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: 'AzureLoadBalancer'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 120
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'AllowBastionHostToHostInbound'
-        properties: {
-          description: 'Service Requirement. Allow Required Host to Host Communication.'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRanges: [
-            '8080'
-            '5701'
-          ]
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationAddressPrefix: 'VirtualNetwork'
-          access: 'Allow'
-          priority: 130
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'DenyAllInbound'
-        properties: {
-          description: 'No further inbound traffic allowed.'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-          access: 'Deny'
-          priority: 1000
-          direction: 'Inbound'
-        }
-      }
-      {
-        name: 'AllowSshToVnetOutbound'
-        properties: {
-          description: 'Allow SSH out to the virtual network'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '22'
-          destinationAddressPrefix: 'VirtualNetwork'
-          access: 'Allow'
-          priority: 100
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowRdpToVnetOutbound'
-        properties: {
-          description: 'Allow RDP out to the virtual network'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '3389'
-          destinationAddressPrefix: 'VirtualNetwork'
-          access: 'Allow'
-          priority: 110
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowControlPlaneOutbound'
-        properties: {
-          description: 'Required for control plane outbound. Regional prefix not yet supported'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '443'
-          destinationAddressPrefix: 'AzureCloud'
-          access: 'Allow'
-          priority: 120
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowBastionHostToHostOutbound'
-        properties: {
-          description: 'Service Requirement. Allow Required Host to Host Communication.'
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: 'VirtualNetwork'
-          destinationPortRanges: [
-            '8080'
-            '5701'
-          ]
-          destinationAddressPrefix: 'VirtualNetwork'
-          access: 'Allow'
-          priority: 130
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'AllowBastionCertificateValidationOutbound'
-        properties: {
-          description: 'Service Requirement. Allow Required Session and Certificate Validation.'
-          protocol: '*'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationPortRange: '80'
-          destinationAddressPrefix: 'Internet'
-          access: 'Allow'
-          priority: 140
-          direction: 'Outbound'
-        }
-      }
-      {
-        name: 'DenyAllOutbound'
-        properties: {
-          description: 'No further outbound traffic allowed.'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-          access: 'Deny'
-          priority: 1000
-          direction: 'Outbound'
-        }
-      }
-    ]
-  }
-}
-
-resource nsgBastionSubnet_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: nsgBastionSubnet
-  name: 'default'
-  properties: {
-    workspaceId: laHub.id
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-      }
-    ]
-  }
-}
-
-// The regional hub network
-resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: 'vnet-${location}-hub'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        hubVirtualNetworkAddressSpace
-      ]
-    }
-    subnets: [
-      {
-        name: 'AzureFirewallSubnet'
-        properties: {
-          addressPrefix: hubVirtualNetworkAzureFirewallSubnetAddressSpace
-        }
-      }
-      {
-        name: 'GatewaySubnet'
-        properties: {
-          addressPrefix: hubVirtualNetworkGatewaySubnetAddressSpace
-        }
-      }
-      {
-        name: 'AzureBastionSubnet'
-        properties: {
-          addressPrefix: hubVirtualNetworkBastionSubnetAddressSpace
-          networkSecurityGroup: {
-            id: nsgBastionSubnet.id
+        priority: 100
+        rules: [
+          {
+            ruleType: 'NetworkRule'
           }
-        }
+        ]
+
       }
     ]
   }
-
-  resource azureFirewallSubnet 'subnets' existing = {
-    name: 'AzureFirewallSubnet'
-  }
-
-  resource azureBastionSubnet 'subnets' existing = {
-    name: 'AzureBastionSubnet'
-  }
 }
 
-@description('The public IP for the regional hub\'s Azure Bastion service.')
-resource pipAzureBastion 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
-  name: 'pip-ab-${location}'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+// Peer to hub
+resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2022-11-01' = {
+  parent: hubVirtualNetwork
+  name: take('peer-${hubVirtualNetwork.name}-to-${split(spokeVirtualNetworkResourceId, '/')[4]}', 64)
   properties: {
-    publicIPAllocationMethod: 'Static'
-    idleTimeoutInMinutes: 4
-    publicIPAddressVersion: 'IPv4'
+    allowForwardedTraffic: true
+    allowGatewayTransit: false
+    allowVirtualNetworkAccess: false
+    useRemoteGateways: false
+    remoteVirtualNetwork: {
+      id: spokeVirtualNetworkResourceId
+    }
   }
 }
-
-@description('This regional hub\'s Azure Bastion service.')
-resource azureBastion 'Microsoft.Network/bastionHosts@2021-05-01' = {
-  name: 'ab-${location}'
-  location: location
+/*
+resource appLzAppRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-11-01' = {
+  parent: fwPolicy2
+  name: 'alz-${orgAppId}-2'
   properties: {
-    enableTunneling: true
-    ipConfigurations: [
+    priority: 210
+    ruleCollections: [
       {
-        name: 'hub-subnet'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: vnetHub::azureBastionSubnet.id
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        name: 'alz-2'
+        action: {
+          type: 'Allow'
+        }
+        priority: 100
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
           }
-          publicIPAddress: {
-            id: pipAzureBastion.id
-          }
-        }
+        ]
       }
     ]
   }
-  sku: {
-    name: 'Standard'
-  }
-}
+}*/
 
-resource azureBastion_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
-  scope: azureBastion
-  properties: {
-    workspaceId: laHub.id
-    logs: [
-      {
-        category: 'BastionAuditLogs'
-        enabled: true
-      }
-    ]
-  }
-}
 
-resource vnetHub_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: vnetHub
-  name: 'default'
-  properties: {
-    workspaceId: laHub.id
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-  }
-}
-
-// Allocate three IP addresses to the firewall
-var numFirewallIpAddressesToAssign = 3
-resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for i in range(0, numFirewallIpAddressesToAssign): {
-  name: 'pip-fw-${location}-${padLeft(i, 2, '0')}'
-  location: location
-  sku: {
-    name: 'Standard'
-  }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
-  properties: {
-    publicIPAllocationMethod: 'Static'
-    idleTimeoutInMinutes: 4
-    publicIPAddressVersion: 'IPv4'
-  }
-}]
-
-resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [for i in range(0, numFirewallIpAddressesToAssign): {
-  name: 'default'
-  scope: pipsAzureFirewall[i]
-  properties: {
-    workspaceId: laHub.id
-    logs: [
-      {
-        categoryGroup: 'audit'
-        enabled: true
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-  }
-}]
-
-// This holds IP address prefixes of known VMSS subnets in spokes.
-resource ipgVmssSubnets 'Microsoft.Network/ipGroups@2021-05-01' = {
-  name: 'ipg-${location}-vmss'
-  location: location
-  properties: {
-    ipAddresses: [for vmssSubnetResourceId in vmssSubnetResourceIds: '${reference(vmssSubnetResourceId, '2020-05-01').addressPrefix}']
-  }
-}
-
-// Azure Firewall starter policy
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
-  name: 'fw-policies-${location}'
-  location: location
-  dependsOn: [
-    ipgVmssSubnets
-  ]
-  properties: {
-    sku: {
-      tier: 'Premium'
-    }
-    threatIntelMode: 'Deny'
-    insights: {
-      isEnabled: true
-      retentionDays: 30
-      logAnalyticsResources: {
-        defaultWorkspaceId: {
-          id: laHub.id
-        }
-      }
-    }
-    threatIntelWhitelist: {
-      fqdns: []
-      ipAddresses: []
-    }
-    intrusionDetection: {
-      mode: 'Deny'
-      configuration: {
-        bypassTrafficSettings: []
-        signatureOverrides: []
-      }
-    }
-    dnsSettings: {
-      servers: []
-      enableProxy: true
-    }
-  }
+/*
 
   // Network hub starts out with only supporting DNS. This is only being done for
   // simplicity in this deployment and is not guidance, please ensure all firewall
@@ -683,65 +322,8 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
   }
 }
 
-// This is the regional Azure Firewall that all regional spoke networks can egress through.
-resource hubFirewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
-  name: 'fw-${location}'
-  location: location
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
-  dependsOn: [
-    // This helps prevent multiple PUT updates happening to the firewall causing a CONFLICT race condition
-    // Ref: https://learn.microsoft.com/azure/firewall-manager/quick-firewall-policy
-    fwPolicy::defaultApplicationRuleCollectionGroup
-    fwPolicy::defaultNetworkRuleCollectionGroup
-    ipgVmssSubnets
-  ]
-  properties: {
-    sku: {
-      tier: 'Premium'
-      name: 'AZFW_VNet'
-    }
-    firewallPolicy: {
-      id: fwPolicy.id
-    }
-    ipConfigurations: [for i in range(0, numFirewallIpAddressesToAssign): {
-      name: pipsAzureFirewall[i].name
-      properties: {
-        subnet: (0 == i) ? {
-          id: vnetHub::azureFirewallSubnet.id
-        } : null
-        publicIPAddress: {
-          id: pipsAzureFirewall[i].id
-        }
-      }
-    }]
-  }
-}
-
-resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
-  scope: hubFirewall
-  properties: {
-    workspaceId: laHub.id
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-  }
-}
-
+*/
 /*** OUTPUTS ***/
-
+/*
 output hubVnetId string = vnetHub.id
-output abName string = azureBastion.name
+output abName string = azureBastion.name*/
