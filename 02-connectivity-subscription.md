@@ -70,4 +70,4 @@ The hub will be a virtual network-based hub, containing common shared resources 
 
 At this point, you have a basic connectivity subscription proxy, with basic connectivity subsubscription resources. Your architecture _has not yet influenced this deployment_, that'll happen with the fulfillment of your upcoming subscription vending request.
 
-:arrow_forward: [Submit your workload landing zone request](./03-subscription-vending-request.md)
+:arrow_forward: [Submit your application landing zone request](./03-subscription-vending-request.md)

@@ -1,4 +1,4 @@
-# Request a workload landing zone [Workload team]
+# Request your application landing zone [Workload team]
 
 In the prior step, you [deployed a fairly basic network hub](./02-connectivity-subscription.md) to stand in for the typical resources found in a Connectivity subscription. Next we start turning our eyes to the workload's needs. You'll start by building a mock landing zone request
 
@@ -42,4 +42,4 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 Now you'll switch back to playing the role of a Platform team member, and will create your workload's landing zone subscription (represented as a resource group in this walkthrough).
 
-:arrow_forward: [Deploy your mock workload landing zone subscription](./04-subscription-vending-execute.md)
+:arrow_forward: [Deploy your mock application landing zone subscription](./04-subscription-vending-execute.md)

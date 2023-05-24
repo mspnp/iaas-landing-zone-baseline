@@ -57,7 +57,13 @@ Azure landing zone implementations are varied, by design. Your implementation li
 
 We acknowledge that you will need to map your organization's Azure landing zone realities onto this architecture. This architecture strives to follow an implementation similar to one described in [Deploy Enterprise-Scale with hub and spoke architecture](https://github.com/Azure/Enterprise-Scale/blob/main/docs/reference/adventureworks/README.md), and as such the deployment guide will reference key concepts like the "Connectivity subscription," "Subscription vending," or "Online" management group; to name a few.
 
-**You do NOT need to fully understand your Azure landing zone platform implementation in order to use this deployment guide.** You will be deploying into a single subscription, you will not be expected to connect to ANY existing networks or platform resources.
+**You do NOT need to fully understand your own Azure landing zone platform implementation in order to use this deployment guide.** You will be deploying into a single subscription, you will not be expected to connect to ANY existing networks or platform resources.
+
+### Application landing zone
+
+The workload that we are deploying in this guide aligns with the Cloud Adoption Framework definition of an _application landing zone_, and specifically the subcategoy of _workload_. We'll be refering to the workload's landing zone as the "application landing zone" in this deployment guide.
+
+See [Platform vs. application landing zones](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-vs-application-landing-zones) as a reminder of the distinction.
 
 ## Deploy the reference implementation
 
@@ -72,12 +78,12 @@ You are not the platform team, and you are not deploying this into an existing A
 - [ ] Begin by ensuring you [install and meet the prerequisites](./01-prerequisites.md)
 - [ ] [Deploy mock connectitity subscription](./02-connectivity-subscription.md)
 
-### 2. Request a workload landing zone
+### 2. Request a application landing zone
 
-All landing zone deployments eventually need the actual subscription(s) the workload resources will be deployed to. Most organizations have a subscription vending process to create these workload landing zone subscriptions. Let's walk through the request and fulfillment
+All landing zone deployments eventually need the actual subscription(s) the workload resources will be deployed to. Most organizations have a subscription vending process to create these application landing zone subscriptions. Let's walk through the request and fulfillment
 
-- [ ] [Submit your workload landing zone request](./03-subscription-vending-request.md)
-- [ ] [Deploy your mock workload landing zone subscription](./04-subscription-vending-execute.md)
+- [ ] [Submit your application landing zone request](./03-subscription-vending-request.md)
+- [ ] [Deploy a mock application landing zone subscription](./04-subscription-vending-execute.md)
 
 ### 3. Deploy the workload infrastructure
 

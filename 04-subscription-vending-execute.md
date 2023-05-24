@@ -1,4 +1,4 @@
-# Deploy a new workload landing zone [Platform team]
+# Deploy a new application landing zone [Platform team]
 
 As the platform team, you've [received a request from a new workload team](./03-subscription-vending-request.md) looking to stand up an application landing zone. Let's run this through a manual subscription vending process and hand the keys to the subscription back over to the application team.
 
