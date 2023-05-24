@@ -3,7 +3,7 @@
 This is the starting point for the instructions on deploying the [IaaS baseline reference implementation](./README.md). There is required access and tooling you'll need in order to accomplish this. Follow the instructions below and on the subsequent pages so that you can get your environment ready.
 
 | :clock10: | These steps are intentionally verbose, intermixed with context, narrative, and guidance. The deployments are all conducted via [Bicep templates](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview), but they are executed manually via `az cli` commands. We strongly encourage you to dedicate time to walk through these instructions, with a focus on learning. We do not provide any "one click" method to complete all deployments.<br><br>Once you understand the components involved and have identified the shared responsibilities between your workload team and your platform team, you are encouraged to build suitable, repeatable deployment processes around your final infrastructure and bootstrapping. The [DevOps archicture design](https://learn.microsoft.com/azure/architecture/guide/devops/devops-start-here) is a great place to learn best practices to build your own automation pipelines. |
-|-----------|:--------------------------|
+| :-------: | :------------------------ |
 
 ## Steps
 

@@ -68,7 +68,7 @@ The following two resource groups will be created and populated with networking 
 
       * `hubVnetId` - which you'll will query in future steps when creating connected regional spokes. E.g. `/subscriptions/[id]/resourceGroups/rg-enterprise-networking-hubs/providers/Microsoft.Network/virtualNetworks/vnet-eastus2-hub`
 
-1. Create the spoke that will be home to the compute nd its adjacent resources.
+1. Create the spoke that will be home to the compute and its adjacent resources.
 
    > :book: The networking team receives a request from an app team in business unit (BU) 0001 for a network spoke to house their new VM-based application (Internally know as Application ID: A0008). The network team talks with the app team to understand their requirements and aligns those needs with Microsoft's best practices for a general-purpose compute deployment. They capture those specific requirements and deploy the spoke, aligning to those specs, and connecting it to the matching regional hub.
 

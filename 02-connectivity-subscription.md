@@ -1,4 +1,4 @@
-# Deploy mock connectitity subscription
+# Deploy mock connectitity subscription [Platform team]
 
 Now that you have your target [Azure subscription and other prerequisties](./01-prerequisites.md) verfied, it's time to start deploying some foundational resources. In this step you'll deploy a stand-in for the core networking components of a traditional Connectivity subscription.
 
@@ -13,7 +13,7 @@ This reference implementation is split across several resource groups in a singl
 The following resource group will be created and populated with networking resources in the steps below.
 
 | Name                              | Purpose                                   |
-|-----------------------------------|-------------------------------------------|
+| :-------------------------------- | :---------------------------------------- |
 | rg-plz-enterprise-networking-hubs | Contains all of your organization's regional hubs. A regional hubs include an egress firewall and Log Analytics for network logging. This is a stand-in for resources typically found in your Connectivity subscription. |
 
 ### Networking resources
@@ -51,10 +51,20 @@ The hub will be a virtual network-based hub, containing common shared resources 
    az deployment group create -g rg-plz-enterprise-networking-hubs -f networking/hub-default.bicep -p location=eastus2
    ```
 
-   The hub creation will emit the following:
+   ```bash
+   RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-enterprise-networking-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
+   echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   ```
 
-      * `hubVnetId` - which you'll will query in future steps when creating regional application landing zone spokes. E.g. `/subscriptions/[id]/resourceGroups/rg-plz-enterprise-networking-hubs/providers/Microsoft.Network/virtualNetworks/vnet-eastus2-hub`
+### Save your work in-progress
 
+```bash
+# run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env
+./saveenv.sh
+
+# if your terminal session gets reset, you can source the file to reload the environment variables
+# source iaas_baseline.env
+```
 
 ### Next step
 
