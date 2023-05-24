@@ -1,6 +1,6 @@
 # Deploy the compute infrastructure
 
-Now that your [spoke shared resources are deployed and ready to support your IaaS deployment](./05-bootstrap-prep.md), the next step in the [IaaS baseline reference implementation](./) is deploying the frontend and backend compute resources and the Azure managed services they depend on.
+Now that your [spoke shared resources are deployed and ready to support your IaaS deployment](./06-bootstrap-prep.md), the next step in the [IaaS baseline reference implementation](./) is deploying the frontend and backend compute resources and the Azure managed services they depend on.
 
 ## Steps
 

@@ -47,4 +47,4 @@ This is the starting point for the instructions on deploying the [IaaS baseline 
 
 ### Next step
 
-:arrow_forward: [Generate your client-facing TLS certificate](./02-ca-certificates.md)
+:arrow_forward: [Deploy mock connectitity subscription](./02-connectivity-subscription.md)

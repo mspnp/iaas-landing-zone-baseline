@@ -80,4 +80,4 @@ Now that you have an [application landing zone awaiting your worklad](./04-subsc
 
 ### Next step
 
-:arrow_forward: [Deploy long-lived resources](./05-bootstrap-prep.md)
+:arrow_forward: [Deploy long-lived resources](./06-bootstrap-prep.md)

@@ -58,4 +58,4 @@ TODO-CK: Take the user through the platform and the application landing zone.
 
 This is the last step in which you'll be directly acting in the role of someone on the platform team. Thanks for role playing with us. From this point forward, you now will be deploying the IaaS baseline architecture into your prepared application landing zone.
 
-:arrow_forward: Let's start by [getting our TLS certificats ready for workload deployment](./02-ca-certificates.md)
+:arrow_forward: Let's start by [getting our TLS certificats ready for workload deployment](./05-ca-certificates.md)
