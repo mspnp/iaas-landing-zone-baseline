@@ -42,9 +42,18 @@ param hubVirtualNetworkGatewaySubnetAddressSpace string = '10.200.0.64/27'
 @minLength(10)
 param hubVirtualNetworkBastionSubnetAddressSpace string = '10.200.0.128/26'
 
+/*** VARIABLES ***/
+
+@description('Going to deploy a few private DNS zones for Private Link as an example of what might already exist in a hub.')
+var privateDnsZones = [
+  'privatelink.blob.${environment().suffixes.storage}'
+  'privatelink.vaultcore.azure.net'
+  'privatelink.file.${environment().suffixes.storage}'
+]
+
 /*** RESOURCES ***/
 
-@description('This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion. Log analytics is a regional resource, as such there will be one workspace per hub (region)')
+@description('This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion. Log analytics is a regional resource, as such there will be one workspace per hub (region).')
 resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'la-hub-${location}'
   location: location
@@ -519,6 +528,26 @@ resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2
     ]
   }
 }
+
+@description('Deploy all private DNS zones expected to be used in application landing zones. This is just a subset for example purposes. This is not a "per hub" deployment, but is included in here for simplicity.')
+resource allPrivateDnsZones 'Microsoft.Network/privateDnsZones@2020-06-01' = [for privateDnsZone in privateDnsZones: {
+  name: privateDnsZone
+  location: 'global'
+  properties: {}
+}]
+
+@description('Link the private DNS zones to all the regional hub networks. There is only one hub in this example.')
+resource allPrivateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = [for (privateDnsZone, index) in privateDnsZones: {
+  parent: allPrivateDnsZones[index]
+  name: 'link-to-${vnetHub.name}'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnetHub.id
+    }
+  }
+}]
 
 /*** OUTPUTS ***/
 
