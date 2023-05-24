@@ -14,7 +14,7 @@ The following resource group will be created and populated with core networking 
 
 | Name                 | Purpose                                   |
 | :------------------- | :---------------------------------------- |
-| rg-alz-bu04A42-spoke | This is a stand-in for in your application landing zone subscription, and specifically the virtual network in which your architecture will reside within. |
+| rg-alz-bu04a42-spoke | This is a stand-in for in your application landing zone subscription, and specifically the virtual network in which your architecture will reside within. |
 
 ### Networking resources
 
@@ -44,8 +44,8 @@ Typically your subscription vending process would yield identities that can then
    TODO-CK: location is eastus but story I think says west coast -- fixup/bug?
 
    ```bash
-   # [This takes about four minutes to run.]
-   az deployment group create -g rg-alz-bu04a42-spoke -f platform-landing-zone/app-landing-zone-BU04A42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   # [This takes about two minutes to run.]
+   az deployment group create -g rg-alz-bu04a42-spoke -f platform-landing-zone/app-landing-zone-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 
    TODO-CK: Capture in env variables
