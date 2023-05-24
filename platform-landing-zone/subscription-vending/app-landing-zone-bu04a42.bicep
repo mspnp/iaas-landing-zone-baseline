@@ -26,10 +26,6 @@ param hubVnetResourceId string
 @description('The spokes\'s regional affinity, must be the same as the hub\'s location.')
 param location string
 
-// A designator that represents a business unit id and application id
-var orgAppId = 'bu04a42'
-var spokeVirtualNetworkName = 'vnet-spoke-${orgAppId}-00'
-
 /*** EXISTING HUB RESOURCES ***/
 
 @description('This is rg-plz-enterprise-networking-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
@@ -79,7 +75,7 @@ resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2022-11-01' = {
 
 @description('Application landing zone network, sized to the application team\'s vending request. No subnets, as expected.')
 resource vnetSpoke 'Microsoft.Network/virtualNetworks@2022-11-01' = {
-  name: spokeVirtualNetworkName
+  name: 'vnet-spoke-bu04a42-00'
   location: location
   properties: {
     addressSpace: {
@@ -92,20 +88,23 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         hubFirewall.properties.ipConfigurations[0].properties.privateIPAddress
       ]
     }
-    enableDdosProtection: false // Cost optimization: this should be enabled, as there will be a public IP for ingress in this virtual network as indicated in the subscription vending request    
-  }
+    enableDdosProtection: false // Cost optimization: this should be enabled, as there will be a public IP for ingress in this virtual network as indicated in the subscription vending request
 
-  // Peer to hub
-  resource peerToHub 'virtualNetworkPeerings' = {
-    name: take('peer-${spokeVirtualNetworkName}-to-${hubVirtualNetwork.name}', 64)
-    properties: {
-      allowForwardedTraffic: true
-      allowGatewayTransit: false
-      allowVirtualNetworkAccess: false
-      useRemoteGateways: false
-      remoteVirtualNetwork: {
-        id: hubVirtualNetwork.id
-      }
+    // Do not deploy any subnets. Subnets are owned by the application team.
+  }
+}
+
+@description('Peer the spoke to the hub.')
+resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2022-11-01' = {
+  name: take('peer-${vnetSpoke.name}-to-${hubVirtualNetwork.name}', 64)
+  parent: vnetSpoke
+  properties: {
+    allowForwardedTraffic: true
+    allowGatewayTransit: false
+    allowVirtualNetworkAccess: false
+    useRemoteGateways: false
+    remoteVirtualNetwork: {
+      id: hubVirtualNetwork.id
     }
   }
 }
@@ -142,3 +141,5 @@ resource ipGroupWindowsVirtualMachines 'Microsoft.Network/ipGroups@2022-11-01' =
 /*** OUTPUTS ***/
 
 output spokeVnetResourceId string = vnetSpoke.id
+output linuxVmIpGroupResourceId string = ipGroupLinuxVirtualMachines.id
+output windowsVmIpGroupResourceId string = ipGroupWindowsVirtualMachines.id

@@ -19,12 +19,15 @@ We're going to take the core workload requirements from the [IaaS baseline](http
      - WAF and DDoS applied by workload team
    - Cross-premises ingress: **None**
    - Internet egress: **Yes**
-     - TODO-CK
-     - TODO-CK
+     - Infra: Ubuntu updates and NTP
+     - Infra: Windows updates and NTP
+     - Infra: Azure monitor
+     - Workload: nginx.org
+     - Workload: github
    - Cross-premises egress: **None**
    - Number of virtual networks needed: **one**
-     - Size: /16 TODO-CK
-     - Region: eastus2
+     - Size: **/16** TODO-CK
+     - Region: **eastus2**
    - Primary Azure resources:
      - Linux virtual machines
      - Windows virtual machines

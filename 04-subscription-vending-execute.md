@@ -28,56 +28,15 @@ Typically your subscription vending process would yield identities that can then
 
 ## Steps
 
-1. Create the networking spoke resource group.
+1. Deploy the application landing zone
 
    > :book: TODO-CK
-
-   ```bash
-   # [This takes less than one minute to run.]
-   az group create -n rg-alz-bu04a42-spoke -l centralus
-
-1. Create the spoke that will be home to the application team's compute and its adjacent resources.
-
-   > :book: TODO-CK
-
-   TODO-CK: File names
-   TODO-CK: location is eastus but story I think says west coast -- fixup/bug?
 
    ```bash
    # [This takes about two minutes to run.]
-   az deployment group create -g rg-alz-bu04a42-spoke -f platform-landing-zone/app-landing-zone-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   az deployment sub create -l eastus2 -f platform-landing-zone/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 
-   TODO-CK: Capture in env variables
-   TODO-CK: Add IpGroups for subnets (empty)
-   TODO-CK: Groups: All VMs, Linux VMs, Windows VMs
-            
-
-   The spoke creation will emit the following:
-
-     * `appGwPublicIpAddress` - The Public IP address of the Azure Application Gateway (WAF) that will receive traffic for your workload.
-     * `spokeVnetResourceId` - The resource ID of the Virtual network where the VMs, App Gateway, and related resources will be deployed. E.g. `/subscriptions/[id]/resourceGroups/rg-enterprise-networking-spokes/providers/Microsoft.Network/virtualNetworks/vnet-spoke-BU0001A0008-00`
-     * `vmssSubnetResourceIds` - The resource IDs of the Virtual network subnets for the VMs. E.g. `[ /subscriptions/[id]/resourceGroups/rg-enterprise-networking-spokes/providers/Microsoft.Network/virtualNetworks/vnet-spoke-BU0001A0008-00/subnet/snet-frontend, /subscriptions/[id]/resourceGroups/rg-enterprise-networking-spokes/providers/Microsoft.Network/virtualNetworks/vnet-spoke-BU0001A0008-00/subnet/snet-backend ]`
-
-1. Update the shared, regional hub deployment to account for the requirements of the spoke.
-
-   > :book: TODO-CK
-
-   TODO-CK: Use IpGroups for subnets instead of subnet resource references
-   TODO-CK: Bastion opening will need to be permissive.
-
-   ```bash
-   RESOURCEIDS_SUBNET_IAAS_BASELINE=$(az deployment group show -g rg-enterprise-networking-spokes -n spoke-BU0001A0008 --query properties.outputs.vmssSubnetResourceIds.value -o json)
-   echo RESOURCEIDS_SUBNET_IAAS_BASELINE: $RESOURCEIDS_SUBNET_IAAS_BASELINE
-
-   # [This takes about ten minutes to run.]
-   az deployment group create -g rg-enterprise-networking-hubs -f networking/hub-regionA.bicep -p location=eastus2 vmssSubnetResourceIds="${RESOURCEIDS_SUBNET_IAAS_BASELINE}"
-   ```
-
-   The hub update  will emit the following:
-
-      * `hubVnetId` - which you'll will query in future steps when creating connected regional spokes. E.g. `/subscriptions/[id]/resourceGroups/rg-enterprise-networking-hubs/providers/Microsoft.Network/virtualNetworks/vnet-eastus2-hub`
-      * `abName ` - which you'll will query in future steps when remotely connecting your VMs. E.g. `/subscriptions/[id]/resourceGroups/rg-enterprise-networking-hubs/providers/Microsoft.Network/bastionHosts/ab-eastus2`
 
    > TODO-CK
    >

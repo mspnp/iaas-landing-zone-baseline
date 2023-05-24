@@ -23,13 +23,8 @@ param hubVnetResourceId string
   'japaneast'
   'southeastasia'
 ])
-@description('The spokes\'s regional affinity, must be the same as the hub\'s location.')
+@description('The spokes\'s regional affinity, must be the same as the existing hub\'s location.')
 param location string
-
-/*** EXISTING RESOURCES ***/
-
-// A designator that represents a business unit id and application id
-var orgAppId = 'bu04a42'
 
 /*** EXISTING RESOURCES ***/
 
@@ -43,13 +38,13 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 @description('Spoke resource group. This typically would be in a dedicated subscription for the workload.')
 resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-alz-bu04a42-spoke'
-  location: location
+  location: location  //TODO: move back to location
 }
 
 @description('Deploy the application landing zone (specifically just the network part)')
 module deployApplicationLandingZone 'app-landing-zone-bu04a42.bicep' = {
   scope: appLandingZoneSpokeResourceGroup
-  name: 'deployApplicationLandingZone${orgAppId}'
+  name: 'deploy-alz-bu04a42'
   params: {
     hubVnetResourceId: hubVnetResourceId
     location: location
@@ -59,9 +54,11 @@ module deployApplicationLandingZone 'app-landing-zone-bu04a42.bicep' = {
 @description('Update the hub to account for the new application landing zone spoke')
 module deployHubUpdate 'hub-updates-bu04a42.bicep' = {
   scope: hubResourceGroup
-  name: 'deployUpdatesForApplicationLandingZone${orgAppId}'
+  name: 'connect-alz-bu04a42'
   params: {
     spokeVirtualNetworkResourceId: deployApplicationLandingZone.outputs.spokeVnetResourceId
     location: location
+    linuxVmIpGroupResourceId: deployApplicationLandingZone.outputs.linuxVmIpGroupResourceId
+    windowsVmIpGroupResourceId: deployApplicationLandingZone.outputs.windowsVmIpGroupResourceId
   }
 }
