@@ -49,9 +49,7 @@ The hub will be a virtual network-based hub, containing common shared resources 
    ```bash
    # [This takes about six minutes to run.]
    az deployment group create -g rg-plz-enterprise-networking-hubs -f platform-team/hub-default.bicep -p location=eastus2
-   ```
 
-   ```bash
    export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-enterprise-networking-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
    echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```

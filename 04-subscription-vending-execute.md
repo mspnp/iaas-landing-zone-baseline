@@ -4,7 +4,7 @@ As the platform team, you've [received a request from a new workload team](./03-
 
 ## Subscription vending
 
-The process below is manual in this deployment guide, it's likely your platform team has [automated](https://learn.microsoft.com/azure/architecture/landing-zones/subscription-vending) your [subscription vending process](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/subscription-vending). For this deployment guide, you are not expected to use your existing subscription vending process.
+The process below is manual in this deployment guide, it's likely your platform team has [automated](https://learn.microsoft.com/azure/architecture/landing-zones/subscription-vending) your [subscription vending process](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/subscription-vending). _For this deployment guide, you are not expected to use your existing subscription vending process._
 
 ## Expected results
 
@@ -35,7 +35,7 @@ Typically your subscription vending process would yield identities that can then
 
 ## Steps
 
-1. Deploy the application landing zone
+1. Deploy and configure the application landing zone
 
    > :book: TODO-CK
 
@@ -52,10 +52,10 @@ Typically your subscription vending process would yield identities that can then
 
 ### Explore your resources
 
-TODO-CK: Take the user through the "platform" and the application landing zone.
+TODO-CK: Take the user through the platform and the application landing zone.
 
 ### Next step
 
-This is the last step in which you'll be directly acting in the role of someone on the platform team. From this point forward, you now will be deploying your IaaS solution into your prepared application landing zone.
+This is the last step in which you'll be directly acting in the role of someone on the platform team. Thanks for role playing with us. From this point forward, you now will be deploying the IaaS baseline architecture into your prepared application landing zone.
 
-TODO-CK: Transition fully over to the workload team
+:arrow_forward: Let's start by [getting our TLS certificats ready for workload deployment](./02-ca-certificates.md)

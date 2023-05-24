@@ -8,24 +8,30 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 ## Steps
 
-1. Communicate initial application requirements.
+1. Gather initial application requirements and submit application landing zone request.
 
-   > :book: Instead of opening an ITSM ticket or using your portal, we'll document key concepts to communicate which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
+   > :book: Instead of opening an ITSM ticket or using your portal, we'll document key concepts to communicate to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
 
-   - Business unit: **BU03**
-   - App identifier: **A42**
-   - Environment: **Pre-production**
-   - Internet Ingress: **Workload-managed, one public IP**
-     - WAF and DDoS applied by workload team
-   - Cross-premises ingress: **None**
-   - Internet egress: **Yes**
-     - Infra: Ubuntu updates and NTP
-     - Infra: Windows updates and NTP
-     - Infra: Azure monitor
-     - Workload: nginx.org
-     - Workload: github
-   - Cross-premises egress: **None**
-   - Number of virtual networks needed: **one**
+   - Biographical information
+     - Business unit: **BU03**
+     - App identifier: **A42**
+     - Mission-critical: **No**
+   - Ingress information
+     - Internet ingress: **Workload-managed, one public IP**
+       - WAF and DDoS applied by workload team
+     - Cross-premises ingress: **None**
+   - Engress information
+     - Internet egress: **Yes**
+     - Known initial firewall allowances
+       - Infra: Ubuntu updates and NTP
+       - Infra: Windows updates and NTP
+       - Infra: Azure monitor
+       - Workload: nginx.org
+       - Workload: github
+     - Cross-premises egress: **None**
+     - Fully predictable public IP for egress: **No**
+     - High SNAT port usage on egress: **No**
+   - Number of virtual networks needed: **One**
      - Size: **/16** TODO-CK
      - Region: **eastus2**
    - Primary Azure resources:
@@ -33,16 +39,14 @@ We're going to take the core workload requirements from the [IaaS baseline](http
      - Windows virtual machines
      - Azure Application Gateway (with WAF)
    - Solution uses Private Link: **Yes**
-     - TODO-CK
-   - Mission-critical: **No**
-   - Latency-senstive: **No**
-   - High SNAT port usage on egress: **No**
-   - Fully predictable public IP for egress: **No**
-   - AAD Security group for virtual machine access: **TODO-CK**
-   - ... plenty more such as both user and service principal auth needs, etc.
+     - Azure Storage
+     - Azure Key Vault
+   - … plenty more such as: environment, latency sensitivity, user and service principal auth needs, etc.
+
+   **To be clear, there was NO ACTION for you to perform here.**
 
 ### Next step
 
-Now you'll switch back to playing the role of a Platform team member, and will create your workload's landing zone subscription (represented as a resource group in this walkthrough).
+Now you'll switch back to playing the role of a Platform team member, and will create your workload's landing zone subscription, which in this deployment guide is simply represented as a resource group.
 
 :arrow_forward: [Deploy your mock application landing zone subscription](./04-subscription-vending-execute.md)

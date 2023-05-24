@@ -1,6 +1,6 @@
-# Generate your client-facing and IaaS TLS certificates
+# Generate your client-facing and mTLS certificates
 
-Now that you have the [prerequisites](./01-prerequisites.md) met, follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
+Now that you have an [application landing zone awaiting your worklad](./04-subscription-vending-execute.md), follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
 
 ## Steps
 
@@ -32,9 +32,9 @@ Now that you have the [prerequisites](./01-prerequisites.md) met, follow the ste
    echo APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE: $APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE
    ```
 
-1. Generate the wildcard certificate for the VMs.
+1. Generate the wildcard certificate for the virtual machines.
 
-   > :book: Contoso will also procure another TLS certificate, a standard cert, to be used by the VMs. This one is not EV, as it will not be user facing. The app team decided to use a wildcard certificate `*.iaas-ingress.contoso.com` for both the frontend and backend endpoints.
+   > :book: Contoso will also procure another TLS certificate, a standard cert, to be used by the virtual machines. This one is not EV, as it will not be user facing. The app team decided to use a wildcard certificate `*.iaas-ingress.contoso.com` for both the frontend and backend endpoints.
 
    ```bash
    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out nginx-ingress-internal-iaas-ingress-tls.crt -keyout nginx-ingress-internal-iaas-ingress-tls.key -subj "/CN=*.iaas-ingress.${DOMAIN_NAME_IAAS_BASELINE}/O=Contoso IaaS Ingresses"
