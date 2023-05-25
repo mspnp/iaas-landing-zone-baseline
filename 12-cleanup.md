@@ -18,9 +18,12 @@ After you are done exploring your deployed [IaaS baseline](./11-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-bu0001a0008
-   az group delete -n rg-enterprise-networking-spokes
-   az group delete -n rg-enterprise-networking-hubs
+   az group delete -n rg-alz-bu04a42-compute
+   # This next command will error, leaving two IP groups behind. This is expected.
+   # They are referenced in the hub firewall, and as such, are locked from being deleted until their rules are removed.
+   az group delete -n rg-alz-bu04a42-spoke 
+   az group delete -n rg-plz-enterprise-networking-hubs
+   az group delete -n rg-alz-bu04a42-spoke # This will catch the two IP Groups that were left behind.
    ```
 
 1. Purge Azure Key Vault
