@@ -38,14 +38,6 @@ param vmssWildcardTlsPublicAndKeyCertificates string
 @description('Domain name to use for App Gateway and Vmss Webserver.')
 param domainName string
 
-@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
-@minLength(100)
-param frontendCloudInitAsBase64 string
-
-@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
-@minLength(100)
-param backendCloudInitAsBase64 string
-
 @description('The admin passwork for the Windows backend machines.')
 @secure()
 param adminPassword string
@@ -103,8 +95,6 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     location: location
     adminPassword: adminPassword
     appGatewayListenerCertificate: appGatewayListenerCertificate
-    backendCloudInitAsBase64: backendCloudInitAsBase64
-    frontendCloudInitAsBase64: frontendCloudInitAsBase64
     targetVnetResourceId: landingZoneVirtualNetwork.id
     vmssWildcardTlsPublicAndKeyCertificates: vmssWildcardTlsPublicAndKeyCertificates
     vmssWildcardTlsPublicCertificate: vmssWildcardTlsPublicCertificate

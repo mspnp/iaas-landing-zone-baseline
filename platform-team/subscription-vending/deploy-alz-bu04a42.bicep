@@ -62,3 +62,7 @@ module deployHubUpdate 'hub-updates-bu04a42.bicep' = {
     windowsVmIpGroupResourceId: deployApplicationLandingZone.outputs.windowsVmIpGroupResourceId
   }
 }
+
+/*** OUPUTS ***/
+
+output spokeVirtualNetworkResourceId string = deployApplicationLandingZone.outputs.spokeVnetResourceId

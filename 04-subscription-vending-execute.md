@@ -41,7 +41,10 @@ Typically your subscription vending process would yield identities that can then
 
    ```bash
    # [This takes about four minutes to run.]
-   az deployment sub create -l eastus2 -f pplatform-team/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   az deployment sub create -l eastus2 -f platform-team/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+
+   export RESOURCEID_VNET_SPOKE_IAAS_BASELINE=$(az deployment sub show -n deploy-alz-bu04a42 --query properties.outputs.spokeVirtualNetworkResourceId.value -o tsv)
+   echo "RESOURCEID_VNET_SPOKE_IAAS_BASELINE: $RESOURCEID_VNET_SPOKE_IAAS_BASELINE"
    ```
 
    > TODO-CK
@@ -53,6 +56,16 @@ Typically your subscription vending process would yield identities that can then
 ### Explore your resources
 
 TODO-CK: Take the user through the platform and the application landing zone.
+
+### Save your work in-progress
+
+```bash
+# run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env
+./saveenv.sh
+
+# if your terminal session gets reset, you can source the file to reload the environment variables
+# source iaas_baseline.env
+```
 
 ### Next step
 

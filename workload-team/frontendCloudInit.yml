@@ -1,7 +1,0 @@
-#cloud-config
-users:
-  - name: opsuser01
-    sudo: False
-    lock_passwd: True
-    ssh-authorized-keys:
-      - YOUR_SSH-RSA_HERE

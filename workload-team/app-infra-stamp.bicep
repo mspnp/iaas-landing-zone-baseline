@@ -38,14 +38,6 @@ param vmssWildcardTlsPublicAndKeyCertificates string
 @description('Domain name to use for App Gateway and Vmss Webserver.')
 param domainName string = 'contoso.com'
 
-@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
-@minLength(100)
-param frontendCloudInitAsBase64 string
-
-@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
-@minLength(100)
-param backendCloudInitAsBase64 string
-
 @description('The admin passwork for the Windows backend machines.')
 @secure()
 param adminPassword string
@@ -245,7 +237,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             ]
           }
         }
-        customData: frontendCloudInitAsBase64
         adminUsername: defaultAdminUserName
       }
       storageProfile: {
@@ -455,7 +446,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             enableHotpatching: true
           }
         }
-        customData: backendCloudInitAsBase64
         adminUsername: defaultAdminUserName
         adminPassword: adminPassword
         secrets: []
