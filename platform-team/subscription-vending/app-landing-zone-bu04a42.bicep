@@ -103,9 +103,9 @@ resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@202
   name: take('peer-${vnetSpoke.name}-to-${hubVirtualNetwork.name}', 64)
   parent: vnetSpoke
   properties: {
-    allowForwardedTraffic: true
+    allowForwardedTraffic: false
     allowGatewayTransit: false
-    allowVirtualNetworkAccess: false
+    allowVirtualNetworkAccess: true
     useRemoteGateways: false
     remoteVirtualNetwork: {
       id: hubVirtualNetwork.id
