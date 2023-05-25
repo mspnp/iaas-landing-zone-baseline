@@ -30,7 +30,7 @@ param location string
 
 @description('UDR provided by the platform team to apply to all subnets that egress traffic to the Internet. Platform team owns this resource.')
 resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2022-11-01' existing = {
-  name: 'route-to-${location}-hub-fw'
+  name: 'route-to-connectivity-${location}-hub-fw'
 }
 
 @description('IP Group created by the platform team to help us keep track of what bastion hosts are expected to be used when connecting to our virtual machines.')
@@ -635,6 +635,9 @@ resource backendSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = 
     serviceEndpointPolicies: []
     serviceEndpoints: []
   }
+  dependsOn: [
+    frontendSubnet // single thread these subnet creations
+  ]
 }
 
 @description('The subnet that contains a load balancer to communicate from front end to back end. UDR applied for egress traffic. NSG applied as well.')
@@ -656,6 +659,9 @@ resource internalLoadBalancerSubnet 'Microsoft.Network/virtualNetworks/subnets@2
     serviceEndpointPolicies: []
     serviceEndpoints: []
   }
+  dependsOn: [
+    backendSubnet // single thread these subnet creations
+  ]
 }
 
 @description('The subnet that contains private endpoints for PaaS services used in this architecture. UDR applied for egress traffic. NSG applied as well.')
@@ -677,6 +683,9 @@ resource privateEndpointsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-
     serviceEndpointPolicies: []
     serviceEndpoints: []
   }
+  dependsOn: [
+    internalLoadBalancerSubnet // single thread these subnet creations
+  ]
 }
 
 @description('The dedicated subnet that contains application gateway used for ingress in this architecture. UDR not applied for egress traffic, per requirements of the service. NSG applied as well.')
@@ -695,6 +704,9 @@ resource applicationGatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@202
     serviceEndpointPolicies: []
     serviceEndpoints: []
   }
+  dependsOn: [
+    privateEndpointsSubnet // single thread these subnet creations
+  ]
 }
 
 @description('The subnet that contains private build agents for last-mile deployments into this architecture. UDR applied for egress traffic. NSG applied as well.')
@@ -716,6 +728,9 @@ resource deploymentAgentsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-
     serviceEndpointPolicies: []
     serviceEndpoints: []
   }
+  dependsOn: [
+    applicationGatewaySubnet // single thread these subnet creations
+  ]
 }
 
 @description('While the platform team probably has their own monitoring, as a workload team, we\'ll want metrics as well.')
