@@ -87,13 +87,19 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
 }
 
 // Spoke resource group
-resource targetResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
+resource targetResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
   name: split(targetVnetResourceId, '/')[4]
 }
 
+@description('The existing public IP address to be used by Application Gateway for public ingress.')
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' existing = {
+  scope: targetResourceGroup
+  name: 'pip-bu04a42-00'
+}
+
 // Spoke virtual network
-resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' existing = {
+resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   scope: targetResourceGroup
   name: last(split(targetVnetResourceId, '/'))
 
@@ -124,13 +130,13 @@ resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' exi
 }
 
 // Default ASG on the vmss frontend.
-resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' existing = {
+resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
   scope: targetResourceGroup
   name: 'asg-frontend'
 }
 
 // Default ASG on the vmss backend.
-resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' existing = {
+resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
   scope: targetResourceGroup
   name: 'asg-backend'
 }
@@ -310,6 +316,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                   ]
                   pollingIntervalInS: '3600'
                 }
+                /* TODO-CK: Where is the managed identity selection? */
               }
             }
           }
@@ -939,7 +946,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
         name: 'agw-frontend-ip-configuration'
         properties: {
           publicIPAddress: {
-            id: resourceId(subscription().subscriptionId, targetResourceGroup.name, 'Microsoft.Network/publicIpAddresses', 'pip-BU0001A0008-00')
+            id: appGatewayPublicIp.id
           }
         }
       }
@@ -1034,6 +1041,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
         name: 'agw-routing-rules'
         properties: {
           ruleType: 'Basic'
+          priority: 100
           httpListener: {
             id: resourceId('Microsoft.Network/applicationGateways/httpListeners', agwName, 'listener-https')
           }
@@ -1054,7 +1062,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
   ]
 }
 
-resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
+resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
   name: lbName
   location: location
   sku: {
@@ -1115,8 +1123,8 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2021-05-01' = {
       }
     ]
   }
-  dependsOn: []
 }
 
 /*** OUTPUTS ***/
+
 output keyVaultName string = kv.name
