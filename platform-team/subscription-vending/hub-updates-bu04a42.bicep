@@ -284,7 +284,7 @@ resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@202
   properties: {
     allowForwardedTraffic: false
     allowGatewayTransit: false
-    allowVirtualNetworkAccess: false
+    allowVirtualNetworkAccess: true  // Required for Azure Bastion to reach into the virtual network.
     useRemoteGateways: false
     remoteVirtualNetwork: {
       id: spokeVirtualNetwork.id
