@@ -15,8 +15,8 @@ We're going to take the core workload requirements from the [IaaS baseline](http
    > :book: Instead of opening an ITSM ticket or using your portal, we'll document key concepts to communicate to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
 
    - Biographical information
-     - Business unit: **BU03**
-     - App identifier: **A42**
+     - Business unit: **03**
+     - App identifier: **42**
      - Mission-critical: **No**
    - Ingress information
      - Internet ingress: **Workload-managed, one public IP**
@@ -29,7 +29,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
        - Infra: Windows updates and NTP
        - Infra: Azure monitor
        - Workload: nginx.org
-       - Workload: github
+       - Workload: GitHub endpoints
      - Cross-premises egress: **None**
      - Fully predictable public IP for egress: **No**
      - High SNAT port usage on egress: **No**

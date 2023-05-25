@@ -40,14 +40,16 @@ The hub will be a virtual network-based hub, containing common shared resources 
    az group create -n rg-plz-enterprise-networking-hubs -l centralus
    ```
 
+   TODO-CK: I think we need to add the word "connectivity" in here.  Maybe rg-plz-connectivity-enterprise-hubs?
+
 1. Create the regional network hub.
 
    > :book: This this scenario, the platform team has a regional hub that contains an Azure Firewall (with some org-wide policies), Azure Bastion, a gateway subnet for cross-premises connectivity, and Azure Monitor for network observability. They follow Microsoft's recommended sizing for the subnets. (These resources would have already existed as part of your platform team's Connectivity subscription.)
    >
-   > The networking team has decided that `10.200.[0-9].0` will be where all regional hubs are homed on their organization's network space. The `eastus2` hub (created below) will be `10.200.0.0/24`.
+   > The networking team has decided that `10.200.[0-9].0` will be where all regional hubs are homed on their organization's network space. The `eastus2` hub created below will be `10.200.0.0/24`.
 
    ```bash
-   # [This takes about six minutes to run.]
+   # [This takes about nine minutes to run.]
    az deployment group create -g rg-plz-enterprise-networking-hubs -f platform-team/hub-default.bicep -p location=eastus2
 
    export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-enterprise-networking-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
