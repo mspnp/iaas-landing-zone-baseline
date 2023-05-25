@@ -76,7 +76,7 @@ resource computeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = 
 }
 
 @description('Deploy any long-lived resources to the compute resource group. In this architecture, it\'s just a Log Analytics resource and Azure Policy assignments.')
-module sharedServices 'shared-svcs-stamp.bicep' = {
+module sharedServices 'app-infra-shared-svcs.bicep' = {
   scope: computeResourceGroup
   name: 'deploy-shared-services'
   params: {
@@ -86,7 +86,7 @@ module sharedServices 'shared-svcs-stamp.bicep' = {
 }
 
 @description('Deploy network configuration.')
-module applySubnetsAndUdrs 'spoke-BU0001A0008.bicep' = {
+module applySubnetsAndUdrs 'app-infra-networking.bicep' = {
   scope: networkResourceGroup
   name: 'apply-networking'
   params: {
@@ -96,7 +96,7 @@ module applySubnetsAndUdrs 'spoke-BU0001A0008.bicep' = {
 }
 
 @description('Deploy the application platform and its adjacent resources.')
-module deployWorkloadInfrastructure 'vmss-stamp.bicep' = {
+module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
   scope: computeResourceGroup
   name: 'deploy-workload-infrastructure'
   params: {
