@@ -327,7 +327,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 commandToExecute: 'sh configure-nginx-frontend.sh'
                 // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/configure-nginx-frontend.sh'
+                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/workload/configure-nginx-frontend.sh'
                 ]
               }
             }
@@ -569,7 +569,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File configure-nginx-backend.ps1'
                 // The following installs and configure Nginx for the backend Windows machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/configure-nginx-backend.ps1'
+                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/workload/configure-nginx-backend.ps1'
                 ]
               }
             }
