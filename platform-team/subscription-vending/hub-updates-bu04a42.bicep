@@ -26,14 +26,6 @@ param spokeVirtualNetworkResourceId string
 @description('The existing hub\'s regional affinity.')
 param location string
 
-@description('An existing IP Group that contains the application team\'s Linux compute IPs. IPs are maintained by the workload team.')
-@minLength(79)
-param linuxVmIpGroupResourceId string
-
-@description('An existing IP Group that contains the application team\'s Windows compute IPs. IPs are maintained by the workload team.')
-@minLength(79)
-param windowsVmIpGroupResourceId string
-
 // A designator that represents a business unit id and application id
 var orgAppId = 'bu04a42'
 
@@ -59,17 +51,6 @@ resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' exis
   scope: spokeVirtualNetworkResourceGroup
   name: split(spokeVirtualNetworkResourceId, '/')[8]
 }
-
-resource linuxVirtualMachineIpGroup 'Microsoft.Network/ipGroups@2022-11-01' existing = {
-  scope: spokeVirtualNetworkResourceGroup
-  name: split(linuxVmIpGroupResourceId, '/')[8]
-}
-
-resource windowsVirtualMachineIpGroup 'Microsoft.Network/ipGroups@2022-11-01' existing = {
-  scope: spokeVirtualNetworkResourceGroup
-  name: split(windowsVmIpGroupResourceId, '/')[8]
-}
-
 
 /*** RESOURCES ***/
 
@@ -97,9 +78,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ipProtocols: [
               'UDP'
             ]
-            sourceIpGroups: [
-              linuxVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the frontend subnets.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
             destinationPorts: [
               '123'
             ]
@@ -114,9 +96,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ipProtocols: [
               'UDP'
             ]
-            sourceIpGroups: [
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend subnet.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
             destinationPorts: [
               '123'
             ]
@@ -146,9 +129,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ]
             httpHeadersToInsert: []
             terminateTLS: false
-            sourceIpGroups: [
-              linuxVirtualMachineIpGroup.id
-            ]
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
           {
             ruleType: 'ApplicationRule'
@@ -165,9 +146,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ]
             httpHeadersToInsert: []
             terminateTLS: false
-            sourceIpGroups: [
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend subnet.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
           {
             ruleType: 'ApplicationRule'
@@ -184,9 +166,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ]
             httpHeadersToInsert: []
             terminateTLS: false
-            sourceIpGroups: [
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend subnet.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
           {
             ruleType: 'ApplicationRule'
@@ -207,10 +190,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               '${location}.monitoring.azure.com'
             ]
             terminateTLS: false
-            sourceIpGroups: [
-              linuxVirtualMachineIpGroup.id
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend & frontend subnets.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
         ]
       }
@@ -243,10 +226,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             targetUrls: []
             destinationAddresses: []
             terminateTLS: false
-            sourceIpGroups: [
-              linuxVirtualMachineIpGroup.id
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend & frontend subnets.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
           {
             ruleType: 'ApplicationRule'
@@ -266,10 +249,10 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             targetUrls: []
             destinationAddresses: []
             terminateTLS: false
-            sourceIpGroups: [
-              linuxVirtualMachineIpGroup.id
-              windowsVirtualMachineIpGroup.id
-            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend & frontend subnets.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
           }
         ]
       }

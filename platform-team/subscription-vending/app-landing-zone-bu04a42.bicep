@@ -128,20 +128,6 @@ resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@202
   }
 }
 
-@description('Empty IP Group to contain Linux VM IP addresses for use in the hub firewall rules for egress. App team is expected to maintain this.')
-resource ipGroupLinuxVirtualMachines 'Microsoft.Network/ipGroups@2022-11-01' = {
-  name: 'ipg-linux-vms'
-  location: location
-  properties: {}
-}
-
-@description('Empty IP Group to contain Windows VM IP addresses for use in the hub firewall rules for egress. App team is expected to maintain this.')
-resource ipGroupWindowsVirtualMachines 'Microsoft.Network/ipGroups@2022-11-01' = {
-  name: 'ipg-windows-vms'
-  location: location
-  properties: {}
-}
-
 @description('IP Group that contains this landing zone\'s bastion host IP ranges to allow in their NSGs.')
 resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
   name: 'ipg-bastion-hosts'
@@ -156,5 +142,3 @@ resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
 /*** OUTPUTS ***/
 
 output spokeVnetResourceId string = vnetSpoke.id
-output linuxVmIpGroupResourceId string = ipGroupLinuxVirtualMachines.id
-output windowsVmIpGroupResourceId string = ipGroupWindowsVirtualMachines.id

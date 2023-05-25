@@ -58,8 +58,6 @@ module deployHubUpdate 'hub-updates-bu04a42.bicep' = {
   params: {
     spokeVirtualNetworkResourceId: deployApplicationLandingZone.outputs.spokeVnetResourceId
     location: location
-    linuxVmIpGroupResourceId: deployApplicationLandingZone.outputs.linuxVmIpGroupResourceId
-    windowsVmIpGroupResourceId: deployApplicationLandingZone.outputs.windowsVmIpGroupResourceId
   }
 }
 
