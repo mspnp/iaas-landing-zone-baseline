@@ -2,9 +2,9 @@ targetScope = 'resourceGroup'
 
 /*** PARAMETERS ***/
 
-@description('The regional hub network to which this regional spoke will peer to.')
+@description('The regional Log Analytics workspace to send all our networking logs to.')
 @minLength(79)
-param hubVnetResourceId string
+param workloadLogWorkspaceResourceId string
 
 @allowed([
   'australiaeast'
@@ -26,70 +26,52 @@ param hubVnetResourceId string
 @description('The spokes\'s regional affinity, must be the same as the hub\'s location. All resources tied to this spoke will also be homed in this region. The network team maintains this approved regional list which is a subset of zones with Availability Zone support.')
 param location string
 
-// A designator that represents a business unit id and application id
-var orgAppId = 'BU0001A0008'
-var clusterVNetName = 'vnet-spoke-${orgAppId}-00'
+/*** EXISTING RESOURCES ***/
 
-/*** EXISTING HUB RESOURCES ***/
+@description('UDR provided by the platform team to apply to all subnets that egress traffic to the Internet. Platform team owns this resource.')
+resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2022-11-01' existing = {
+  name: 'route-to-${location}-hub-fw'
+}
 
-// This is 'rg-enterprise-networking-hubs' if using the default values in the walkthrough
-resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
+@description('IP Group created by the platform team to help us keep track of what bastion hosts are expected to be used when connecting to our virtual machines.')
+resource bastionHostIpGroup 'Microsoft.Network/ipGroups@2022-11-01' existing = {
+  name: 'ipg-bastion-hosts'
+}
+
+@description('Spoke network provided by the platform team. We\'ll be adding our workload\'s subnets to this. Platform team owns this resource.')
+resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  name: 'vnet-spoke-bu04a42-00'
+}
+
+@description('The resource group that contains the workload\'s log analytics workspace.')
+resource workloadLoggingResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
-  name: '${split(hubVnetResourceId,'/')[4]}'
+  name: split(workloadLogWorkspaceResourceId, '/')[4]
 }
 
-resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
-  scope: hubResourceGroup
-  name: '${last(split(hubVnetResourceId,'/'))}'
-}
-
-// This is the firewall that was deployed in 'hub-default.bicep'
-resource hubFirewall 'Microsoft.Network/azureFirewalls@2021-05-01' existing = {
-  scope: hubResourceGroup
-  name: 'fw-${location}'
-}
-
-// This is the networking log analytics workspace (in the hub)
-resource laHub 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
-  scope: hubResourceGroup
-  name: 'la-hub-${location}'
+@description('The resource group that contains the workload\'s log analytics workspace.')
+resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  scope: workloadLoggingResourceGroup
+  name: last(split(workloadLogWorkspaceResourceId, '/'))
 }
 
 /*** RESOURCES ***/
 
-// Next hop to the regional hub's Azure Firewall
-resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2021-05-01' = {
-  name: 'route-to-${location}-hub-fw'
-  location: location
-  properties: {
-    routes: [
-      {
-        name: 'r-nexthop-to-fw'
-        properties: {
-          nextHopType: 'VirtualAppliance'
-          addressPrefix: '0.0.0.0/0'
-          nextHopIpAddress: hubFirewall.properties.ipConfigurations[0].properties.privateIPAddress
-        }
-      }
-    ]
-  }
-}
-
-// Default ASG on the vmss frontend. Feel free to constrict further.
-resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' = {
+@description('Application Security Group to target the front end virtual machines.')
+resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' = {
   name: 'asg-frontend'
   location: location
 }
 
-// Default ASG on the vmss backend. Feel free to constrict further.
-resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' = {
+@description('Application Security Group to target the backend end virtual machines.')
+resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' = {
   name: 'asg-backend'
   location: location
 }
 
-// Default NSG on the vmss frontend. Feel free to constrict further.
-resource nsgVmssFrontendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-frontend'
+@description('Network security group for the front end virtual machines subnet. Feel free to constrict further if your workload allows.')
+resource frontEndSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-frontend'
   location: location
   properties: {
     securityRules: [
@@ -100,7 +82,9 @@ resource nsgVmssFrontendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-
           protocol: 'Tcp'
           sourcePortRange: '*'
           sourceAddressPrefix: '10.240.5.0/24'
-          destinationPortRange: '*'
+          destinationPortRanges: [
+            '443'
+          ]
           destinationApplicationSecurityGroups: [
             {
               id: asgVmssFrontend.id
@@ -131,7 +115,7 @@ resource nsgVmssFrontendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-
           description: 'Allow Azure Azure Bastion in.'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          sourceAddressPrefix: '10.200.0.128/26'
+          sourceAddressPrefixes: bastionHostIpGroup.properties.ipAddresses
           destinationPortRange: '22'
           destinationApplicationSecurityGroups: [
             {
@@ -175,9 +159,24 @@ resource nsgVmssFrontendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-
   }
 }
 
-// Default NSG on the vmss backend. Feel free to constrict further.
-resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-backend'
+@description('Diagnostics settings for the front end NSG.')
+resource nsgVmssFrontendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: frontEndSubnetNsg
+  name: 'default'
+  properties: {
+    workspaceId: workloadLogAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
+@description('Network security group for the back end virtual machines subnet. Feel free to constrict further if your workload allows.')
+resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-backend'
   location: location
   properties: {
     securityRules: [
@@ -223,7 +222,7 @@ resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-0
           description: 'Allow Azure Azure Bastion in.'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          sourceAddressPrefix: '10.200.0.128/26'
+          sourceAddressPrefixes: bastionHostIpGroup.properties.ipAddresses
           destinationPortRange: '22'
           destinationApplicationSecurityGroups: [
             {
@@ -241,7 +240,7 @@ resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-0
           description: 'Allow Azure Azure Bastion in.'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          sourceAddressPrefix: '10.200.0.128/26'
+          sourceAddressPrefixes: bastionHostIpGroup.properties.ipAddresses
           destinationPortRange: '3389'
           destinationApplicationSecurityGroups: [
             {
@@ -285,25 +284,12 @@ resource nsgVmssBackendSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-0
   }
 }
 
-resource nsgVmssFrontendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: nsgVmssFrontendSubnet
-  name: 'default'
-  properties: {
-    workspaceId: laHub.id
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-      }
-    ]
-  }
-}
-
+@description('Diagnostics settings for the backend end NSG.')
 resource nsgVmssBackendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: nsgVmssBackendSubnet
   name: 'default'
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         categoryGroup: 'allLogs'
@@ -313,9 +299,9 @@ resource nsgVmssBackendSubnet_diagnosticsSettings 'Microsoft.Insights/diagnostic
   }
 }
 
-// Default NSG on the Vmss Backend internal load balancer subnet. Feel free to constrict further.
-resource nsgInternalLoadBalancerSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-ilbs'
+@description('Network security group for the internal load balancer subnet. Feel free to constrict further if your workload allows.')
+resource nsgInternalLoadBalancerSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-ilbs'
   location: location
   properties: {
     securityRules: [
@@ -383,11 +369,12 @@ resource nsgInternalLoadBalancerSubnet 'Microsoft.Network/networkSecurityGroups@
   }
 }
 
+@description('Diagnostics settings for the load balancer subnet NSG.')
 resource nsgInternalLoadBalancerSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: nsgInternalLoadBalancerSubnet
   name: 'default'
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         categoryGroup: 'allLogs'
@@ -398,8 +385,9 @@ resource nsgInternalLoadBalancerSubnet_diagnosticsSettings 'Microsoft.Insights/d
 }
 
 // NSG on the Application Gateway subnet.
-resource nsgAppGwSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-appgw'
+@description('Network security group for the Application Gateway subnet. Feel free to constrict further if your workload allows.')
+resource nsgAppGwSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-appgw'
   location: location
   properties: {
     securityRules: [
@@ -477,11 +465,12 @@ resource nsgAppGwSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
   }
 }
 
+@description('Diagnostics settings for the Application Gateway subnet NSG.')
 resource nsgAppGwSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: nsgAppGwSubnet
   name: 'default'
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         categoryGroup: 'allLogs'
@@ -491,9 +480,9 @@ resource nsgAppGwSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettin
   }
 }
 
-// NSG on the Private Link subnet.
-resource nsgPrivateLinkEndpointsSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: 'nsg-${clusterVNetName}-privatelinkendpoints'
+@description('Network security group for the private endpoint subnet. Feel free to constrict further if your workload allows.')
+resource nsgPrivateLinkEndpointsSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-privatelinkendpoints'
   location: location
   properties: {
     securityRules: [
@@ -540,11 +529,12 @@ resource nsgPrivateLinkEndpointsSubnet 'Microsoft.Network/networkSecurityGroups@
   }
 }
 
+@description('Diagnostics settings for the Private Endpoint subnet NSG.')
 resource nsgPrivateLinkEndpointsSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: nsgPrivateLinkEndpointsSubnet
   name: 'default'
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         categoryGroup: 'allLogs'
@@ -554,125 +544,186 @@ resource nsgPrivateLinkEndpointsSubnet_diagnosticsSettings 'Microsoft.Insights/d
   }
 }
 
-// The spoke virtual network.
-// 65,536 (-reserved) IPs available to the workload, split across subnets four subnets for Compute,
-// one for App Gateway and one for Private Link endpoints.
-resource vnetSpoke 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: clusterVNetName
+@description('Network security group for the build/deployment agents subnet. Since this is just a placeholder and no resources are deployed, NSG is on full lock down.')
+resource nsgBuildAgentSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-deploymentagents'
   location: location
   properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.240.0.0/16'
-      ]
-    }
-    subnets: [
+    securityRules: [
       {
-        name: 'snet-frontend'
+        name: 'DenyAllInbound'
         properties: {
-          addressPrefix: '10.240.0.0/24'
-          routeTable: {
-            id: routeNextHopToFirewall.id
-          }
-          networkSecurityGroup: {
-            id: nsgVmssFrontendSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Disabled'
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
         }
       }
       {
-        name: 'snet-backend'
+        name: 'DenyAllOutbound'
         properties: {
-          addressPrefix: '10.240.1.0/24'
-          routeTable: {
-            id: routeNextHopToFirewall.id
-          }
-          networkSecurityGroup: {
-            id: nsgVmssBackendSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Disabled'
-        }
-      }
-      {
-        name: 'snet-ilbs'
-        properties: {
-          addressPrefix: '10.240.4.0/28'
-          routeTable: {
-            id: routeNextHopToFirewall.id
-          }
-          networkSecurityGroup: {
-            id: nsgInternalLoadBalancerSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Disabled'
-        }
-      }
-      {
-        name: 'snet-privatelinkendpoints'
-        properties: {
-          addressPrefix: '10.240.4.32/28'
-          networkSecurityGroup: {
-            id: nsgPrivateLinkEndpointsSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-      {
-        name: 'snet-applicationgateway'
-        properties: {
-          addressPrefix: '10.240.5.0/24'
-          networkSecurityGroup: {
-            id: nsgAppGwSubnet.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Disabled'
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
         }
       }
     ]
   }
-
-  resource snetFrontend 'subnets' existing = {
-    name: 'snet-frontend'
-  }
-
-  resource snetBackend 'subnets' existing = {
-    name: 'snet-backend'
-  }
 }
 
-// Peer to regional hub
-module peeringSpokeToHub 'virtualNetworkPeering.bicep' = {
-  name: take('Peer-${vnetSpoke.name}To${hubVirtualNetwork.name}', 64)
-  params: {
-    remoteVirtualNetworkId: hubVirtualNetwork.id
-    localVnetName: vnetSpoke.name
-  }
-}
-
-// Connect regional hub back to this spoke, this could also be handled via the
-// hub template or via Azure Policy or Portal. How virtual networks are peered
-// may vary from organization to organization. This example simply does it in
-// the most direct way.
-module peeringHubToSpoke 'virtualNetworkPeering.bicep' = {
-  name: take('Peer-${hubVirtualNetwork.name}To${vnetSpoke.name}', 64)
-  dependsOn: [
-    peeringSpokeToHub
-  ]
-  scope: hubResourceGroup
-  params: {
-    remoteVirtualNetworkId: vnetSpoke.id
-    localVnetName: hubVirtualNetwork.name
-  }
-}
-
-resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: vnetSpoke
+@description('Diagnostics settings for the build agent subnet NSG.')
+resource nsgBuildAgentSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: nsgBuildAgentSubnet
   name: 'default'
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
+@description('The subnet that contains our front end compute. UDR applied for egress traffic. NSG applied as well.')
+resource frontendSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-frontend'
+  properties: {
+    addressPrefix: '10.240.0.0/24' // Enough to hold about 250 virtual machine NICs.
+    routeTable: {
+      id: routeNextHopToFirewall.id
+    }
+    networkSecurityGroup: {
+      id: frontEndSubnetNsg.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('The subnet that contains our back end compute. UDR applied for egress traffic. NSG applied as well.')
+resource backendSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-backend'
+  properties: {
+    addressPrefix: '10.240.1.0/24' // Enough to hold about 250 virtual machine NICs.
+    routeTable: {
+      id: routeNextHopToFirewall.id
+    }
+    networkSecurityGroup: {
+      id: nsgVmssBackendSubnet.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('The subnet that contains a load balancer to communicate from front end to back end. UDR applied for egress traffic. NSG applied as well.')
+resource internalLoadBalancerSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-ilbs'
+  properties: {
+    addressPrefix: '10.240.4.0/28' // Just large enough to hold a few internal load balancers, one is all that is deployed.
+    routeTable: {
+      id: routeNextHopToFirewall.id
+    }
+    networkSecurityGroup: {
+      id: nsgInternalLoadBalancerSubnet.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('The subnet that contains private endpoints for PaaS services used in this architecture. UDR applied for egress traffic. NSG applied as well.')
+resource privateEndpointsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-privatelinkendpoints' // Just large enough to hold a few private endpoints, one is all that is deployed.
+  properties: {
+    addressPrefix: '10.240.4.32/28'
+    routeTable: {
+      id: routeNextHopToFirewall.id // No internet traffic is expected, but routing just for added security.
+    }
+    networkSecurityGroup: {
+      id: nsgPrivateLinkEndpointsSubnet.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Enabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('The dedicated subnet that contains application gateway used for ingress in this architecture. UDR not applied for egress traffic, per requirements of the service. NSG applied as well.')
+resource applicationGatewaySubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-applicationgateway'
+  properties: {
+    addressPrefix: '10.240.5.0/24' // Azure Application Gateway recommended subnet size.
+    networkSecurityGroup: {
+      id: nsgAppGwSubnet.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('The subnet that contains private build agents for last-mile deployments into this architecture. UDR applied for egress traffic. NSG applied as well.')
+resource deploymentAgentsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-11-01' = {
+  parent: spokeVirtualNetwork
+  name: 'snet-deploymentagents'
+  properties: {
+    addressPrefix: '10.240.4.96/28' // Enough to hold about 10 virtual machine NICs.
+    routeTable: {
+      id: routeNextHopToFirewall.id
+    }
+    networkSecurityGroup: {
+      id: nsgAppGwSubnet.id
+    }
+    privateEndpointNetworkPolicies: 'Disabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
+    delegations: []
+    natGateway: null
+    serviceEndpointPolicies: []
+    serviceEndpoints: []
+  }
+}
+
+@description('While the platform team probably has their own monitoring, as a workload team, we\'ll want metrics as well.')
+resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: spokeVirtualNetwork
+  name: 'default'
+  properties: {
+    workspaceId: workloadLogAnalytics.id
     metrics: [
       {
         category: 'AllMetrics'
@@ -682,10 +733,9 @@ resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@202
   }
 }
 
-// Used as primary public entry point for the workload. Expected to be assigned to an Azure Application Gateway.
-// This is a public facing IP, and would be best behind a DDoS Policy (not deployed simply for cost considerations)
-resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
-  name: 'pip-${orgAppId}-00'
+@description('This IP is used as the primary public entry point for the workload. Expected to be assigned to an Azure Application Gateway.')
+resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+  name: 'pip-bu04a42-00'
   location: location
   sku: {
     name: 'Standard'
@@ -695,14 +745,18 @@ resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2021-05-01' =
     publicIPAllocationMethod: 'Static'
     idleTimeoutInMinutes: 4
     publicIPAddressVersion: 'IPv4'
+    ddosSettings: {
+      protectionMode: 'Disabled' // Cost Optimization: DDoS protection should be enabled with all public IPs.
+    }
   }
 }
 
-resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' =  {
+@description('Azure Diagnostics for the Application Gateway public IP.')
+resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: pipPrimaryWorkloadIp
   properties: {
-    workspaceId: laHub.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         categoryGroup: 'audit'
@@ -719,10 +773,3 @@ resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSe
 }
 
 /*** OUTPUTS ***/
-
-output spokeVnetResourceId string = vnetSpoke.id
-output vmssSubnetResourceIds array = [
-  vnetSpoke::snetFrontend.id
-  vnetSpoke::snetBackend.id
-]
-output appGwPublicIpAddress string = pipPrimaryWorkloadIp.properties.ipAddress

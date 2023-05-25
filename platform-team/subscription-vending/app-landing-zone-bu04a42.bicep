@@ -38,6 +38,10 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   scope: hubResourceGroup
   name: last(split(hubVnetResourceId,'/'))
+
+  resource bastionHostSubnet 'subnets' existing = {
+    name: 'AzureBastionSubnet'
+  }
 }
 
 @description('The regional firewall in the Connectivity subscription.')
@@ -80,7 +84,7 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2022-11-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.240.0.0/16'
+        '10.240.0.0/21'   // Allocating just over 2,000 IPs for this landing zone. These would be registered in your platform team's IPAM system.
       ]
     }
     dhcpOptions: {
@@ -136,6 +140,15 @@ resource ipGroupWindowsVirtualMachines 'Microsoft.Network/ipGroups@2022-11-01' =
   name: 'ipg-windows-vms'
   location: location
   properties: {}
+}
+
+@description('IP Group that contains this landing zone\'s bastion host IP ranges to allow in their NSGs.')
+resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
+  name: 'ipg-bastion-hosts'
+  location: location
+  properties: {
+    ipAddresses: hubVirtualNetwork::bastionHostSubnet.properties.addressPrefixes
+  }
 }
 
 /*** OUTPUTS ***/

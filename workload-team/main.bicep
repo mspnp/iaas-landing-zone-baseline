@@ -1,0 +1,116 @@
+targetScope = 'subscription'
+
+/*** PARAMETERS ***/
+
+@allowed([
+  'australiaeast'
+  'canadacentral'
+  'centralus'
+  'eastus'
+  'eastus2'
+  'westus2'
+  'francecentral'
+  'germanywestcentral'
+  'northeurope'
+  'southafricanorth'
+  'southcentralus'
+  'uksouth'
+  'westeurope'
+  'japaneast'
+  'southeastasia'
+])
+@description('The region for IaaS resources, and supporting managed services (i.e. KeyVault, App Gateway, etc) . This needs to be the same region as the target vnet provided.')
+param location string
+
+@description('The existing regional network spoke resource ID, provided by the landing zone platform team, that will host the virtual machines.')
+@minLength(79)
+param targetVnetResourceId string
+
+@description('The certificate data for app gateway TLS termination. It is base64 encoded')
+param appGatewayListenerCertificate string
+
+@description('The Base64 encoded Vmss Webserver public certificate (as .crt or .cer) to be stored in Azure Key Vault as secret and referenced by Azure Application Gateway as a trusted root certificate.')
+param vmssWildcardTlsPublicCertificate string
+
+@description('The Base64 encoded Vmss Webserver public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
+param vmssWildcardTlsPublicAndKeyCertificates string
+
+@description('Domain name to use for App Gateway and Vmss Webserver.')
+param domainName string
+
+@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
+@minLength(100)
+param frontendCloudInitAsBase64 string
+
+@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
+@minLength(100)
+param backendCloudInitAsBase64 string
+
+@description('The admin passwork for the Windows backend machines.')
+@secure()
+param adminPassword string
+
+/*** VARIABLES ***/
+
+var subComputeRgUniqueString = uniqueString('bu04a42', computeResourceGroup.id)
+
+/*** EXISTING RESOURCES ***/
+
+@description('The resource group in our landing zone subscription that contains the virtual network.')
+resource networkResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  name: split(targetVnetResourceId, '/')[4]
+}
+
+@description('The existing application landing zone virtual network. We do not have full access to this virtual network, just subnets.')
+resource landingZoneVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  scope: networkResourceGroup
+  name: last(split(targetVnetResourceId, '/'))
+}
+
+/*** RESOURCES ***/
+
+@description('The resource group that holds most of the resources in this architecture not provided by the platform landing zone team.')
+resource computeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+  name: 'rg-alz-bu04a42-compute'
+  location: location
+}
+
+@description('Deploy any long-lived resources to the compute resource group. In this architecture, it\'s just a Log Analytics resource and Azure Policy assignments.')
+module sharedServices 'shared-svcs-stamp.bicep' = {
+  scope: computeResourceGroup
+  name: 'deploy-shared-services'
+  params: {
+    location: location
+    subComputeRgUniqueString: subComputeRgUniqueString
+  }
+}
+
+@description('Deploy network configuration.')
+module applySubnetsAndUdrs 'spoke-BU0001A0008.bicep' = {
+  scope: networkResourceGroup
+  name: 'apply-networking'
+  params: {
+    workloadLogWorkspaceResourceId: sharedServices.outputs.logAnalyticsWorkspaceResourceId
+    location: location
+  }
+}
+
+@description('Deploy the application platform and its adjacent resources.')
+module deployWorkloadInfrastructure 'vmss-stamp.bicep' = {
+  scope: computeResourceGroup
+  name: 'deploy-workload-infrastructure'
+  params: {
+    location: location
+    adminPassword: adminPassword
+    appGatewayListenerCertificate: appGatewayListenerCertificate
+    backendCloudInitAsBase64: backendCloudInitAsBase64
+    frontendCloudInitAsBase64: frontendCloudInitAsBase64
+    targetVnetResourceId: landingZoneVirtualNetwork.id
+    vmssWildcardTlsPublicAndKeyCertificates: vmssWildcardTlsPublicAndKeyCertificates
+    vmssWildcardTlsPublicCertificate: vmssWildcardTlsPublicCertificate
+    domainName: domainName
+    subComputeRgUniqueString: subComputeRgUniqueString
+  }
+}
+
+/*** OUTPUTS ***/

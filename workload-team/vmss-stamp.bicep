@@ -50,6 +50,10 @@ param backendCloudInitAsBase64 string
 @secure()
 param adminPassword string
 
+@description('A common uniquestring reference used for resources that benefit from having a unique component.')
+@maxLength(13)
+param subComputeRgUniqueString string
+
 /*** VARIABLES ***/
 
 var subRgUniqueString = uniqueString('vmss', subscription().subscriptionId, resourceGroup().id)
@@ -86,16 +90,20 @@ resource logAnalyticsContributorUserRole 'Microsoft.Authorization/roleDefinition
 
 /*** EXISTING RESOURCES ***/
 
+resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: 'log-${subComputeRgUniqueString}'
+}
+
 // Spoke resource group
 resource targetResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
   scope: subscription()
-  name: '${split(targetVnetResourceId,'/')[4]}'
+  name: split(targetVnetResourceId, '/')[4]
 }
 
 // Spoke virtual network
 resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' existing = {
   scope: targetResourceGroup
-  name: '${last(split(targetVnetResourceId,'/'))}'
+  name: last(split(targetVnetResourceId, '/'))
 
   // Spoke virtual network's subnet for the nic vms
   resource snetFrontend 'subnets' existing = {
@@ -123,13 +131,13 @@ resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' exi
   }
 }
 
-// Default ASG on the vmss frontend. Feel free to constrict further.
+// Default ASG on the vmss frontend.
 resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' existing = {
   scope: targetResourceGroup
   name: 'asg-frontend'
 }
 
-// Default ASG on the vmss backend. Feel free to constrict further.
+// Default ASG on the vmss backend.
 resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01' existing = {
   scope: targetResourceGroup
   name: 'asg-backend'
@@ -137,19 +145,7 @@ resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-07-01'
 
 /*** RESOURCES ***/
 
-resource la 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
-  name: 'la-vmss-${subRgUniqueString}'
-  location: location
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    retentionInDays: 30
-  }
-}
-
-
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2021-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-11-01' = {
   name: 'waf-${vmssName}'
   location: location
   properties: {
@@ -157,13 +153,25 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
       fileUploadLimitInMb: 10
       state: 'Enabled'
       mode: 'Prevention'
+      customBlockResponseBody: null
+      customBlockResponseStatusCode: null
+      fileUploadEnforcement: true
+      logScrubbing: {
+        state: 'Disabled'
+        scrubbingRules: []
+      }
+      /*maxRequestBodySizeInKb: null
+      requestBodyCheck: false
+      requestBodyEnforcement: false
+      requestBodyInspectLimitInKB: null*/
     }
     managedRules: {
+      exclusions: []
       managedRuleSets: [
         {
-            ruleSetType: 'OWASP'
-            ruleSetVersion: '3.2'
-            ruleGroupOverrides: []
+          ruleSetType: 'OWASP'
+          ruleSetVersion: '3.2'
+          ruleGroupOverrides: []
         }
         {
           ruleSetType: 'Microsoft_BotManagerRuleSet'
@@ -176,25 +184,25 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 // User Managed Identity that App Gateway is assigned. Used for Azure Key Vault Access.
-resource miAppGatewayFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource miAppGatewayFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-appgateway'
   location: location
 }
 
 @description('The managed identity for frontend instances')
-resource miVmssFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource miVmssFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-vm-frontent'
   location: location
 }
 
 @description('The managed identity for backend instances')
-resource miVmssBackend 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource miVmssBackend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-vm-backent'
   location: location
 }
 
 @description('The compute for frontend instances; these machines are assigned to the frontend app team to deploy their workloads')
-resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
+resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   name: 'vmss-frontend-00'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachineScaleSets', location, 3)
@@ -328,7 +336,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
                 commandToExecute: 'sh configure-nginx-frontend.sh'
                 // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-baseline/main/configure-nginx-frontend.sh'
+                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/configure-nginx-frontend.sh'
                 ]
               }
             }
@@ -394,12 +402,10 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
   ]
-
-
 }
 
 @description('The compute for backend instances; these machines are assigned to the api app team so they can deploy their workloads.')
-resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
+resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   name: 'vmss-backend-00'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachineScaleSets', location, 3)
@@ -475,7 +481,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
           offer: 'WindowsServer'
           sku: '2022-datacenter-azure-edition-core-smalldisk'
           version: 'latest'
-          exactVersion: '20348.1668.230404'
         }
         dataDisks: [
           {
@@ -574,7 +579,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
                 commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File configure-nginx-backend.ps1'
                 // The following installs and configure Nginx for the backend Windows machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-baseline/main/configure-nginx-backend.ps1'
+                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/configure-nginx-backend.ps1'
                 ]
               }
             }
@@ -633,19 +638,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
               }
             }
           }
-
-          /*
-          {
-            name: 'WindowsOpenSSH'
-            properties: {
-              autoUpgradeMinorVersion: true
-              publisher: 'Microsoft.Azure.OpenSSH'
-              type: 'WindowsOpenSSH'
-              typeHandlerVersion: '3.0'
-              settings: {}
-            }
-          }
-          */
         ]
       }
     }
@@ -658,20 +650,20 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2022-11-01' = {
 }
 
 resource omsVmssInsights 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
-  name: 'VMInsights(${la.name})'
+  name: 'VMInsights(${workloadLogAnalytics.name})'
   location: location
   properties: {
-    workspaceResourceId: la.id
+    workspaceResourceId: workloadLogAnalytics.id
   }
   plan: {
-    name: 'VMInsights(${la.name})'
+    name: 'VMInsights(${workloadLogAnalytics.name})'
     product: 'OMSGallery/VMInsights'
     promotionCode: ''
     publisher: 'Microsoft'
   }
 }
 
-resource kv 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+resource kv 'Microsoft.KeyVault/vaults@2023-02-01' = {
   name: 'kv-${vmssName}'
   location: location
   properties: {
@@ -726,7 +718,7 @@ resource kv_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01
   scope: kv
   name: 'default'
   properties: {
-    workspaceId: la.id
+    workspaceId: workloadLogAnalytics.id
     logs: [
       {
         category: 'AuditEvent'
@@ -848,7 +840,7 @@ resource pdzKv 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-resource peKv 'Microsoft.Network/privateEndpoints@2021-05-01' = {
+resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: 'pe-${kv.name}'
   location: location
   properties: {
@@ -911,7 +903,7 @@ resource pdzVmss 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-resource agw 'Microsoft.Network/applicationGateways@2021-05-01' = {
+resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
   name: agwName
   location: location
   identity: {
