@@ -147,7 +147,9 @@ resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
   name: 'ipg-bastion-hosts'
   location: location
   properties: {
-    ipAddresses: hubVirtualNetwork::bastionHostSubnet.properties.addressPrefixes
+    ipAddresses: [
+      hubVirtualNetwork::bastionHostSubnet.properties.addressPrefix
+    ]
   }
 }
 
