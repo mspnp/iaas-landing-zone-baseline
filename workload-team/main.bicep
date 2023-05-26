@@ -101,6 +101,9 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     domainName: domainName
     subComputeRgUniqueString: subComputeRgUniqueString
   }
+  dependsOn: [
+    applySubnetsAndUdrs
+  ]
 }
 
 /*** OUTPUTS ***/

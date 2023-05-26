@@ -714,12 +714,12 @@ resource deploymentAgentsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-
   parent: spokeVirtualNetwork
   name: 'snet-deploymentagents'
   properties: {
-    addressPrefix: '10.240.4.96/28' // Enough to hold about 10 virtual machine NICs.
+    addressPrefix: '10.240.4.96/28' // Enough to hold about 10 virtual machine NICs or delegated to ACI
     routeTable: {
       id: routeNextHopToFirewall.id
     }
     networkSecurityGroup: {
-      id: nsgAppGwSubnet.id
+      id: nsgBuildAgentSubnet.id
     }
     privateEndpointNetworkPolicies: 'Disabled'
     privateLinkServiceNetworkPolicies: 'Disabled'

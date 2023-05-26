@@ -467,7 +467,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         }
         adminUsername: defaultAdminUserName
         adminPassword: adminPassword
-        secrets: []
+        secrets: [] // Uses the Key Vault extension instead
         allowExtensionOperations: true
       }
       storageProfile: {
