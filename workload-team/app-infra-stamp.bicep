@@ -340,11 +340,13 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '2.1'
               autoUpgradeMinorVersion: true
               protectedSettings: {
-                commandToExecute: 'sh configure-nginx-frontend.sh'
+                // TODO-CK: This won't work on 'internal', so temp moved to base64
+                // commandToExecute: 'sh configure-nginx-frontend.sh'
                 // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
-                fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/workload/configure-nginx-frontend.sh'
-                ]
+                //fileUris: [
+                //  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/content-pass/workload-team/workload/configure-nginx-frontend.sh'
+                //]
+                script: 'H4sIAAAAAAACA7VU22rcMBB991dMk8AmEFtJmz60SQohbCHkUsimhVKKkeWxLaKVjDR7cdP8e0f25tIQ6I36QcLSzJmjM0dafyEKbUUhQ5Mk63Ds2g4mwYBCTwEq76Zwit0nOTOU4LJ1nmDy+fzs5OI0Px5fXl0cnY8PNzbDrHRgAoi59MLoQiykrNGSONfKu+Aqyo6+zTxmd1jZhJxHAd+h9thCqiEdw1q2cP7aOFmm7awwWqWt13NJmEY2axzcoCwh3d1K+oKuRRuY6/L1zhuGsH9cfuPm6VluIXUzAoGkBEOLXgZha22XXIC5hsAzobfSpFrKcL9KJmTK08/MfJD/idhKmd+mdo1d7O/HtuQskC2BkqrBbODL/2mNBLN+Owae2EDSGLiI+E+i9Gov7aAvPxjHVrrmowwZsNDUgHeOoOUTbwNz3o7tM7zgXYGAtmwd890GaUvwOEcfMO4tu0RJgnfDWfsCImjCkKKVhcFSVM4vpC/h4ADGH94nAT0nw00C/BkdCC3s7b2KJff7tSEgt3KK0dGskS3TnZ3ssUiZ4nXuCM/TVVYweWy/rrSKmv29J57Fy7kj/9TOB1QWjZxyfP+uzibz3WHM7uaX+8mgjOOy2rEZV1LFr9c7b2UI0BC14a3gp0Bd/0IgsX8PEGZFXmnDPGH05U7cryMYbWw2LlDUfGv0XHjurEJwVTVs3j4heQiiknPNRTMeHjHGaUtdXuvqAVQqxQRz4+rHeLdJNAdb8xLZrvxuDcYkfqj4hQFqECwuQK2M25cdfB469tBUEd/fVWrfliz6SCtMfgAd7CO5NAUAAA=='
               }
             }
           }
@@ -586,8 +588,9 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               protectedSettings: {
                 commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File configure-nginx-backend.ps1'
                 // The following installs and configure Nginx for the backend Windows machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
+                // TODO-CK: This won't work on 'internal', so temp moved to blob
                 fileUris: [
-                  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/workload/configure-nginx-backend.ps1'
+                  'https://pnpgithubfuncst.blob.core.windows.net/temp/configure-nginx-backend.ps1'
                 ]
               }
             }
@@ -670,7 +673,7 @@ resource workloadKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    // publicNetworkAccess: 'Disabled'  TODO-CK: this doesn't seem to be working
+    publicNetworkAccess: 'Enabled' //  TODO-CK: this doesn't seem to be working as 'Disabled', but this resource should be configured as disabled.
     networkAcls: {
       bypass: 'AzureServices' // Required for ARM deployments to set secrets
       defaultAction: 'Deny'
