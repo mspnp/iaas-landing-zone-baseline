@@ -1,3 +1,14 @@
+/* 
+
+    IDEMPOTENCY WARNING
+
+    Subscription vending is typically done as a "one shot" process to bootstrap a subscription.
+    There is no expectation that this bicep file is idempotent once the application team has started
+    to apply subnets to the virtual network.  It is idempotent up until that point though. Once the
+    workload team deploys subnets you cannot run this script again.
+
+*/
+
 targetScope = 'subscription'
 
 /*** PARAMETERS ***/

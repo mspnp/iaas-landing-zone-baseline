@@ -104,6 +104,27 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               '123'
             ]
           }
+          {
+            ruleType: 'NetworkRule'
+            name: 'windows-kms'
+            description: 'Allow outbound to support for Key Management Service (KMS)'
+            destinationFqdns: [
+              #disable-next-line no-hardcoded-env-urls
+              'azkms.core.windows.net'
+              #disable-next-line no-hardcoded-env-urls
+              'kms.core.windows.net'
+            ]
+            ipProtocols: [
+              'TCP'
+            ]
+            // This covers the whole IP space of the spoke virtual network, if you have the ability to work
+            // with your application team, ideally restrict this just to the subnets that contain traffic that
+            // need this allowance. This this reference implementation, that would be the backend subnet.
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
+            destinationPorts: [
+              '1688'
+            ]
+          }
         ]
       }
       {
@@ -135,7 +156,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ruleType: 'ApplicationRule'
             name: 'windows-package-upgrades'
             description: 'Allow outbound to support package upgrades'
-            targetFqdns: [
+            fqdnTags: [
               'WindowsUpdate'
             ]
             protocols: [
@@ -159,7 +180,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ruleType: 'ApplicationRule'
             name: 'windows-diagnostics'
             description: 'Allow outbound to support windows diagnostics'
-            targetFqdns: [
+            fqdnTags: [
               'WindowsDiagnostics'
             ]
             protocols: [
@@ -192,6 +213,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               '*.ods.opinsights.azure.com'
               '*.oms.opinsights.azure.com'
               '${location}.monitoring.azure.com'
+              '*.blob.core.windows.net'  // TODO-CK: this was added
             ]
             terminateTLS: false
             // This covers the whole IP space of the spoke virtual network, if you have the ability to work

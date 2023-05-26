@@ -31,7 +31,7 @@ Azure Firewall egress rules often need to be updated based on the gathered requi
 
 ### Identity and role-based access control (RBAC)
 
-Typically your subscription vending process would yield identities that can then be used in your pipelines. This deployment guide will not be simulating this part.  Also, it would be expected that you do not have full control over the network resources deployed. The network resources have a shared ownership/manipulation model between the application team and the platform team.
+Typically your subscription vending process would yield identities that can then be used in your pipelines. This deployment guide will not be simulating this part. Also, it would be expected that you do not have full control over the network resources deployed. The network resources have a shared ownership/manipulation model between the application team and the platform team.
 
 ## Steps
 
@@ -52,6 +52,8 @@ Typically your subscription vending process would yield identities that can then
    > :book: At this point the networking team has delivered a spoke in which BU 0001's app team can deploy the IaaS application (ID: A0008). The networking team provides the necessary information to the app team for them to reference in their infrastructure-as-code artifacts.
    >
    > Hubs and spokes are controlled by the networking team's GitHub Actions workflows. This automation is not included in this reference implementation as this body of work is focused on the IaaS baseline and not the networking team's CI/CD practices.
+   >
+   > TODO-CK: Mention this is an non-idempotent process, once workload team starts deploying resources.
 
 ### Explore your resources
 
