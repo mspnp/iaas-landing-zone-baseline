@@ -48,17 +48,12 @@ param subComputeRgUniqueString string
 
 /*** VARIABLES ***/
 
-var subRgUniqueString = uniqueString('vmss', subscription().subscriptionId, resourceGroup().id)
-var vmssName = 'vmss-${subRgUniqueString}'
-var agwName = 'agw-${vmssName}'
-var lbName = 'ilb-${vmssName}'
+var agwName = 'agw-${subComputeRgUniqueString}'
+var lbName = 'ilb-${subComputeRgUniqueString}'
 
 var ingressDomainName = 'iaas-ingress.${domainName}'
-var vmssBackendSubdomain = 'bu0001a0008-00-backend'
-var vmssFrontendSubdomain = 'bu0001a0008-00-frontend'
-var vmssFrontendDomainName = '${vmssFrontendSubdomain}.${ingressDomainName}'
 
-var defaultAdminUserName = uniqueString(vmssName, resourceGroup().id)
+var defaultAdminUserName = uniqueString('vmss', subComputeRgUniqueString, resourceGroup().id)
 
 /*** EXISTING SUBSCRIPTION RESOURCES ***/
 
@@ -159,7 +154,7 @@ resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01'
 
 @description('Azure WAF policy to apply to our workload\'s inbound traffic.')
 resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-11-01' = {
-  name: 'waf-${vmssName}'
+  name: 'waf-ingress-policy'
   location: location
   properties: {
     policySettings: {
@@ -281,7 +276,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         networkApiVersion: '2020-11-01'
         networkInterfaceConfigurations: [
           {
-            name: 'nic-vnet-spoke-BU0001A0008-00-frontend'
+            name: 'nic-frontend'
             properties: {
               primary: true
               enableIPForwarding: false
@@ -299,7 +294,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     }
                     applicationGatewayBackendAddressPools: [
                       {
-                        id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', agwName, 'webappBackendPool')
+                        id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', workloadAppGateway.name, 'webappBackendPool')
                       }
                     ]
                     applicationSecurityGroups: [
@@ -411,7 +406,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     }
   }
   dependsOn: [
-    workloadAppGateway
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
     peKv::pdnszg
@@ -534,7 +528,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     }
                     loadBalancerBackendAddressPools: [
                       {
-                        id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, 'apiBackendPool')
+                        id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancer.name, 'apiBackendPool')
                       }
                     ]
                     applicationSecurityGroups: [
@@ -658,7 +652,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     }
   }
   dependsOn: [
-    loadBalancer
     kvMiVmssBackendSecretsUserRole_roleAssignment
     peKv::pdnszg
     contosoPrivateDnsZone::vmssBackendDomainName_bu0001a0008_00
@@ -871,7 +864,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
   location: 'global'
 
   resource vmssBackendDomainName_bu0001a0008_00 'A' = {
-    name: vmssBackendSubdomain
+    name: 'bu0001a0008-00-backend'
     properties: {
       ttl: 3600
       aRecords: [
@@ -966,7 +959,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     // TODO-CK: Fill out rest of missing properties
     sslCertificates: [
       {
-        name: '${agwName}-ssl-certificate'
+        name: 'public-ssl-certificate'
         properties: {
           keyVaultSecretId: workloadKeyVault::kvsGatewayPublicCert.properties.secretUri
         }
@@ -974,7 +967,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     probes: [
       {
-        name: 'probe-${vmssFrontendDomainName}'
+        name: 'probe-origin'
         properties: {
           protocol: 'Https'
           path: '/favicon.ico'
@@ -999,11 +992,11 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
           port: 443
           protocol: 'Https'
           cookieBasedAffinity: 'Disabled'
-          hostName: vmssFrontendDomainName
+          hostName: 'bu0001a0008-00-frontend.${ingressDomainName}'
           pickHostNameFromBackendAddress: false
           requestTimeout: 20
           probe: {
-            id: resourceId('Microsoft.Network/applicationGateways/probes', agwName, 'probe-${vmssFrontendDomainName}')
+            id: resourceId('Microsoft.Network/applicationGateways/probes', agwName, 'probe-origin')
           }
           trustedRootCertificates: [
             {
@@ -1025,7 +1018,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
           }
           protocol: 'Https'
           sslCertificate: {
-            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', agwName, '${agwName}-ssl-certificate')
+            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', agwName, 'public-ssl-certificate')
           }
           hostName: domainName
           hostNames: []
