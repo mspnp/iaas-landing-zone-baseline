@@ -438,20 +438,17 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
           rules: [
             {
               ruleType: 'NetworkRule'
-              name: 'DNS'
+              name: 'azure-dns'
               description: 'Allow Azure DNS outbound (for simplicity, adjust as needed)'
-              ipProtocols: [
-                'UDP'
-              ]
               sourceAddresses: [
                 '*'
               ]
-              sourceIpGroups: []
               destinationAddresses: [
                 '168.63.129.16'
               ]
-              destinationIpGroups: []
-              destinationFqdns: []
+              ipProtocols: [
+                'UDP'
+              ]
               destinationPorts: [
                 '53'
               ]
@@ -462,7 +459,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
     }
   }
 
-  // Network hub starts out with no allowances for appliction rules
+  // Network hub starts out with very few allowances for appliction rules
   resource defaultApplicationRuleCollectionGroup 'ruleCollectionGroups@2021-05-01' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     dependsOn: [
@@ -470,7 +467,36 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
     ]
     properties: {
       priority: 300
-      ruleCollections: []
+      ruleCollections: [
+        {
+          ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+          name: ''
+          action: {
+            type: 'Allow'
+          }
+          priority: 100
+          rules: [
+            {
+              ruleType: 'ApplicationRule'
+              name: 'msft-common'
+              description: 'Allow common connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetUrls: [
+                'www.msftconnecttest.com/connecttest.txt'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Http'
+                  port: 80
+                }
+              ]
+              terminateTLS: false
+            }
+          ]
+        }
+      ]
     }
   }
 }
