@@ -67,12 +67,6 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2018-0
   scope: subscription()
 }
 
-@description('Built-in Azure RBAC role that is applied to a Log Anlytics Workspace to grant with contrib access privileges. Granted to both frontend and backend user managed identities.')
-resource logAnalyticsContributorUserRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  name: '92aaf0da-9dab-42b6-94a3-d43ce8d16293'
-  scope: subscription()
-}
-
 @description('Existing resource group that holds our application landing zone\'s network.')
 resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
@@ -96,6 +90,12 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
 resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   scope: hubResourceGroup
   name: 'privatelink.vaultcore.azure.net'
+}
+
+@description('TEMP: TODO-CK: Provide a solution.')
+resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  scope: hubResourceGroup
+  name: 'vnet-${location}-hub'
 }
 
 @description('The existing public IP address to be used by Application Gateway for public ingress.')
@@ -670,7 +670,7 @@ resource workloadKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    publicNetworkAccess: 'Disabled'
+    // publicNetworkAccess: 'Disabled'  TODO-CK: this doesn't seem to be working
     networkAcls: {
       bypass: 'AzureServices' // Required for ARM deployments to set secrets
       defaultAction: 'Deny'
@@ -774,17 +774,6 @@ resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/
   }
 }
 
-@description('Grant the frontend compute managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.')
-resource laMiVmssFrontendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-frontent', logAnalyticsContributorUserRole.id)
-  properties: {
-    roleDefinitionId: logAnalyticsContributorUserRole.id
-    principalId: miVmssFrontend.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 @description('Grant the backend compute managed identity with Key Vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
@@ -802,17 +791,6 @@ resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/r
   name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
-    principalId: miVmssBackend.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-@description('Grant the backend compute managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.')
-resource laMiVmssBackendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-backent', logAnalyticsContributorUserRole.id)
-  properties: {
-    roleDefinitionId: logAnalyticsContributorUserRole.id
     principalId: miVmssBackend.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -856,7 +834,6 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   }
 }
 
-// TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
 @description('A private DNS zone for iaas-ingress.contoso.com')
 resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: 'iaas-ingress.${domainName}'
@@ -874,12 +851,27 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
+  // TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
+  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
+  // Normally a workload team wouldn't have this permission, and a DINE policy
+  // would have taken care of this step.
   resource vnetlnk 'virtualNetworkLinks' = {
     name: 'to_${spokeVirtualNetwork.name}'
     location: 'global'
     properties: {
       virtualNetwork: {
         id: spokeVirtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+
+  resource linkToHub 'virtualNetworkLinks' = {
+    name: 'to_${hubVirtualNetwork.name}'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: hubVirtualNetwork.id
       }
       registrationEnabled: false
     }
@@ -928,7 +920,6 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
       {
         name: 'public-ip'
         properties: {
-          privateIPAddress: null
           publicIPAddress: {
             id: appGatewayPublicIp.id
           }
