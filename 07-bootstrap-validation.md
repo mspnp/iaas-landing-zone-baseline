@@ -67,7 +67,7 @@ Now that [the compute infrastructure](./06-compute-infra.md) has been deployed, 
 1. Validate your workload (a Nginx instance) is running in the frontend
 
    ```bash
-   curl https://bu0001a0008-00-frontend.iaas-ingress.contoso.com/ --resolve bu0001a0008-00-frontend.iaas-ingress.contoso.com:443:127.0.0.1 -k
+   curl https://frontend-00.iaas-ingress.contoso.com/ --resolve frontend-00.iaas-ingress.contoso.com:443:127.0.0.1 -k
    ```
 
 1. Exit the ssh session from the frontend VM

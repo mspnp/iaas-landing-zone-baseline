@@ -51,8 +51,6 @@ param subComputeRgUniqueString string
 var agwName = 'agw-${subComputeRgUniqueString}'
 var lbName = 'ilb-${subComputeRgUniqueString}'
 
-var ingressDomainName = 'iaas-ingress.${domainName}'
-
 var defaultAdminUserName = uniqueString('vmss', subComputeRgUniqueString, resourceGroup().id)
 
 /*** EXISTING SUBSCRIPTION RESOURCES ***/
@@ -168,11 +166,10 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
         state: 'Disabled'
         scrubbingRules: []
       }
-      /* TODO-CK: Figure out defaults and set them.
-      maxRequestBodySizeInKb: null
-      requestBodyCheck: false
-      requestBodyEnforcement: false
-      requestBodyInspectLimitInKB: null*/
+      maxRequestBodySizeInKb: 128
+      requestBodyCheck: true
+      requestBodyEnforcement: true
+      requestBodyInspectLimitInKB: 128
     }
     managedRules: {
       exclusions: []
@@ -184,7 +181,7 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
         }
         {
           ruleSetType: 'Microsoft_BotManagerRuleSet'
-          ruleSetVersion: '0.1'
+          ruleSetVersion: '1.0'
           ruleGroupOverrides: []
         }
       ]
@@ -292,9 +289,10 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     subnet: {
                       id: spokeVirtualNetwork::snetFrontend.id
                     }
+                    loadBalancerBackendAddressPools: []
                     applicationGatewayBackendAddressPools: [
                       {
-                        id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', workloadAppGateway.name, 'webappBackendPool')
+                        id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', workloadAppGateway.name, 'vmss-frontend')
                       }
                     ]
                     applicationSecurityGroups: [
@@ -509,7 +507,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         networkApiVersion: '2020-11-01'
         networkInterfaceConfigurations: [
           {
-            name: 'nic-vnet-spoke-BU0001A0008-00-backend'
+            name: 'nic-backend'
             properties: {
               deleteOption: 'Delete'
               primary: true
@@ -523,12 +521,13 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     primary: true
                     privateIPAddressVersion: 'IPv4'
                     publicIPAddressConfiguration: null
+                    applicationGatewayBackendAddressPools: []
                     subnet: {
                       id: spokeVirtualNetwork::snetBackend.id
                     }
                     loadBalancerBackendAddressPools: [
                       {
-                        id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancer.name, 'apiBackendPool')
+                        id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancer.name, 'vmss-backend')
                       }
                     ]
                     applicationSecurityGroups: [
@@ -858,9 +857,9 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
 }
 
 // TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
-@description('A private DNS zone for contoso.com')
+@description('A private DNS zone for iaas-ingress.contoso.com')
 resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: ingressDomainName
+  name: 'iaas-ingress.${domainName}'
   location: 'global'
 
   resource vmssBackendDomainName_bu0001a0008_00 'A' = {
@@ -903,13 +902,9 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
       name: 'WAF_v2'
       tier: 'WAF_v2'
     }
-    sslPolicy: {
-      policyType: 'Custom'
-      cipherSuites: [
-        'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384'
-        'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'
-      ]
-      minProtocolVersion: 'TLSv1_2'
+    sslPolicy: {      
+      policyType: 'Predefined'
+      policyName: 'AppGwSslPolicy20220101S'
     }
     trustedRootCertificates: [
       {
@@ -921,7 +916,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     gatewayIPConfigurations: [
       {
-        name: 'agw-ip-configuration'
+        name: 'ingress-into-${spokeVirtualNetwork::snetApplicationGateway.name}'
         properties: {
           subnet: {
             id: spokeVirtualNetwork::snetApplicationGateway.id
@@ -931,7 +926,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     frontendIPConfigurations: [
       {
-        name: 'agw-frontend-ip-configuration'
+        name: 'public-ip'
         properties: {
           privateIPAddress: null
           publicIPAddress: {
@@ -942,7 +937,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     frontendPorts: [
       {
-        name: 'port-443'
+        name: 'https'
         properties: {
           port: 443
         }
@@ -957,9 +952,18 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     }
     enableHttp2: false
     // TODO-CK: Fill out rest of missing properties
+    enableFips: false
+    rewriteRuleSets: []
+    redirectConfigurations: []
+    privateLinkConfigurations: []
+    urlPathMaps: []
+    listeners: []
+    sslProfiles: []
+    trustedClientCertificates: []
+    loadDistributionPolicies: []
     sslCertificates: [
       {
-        name: 'public-ssl-certificate'
+        name: 'public-gateway-cert'
         properties: {
           keyVaultSecretId: workloadKeyVault::kvsGatewayPublicCert.properties.secretUri
         }
@@ -967,7 +971,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     probes: [
       {
-        name: 'probe-origin'
+        name: 'vmss-frontend'
         properties: {
           protocol: 'Https'
           path: '/favicon.ico'
@@ -982,21 +986,22 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     backendAddressPools: [
       {
-        name: 'webappBackendPool'
+        name: 'vmss-frontend'
       }
     ]
     backendHttpSettingsCollection: [
       {
-        name: 'vmss-webserver-backendpool-httpsettings'
+        name: 'vmss-webserver'
         properties: {
           port: 443
           protocol: 'Https'
           cookieBasedAffinity: 'Disabled'
-          hostName: 'bu0001a0008-00-frontend.${ingressDomainName}'
+          hostName: 'frontend-00.${contosoPrivateDnsZone.name}'
           pickHostNameFromBackendAddress: false
           requestTimeout: 20
+          probeEnabled: true
           probe: {
-            id: resourceId('Microsoft.Network/applicationGateways/probes', agwName, 'probe-origin')
+            id: resourceId('Microsoft.Network/applicationGateways/probes', agwName, 'vmss-frontend')
           }
           trustedRootCertificates: [
             {
@@ -1008,44 +1013,44 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     ]
     httpListeners: [
       {
-        name: 'listener-https'
+        name: 'https-public-ip'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', agwName, 'agw-frontend-ip-configuration')
+            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', agwName, 'public-ip')
           }
           frontendPort: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', agwName, 'port-443')
+            id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', agwName, 'https')
           }
           protocol: 'Https'
           sslCertificate: {
-            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', agwName, 'public-ssl-certificate')
+            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', agwName, 'public-gateway-cert')
           }
           hostName: domainName
-          hostNames: []
           requireServerNameIndication: true
         }
       }
     ]
     requestRoutingRules: [
       {
-        name: 'agw-routing-rules'
+        name: 'https-to-vmss-frontend'
         properties: {
           ruleType: 'Basic'
           priority: 100
           httpListener: {
-            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', agwName, 'listener-https')
+            id: resourceId('Microsoft.Network/applicationGateways/httpListeners', agwName, 'https-public-ip')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', agwName, 'webappBackendPool')
+            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', agwName, 'vmss-frontend')
           }
           backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', agwName, 'vmss-webserver-backendpool-httpsettings')
+            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', agwName, 'vmss-webserver')
           }
         }
       }
     ]
   }
   dependsOn: [
+    contosoPrivateDnsZone::vnetlnk
     peKv
     kvMiAppGatewayFrontendKeyVaultReader_roleAssignment
     kvMiAppGatewayFrontendSecretsUserRole_roleAssignment
@@ -1062,7 +1067,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
   properties: {
     frontendIPConfigurations: [
       {
-        name: 'ilbBackend'
+        name: 'backend'
         properties: {
           subnet: {
             id: spokeVirtualNetwork::snetInternalLoadBalancer.id
@@ -1080,46 +1085,42 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
     ]
     backendAddressPools: [
       {
-        name: 'apiBackendPool'
-        // TODO-CK: Why are the properties not set?
+        name: 'vmss-backend'
       }
     ]
     loadBalancingRules: [
       {
-        name: 'ilbrule'
+        name: 'https'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', lbName, 'ilbBackend')
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', lbName, 'backend')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, 'apiBackendPool')
+            id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', lbName, 'vmss-backend')
           }
           probe: {
-            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, 'ilbprobe')
+            id: resourceId('Microsoft.Network/loadBalancers/probes', lbName, 'vmss-backend-probe')
           }
           protocol: 'Tcp'
           frontendPort: 443
           backendPort: 443
           idleTimeoutInMinutes: 15
-          // TODO-CK: Set these properties that were not set.
-          // disableOutboundSnat: true
-          // enableFloatingIP: false
-          // enableTcpReset: false
-          // loadDistribution: 'Default'
+          enableFloatingIP: false
+          enableTcpReset: false
+          disableOutboundSnat: false
+          loadDistribution: 'Default'
         }
       }
     ]
     probes: [
       {
-        name: 'ilbprobe'
+        name: 'vmss-backend-probe'
         properties: {
           protocol: 'Tcp'
           port: 80
           intervalInSeconds: 15
           numberOfProbes: 2
-          // TODO-CK: Set these properties that were not set.
-          //probeThreshold: 
-          //requestPath: 
+          probeThreshold: 1
         }
       }
     ]

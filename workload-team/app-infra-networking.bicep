@@ -757,7 +757,7 @@ resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2022-11-01' =
   }
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   properties: {
-    publicIPAllocationMethod: 'Static'
+    publicIPAllocationMethod: 'Static' // Application Gateway v2 requires Static
     idleTimeoutInMinutes: 4
     publicIPAddressVersion: 'IPv4'
     ddosSettings: {

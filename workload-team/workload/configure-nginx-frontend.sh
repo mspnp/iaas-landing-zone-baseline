@@ -15,7 +15,7 @@ sudo apt-get install -y nginx
 cat > /etc/nginx/sites-enabled/forward << EOF
 server {
     listen 443 ssl;
-    server_name bu0001a0008-00-frontend.iaas-ingress.contoso.com;
+    server_name frontend-00.iaas-ingress.contoso.com;
     ssl_certificate /etc/ssl/certs/nginx-ingress-internal-iaas-ingress-tls.crt;
     ssl_certificate_key /etc/ssl/private/nginx-ingress-internal-iaas-ingress-tls.key;
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
