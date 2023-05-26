@@ -407,7 +407,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
     peKv::pdnszg
-    contosoPrivateDnsZone::vmssBackendDomainName_bu0001a0008_00
+    contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
   ]
 }
@@ -653,7 +653,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   dependsOn: [
     kvMiVmssBackendSecretsUserRole_roleAssignment
     peKv::pdnszg
-    contosoPrivateDnsZone::vmssBackendDomainName_bu0001a0008_00
+    contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
   ]
 }
@@ -862,8 +862,8 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
   name: 'iaas-ingress.${domainName}'
   location: 'global'
 
-  resource vmssBackendDomainName_bu0001a0008_00 'A' = {
-    name: 'bu0001a0008-00-backend'
+  resource vmssBackend 'A' = {
+    name: 'backend-00'
     properties: {
       ttl: 3600
       aRecords: [
@@ -951,8 +951,6 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
       id: wafPolicy.id
     }
     enableHttp2: false
-    // TODO-CK: Fill out rest of missing properties
-    enableFips: false
     rewriteRuleSets: []
     redirectConfigurations: []
     privateLinkConfigurations: []

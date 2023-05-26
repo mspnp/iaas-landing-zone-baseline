@@ -21,7 +21,7 @@ server {
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 
     location / {
-        proxy_pass https://bu0001a0008-00-backend.iaas-ingress.contoso.com/;
+        proxy_pass https://backend-00.iaas-ingress.contoso.com/;
         sub_filter '[frontend]' '$(hostname)';
         sub_filter_once off;
     }
