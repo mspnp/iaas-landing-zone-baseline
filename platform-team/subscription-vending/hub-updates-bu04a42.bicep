@@ -213,7 +213,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               '*.ods.opinsights.azure.com'
               '*.oms.opinsights.azure.com'
               '${location}.monitoring.azure.com'
-              '*.blob.core.windows.net'  // TODO-CK: this was added
+              '*.blob.core.windows.net'  // TODO-CK: this was added, but not sure where to set it.
             ]
             terminateTLS: false
             // This covers the whole IP space of the spoke virtual network, if you have the ability to work

@@ -676,8 +676,8 @@ resource privateEndpointsSubnet 'Microsoft.Network/virtualNetworks/subnets@2022-
     networkSecurityGroup: {
       id: nsgPrivateLinkEndpointsSubnet.id
     }
-    privateEndpointNetworkPolicies: 'Disabled'
-    privateLinkServiceNetworkPolicies: 'Enabled'
+    privateEndpointNetworkPolicies: 'Enabled'
+    privateLinkServiceNetworkPolicies: 'Disabled'
     delegations: []
     natGateway: null
     serviceEndpointPolicies: []
