@@ -4,7 +4,7 @@ Now that you have a [mock application landing zone deployed](./04-subscription-v
 
 ## Expected results
 
-TODO
+**TODO-CK: fill in**
 
 ## Steps
 
@@ -18,6 +18,8 @@ TODO
    > Alteratively, you could have updated the [`azuredeploy.parameters.prod.json`](./azuredeploy.parameters.prod.json) file and deployed as above, using `-p "@azuredeploy.parameters.prod.json"` instead of providing the individual key-value pairs.
 
 ## Application Gateway placement
+
+**TODO-CK: Might want this section somewhere else, someplace closer to the landing zone network choices**
 
 Azure Application Gateway, for this reference implementation, is placed in the same virtual network as the VMs (isolated by subnets and related NSGs). This facilitates direct network line-of-sight from Application Gateway to the private VM ip addresses and still allows for strong network boundary control. More importantly, this aligns operation team owning the point of ingress. Some organizations may instead leverage a perimeter network in which Application Gateway is managed centrally which resides in an entirely separated virtual network. That topology is also fine, but you'll need to ensure there is secure and limited routing between that perimeter network and your internal private load balancer for your VMs. Also, there will be additional coordination necessary between the VMs/workload operators and the team owning the Application Gateway.
 

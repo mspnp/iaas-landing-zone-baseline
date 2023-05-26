@@ -62,45 +62,59 @@ var defaultAdminUserName = uniqueString(vmssName, resourceGroup().id)
 
 /*** EXISTING SUBSCRIPTION RESOURCES ***/
 
-// Built-in Azure RBAC role that is applied a Key Vault to grant with metadata, certificates, keys and secrets read privileges.  Granted to App Gateway's managed identity.
+@description('Built-in Azure RBAC role that is applied a Key Vault to grant with metadata, certificates, keys and secrets read privileges.  Granted to App Gateway\'s managed identity.')
 resource keyVaultReaderRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   name: '21090545-7ca7-4776-b22c-e363652d74d2'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload's identity.
+@description('Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload\'s identity.')
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to a Log Anlytics Workspace to grant with contrib access privileges. Granted to both frontend and backend user managed identities.
+@description('Built-in Azure RBAC role that is applied to a Log Anlytics Workspace to grant with contrib access privileges. Granted to both frontend and backend user managed identities.')
 resource logAnalyticsContributorUserRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   name: '92aaf0da-9dab-42b6-94a3-d43ce8d16293'
   scope: subscription()
 }
 
-/*** EXISTING RESOURCES ***/
-
-resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
-  name: 'log-${subComputeRgUniqueString}'
-}
-
-// Spoke resource group
-resource targetResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+@description('Existing resource group that holds our application landing zone\'s network.')
+resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
   name: split(targetVnetResourceId, '/')[4]
 }
 
+@description('Existing resource group that has our regional hub network. This is owned by the platform team, and usually is in another subscription.')
+resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  scope: subscription()
+  name: 'rg-plz-enterprise-networking-hubs'
+}
+
+/*** EXISTING RESOURCES ***/
+
+@description('Existing log sink for the workload.')
+resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: 'log-${subComputeRgUniqueString}'
+}
+
+@description('Private DNS zone for Key Vault in the Hub. This is owned by the platform team.')
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
+  scope: hubResourceGroup
+  name: 'privatelink.vaultcore.azure.net'
+}
+
 @description('The existing public IP address to be used by Application Gateway for public ingress.')
 resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' existing = {
-  scope: targetResourceGroup
+  scope: spokeResourceGroup
   name: 'pip-bu04a42-00'
 }
 
 // Spoke virtual network
-resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  scope: targetResourceGroup
+@description('Existing spoke virtual network, as deployed by the platform team into our landing zone and with subnets added by the workload team.')
+resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  scope: spokeResourceGroup
   name: last(split(targetVnetResourceId, '/'))
 
   // Spoke virtual network's subnet for the nic vms
@@ -129,20 +143,21 @@ resource targetVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' exi
   }
 }
 
-// Default ASG on the vmss frontend.
+@description('Application security group for the frontend compute.')
 resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
-  scope: targetResourceGroup
+  scope: spokeResourceGroup
   name: 'asg-frontend'
 }
 
-// Default ASG on the vmss backend.
+@description('Application security group for the backend compute.')
 resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
-  scope: targetResourceGroup
+  scope: spokeResourceGroup
   name: 'asg-backend'
 }
 
 /*** RESOURCES ***/
 
+@description('Azure WAF policy to apply to our workload\'s inbound traffic.')
 resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-11-01' = {
   name: 'waf-${vmssName}'
   location: location
@@ -158,7 +173,8 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
         state: 'Disabled'
         scrubbingRules: []
       }
-      /*maxRequestBodySizeInKb: null
+      /* TODO-CK: Figure out defaults and set them.
+      maxRequestBodySizeInKb: null
       requestBodyCheck: false
       requestBodyEnforcement: false
       requestBodyInspectLimitInKB: null*/
@@ -181,25 +197,25 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
   }
 }
 
-// User Managed Identity that App Gateway is assigned. Used for Azure Key Vault Access.
+@description('User Managed Identity that App Gateway is assigned. Used for Azure Key Vault Access.')
 resource miAppGatewayFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-appgateway'
   location: location
 }
 
-@description('The managed identity for frontend instances')
+@description('The managed identity for all frontend virtual machines.')
 resource miVmssFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-vm-frontent'
   location: location
 }
 
-@description('The managed identity for backend instances')
+@description('The managed identity for all backend virtual machines.')
 resource miVmssBackend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'mi-vm-backent'
   location: location
 }
 
-@description('The compute for frontend instances; these machines are assigned to the frontend app team to deploy their workloads')
+@description('The virtual machines for the frontend. Orchestrated by a Virtual Machine Scale Set with flexible orchestration.')
 resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   name: 'vmss-frontend-00'
   location: location
@@ -279,7 +295,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     privateIPAddressVersion: 'IPv4'
                     publicIPAddressConfiguration: null
                     subnet: {
-                      id: targetVirtualNetwork::snetFrontend.id
+                      id: spokeVirtualNetwork::snetFrontend.id
                     }
                     applicationGatewayBackendAddressPools: [
                       {
@@ -312,7 +328,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 secretsManagementSettings: {
                   certificateStoreLocation: '/var/lib/waagent/Microsoft.Azure.KeyVault.Store'
                   observedCertificates: [
-                    kv::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
+                    workloadKeyVault::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
                   ]
                   pollingIntervalInS: '3600'
                 }
@@ -396,13 +412,15 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   }
   dependsOn: [
     agw
-    omsVmssInsights
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
+    peKv::pdnszg
+    pdzVmss::vmssBackendDomainName_bu0001a0008_00
+    pdzVmss::vnetlnk
   ]
 }
 
-@description('The compute for backend instances; these machines are assigned to the api app team so they can deploy their workloads.')
+@description('The virtual machines for the backend. Orchestrated by a Virtual Machine Scale Set with flexible orchestration.')
 resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   name: 'vmss-backend-00'
   location: location
@@ -512,7 +530,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                     privateIPAddressVersion: 'IPv4'
                     publicIPAddressConfiguration: null
                     subnet: {
-                      id: targetVirtualNetwork::snetBackend.id
+                      id: spokeVirtualNetwork::snetBackend.id
                     }
                     loadBalancerBackendAddressPools: [
                       {
@@ -548,7 +566,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                       certificateStoreName: 'MY'
                       certificateStoreLocation: 'LocalMachine'
                       keyExportable: true
-                      url: kv::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
+                      url: workloadKeyVault::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
                       accounts: [
                         'Network Service'
                         'Local Service'
@@ -640,28 +658,18 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     }
   }
   dependsOn: [
-    omsVmssInsights
     loadBalancer
     kvMiVmssBackendSecretsUserRole_roleAssignment
+    peKv::pdnszg
+    pdzVmss::vmssBackendDomainName_bu0001a0008_00
+    pdzVmss::vnetlnk
   ]
 }
 
-resource omsVmssInsights 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
-  name: 'VMInsights(${workloadLogAnalytics.name})'
-  location: location
-  properties: {
-    workspaceResourceId: workloadLogAnalytics.id
-  }
-  plan: {
-    name: 'VMInsights(${workloadLogAnalytics.name})'
-    product: 'OMSGallery/VMInsights'
-    promotionCode: ''
-    publisher: 'Microsoft'
-  }
-}
 
-resource kv 'Microsoft.KeyVault/vaults@2023-02-01' = {
-  name: 'kv-${vmssName}'
+@description('Common Key Vault used for all resources in this architecture that are owned by the workload team. Starts with no secrets/keys.')
+resource workloadKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+  name: 'kv-${subComputeRgUniqueString}'
   location: location
   properties: {
     accessPolicies: [] // Azure RBAC is used instead
@@ -670,8 +678,9 @@ resource kv 'Microsoft.KeyVault/vaults@2023-02-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
-      bypass: 'AzureServices' // Required for AppGW communication
+      bypass: 'AzureServices' // Required for ARM deployments to set secrets
       defaultAction: 'Deny'
       ipRules: []
       virtualNetworkRules: []
@@ -684,9 +693,6 @@ resource kv 'Microsoft.KeyVault/vaults@2023-02-01' = {
     softDeleteRetentionInDays: 7
     createMode: 'default'
   }
-  dependsOn: [
-    miAppGatewayFrontend
-  ]
 
   resource kvsAppGwInternalVmssWebserverTls 'secrets' = {
     name: 'appgw-vmss-webserver-tls'
@@ -712,7 +718,7 @@ resource kv 'Microsoft.KeyVault/vaults@2023-02-01' = {
 }
 
 resource kv_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: 'default'
   properties: {
     workspaceId: workloadLogAnalytics.id
@@ -733,7 +739,7 @@ resource kv_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01
 
 // Grant the Azure Application Gateway managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
 resource kvMiAppGatewayFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-appgateway', keyVaultSecretsUserRole.id)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole.id
@@ -744,7 +750,7 @@ resource kvMiAppGatewayFrontendSecretsUserRole_roleAssignment 'Microsoft.Authori
 
 // Grant the Azure Application Gateway managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
 resource kvMiAppGatewayFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-appgateway', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
@@ -755,7 +761,7 @@ resource kvMiAppGatewayFrontendKeyVaultReader_roleAssignment 'Microsoft.Authoriz
 
 // Grant the Vmss Frontend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
 resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultSecretsUserRole.id)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole.id
@@ -766,7 +772,7 @@ resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization
 
 // Grant the Vmss Frontend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
 resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
@@ -777,7 +783,7 @@ resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/
 
 // Grant the Vmss Frontend managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.
 resource laMiVmssFrontendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', logAnalyticsContributorUserRole.id)
   properties: {
     roleDefinitionId: logAnalyticsContributorUserRole.id
@@ -788,7 +794,7 @@ resource laMiVmssFrontendContributorUserRole_roleAssignment 'Microsoft.Authoriza
 
 // Grant the Vmss Backend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
 resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultSecretsUserRole.id)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole.id
@@ -799,7 +805,7 @@ resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/
 
 // Grant the Vmss Backend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
 resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
@@ -810,7 +816,7 @@ resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/r
 
 // Grant the Vmss Backend managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.
 resource laMiVmssBackendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  scope: kv
+  scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', logAnalyticsContributorUserRole.id)
   properties: {
     roleDefinitionId: logAnalyticsContributorUserRole.id
@@ -819,36 +825,21 @@ resource laMiVmssBackendContributorUserRole_roleAssignment 'Microsoft.Authorizat
   }
 }
 
-// Enabling Azure Key Vault Private Link support.
-resource pdzKv 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.vaultcore.azure.net'
-  location: 'global'
-
-  // Enabling Azure Key Vault Private Link on vmss vnet.
-  resource vnetlnk 'virtualNetworkLinks' = {
-    name: 'to_${targetVirtualNetwork.name}'
-    location: 'global'
-    properties: {
-      virtualNetwork: {
-        id: targetVirtualNetwork.id
-      }
-      registrationEnabled: false
-    }
-  }
-}
-
+// THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
+// Normally a workload team wouldn't have this permission, and a DINE policy
+// would have taken care of this step.
 resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: 'pe-${kv.name}'
+  name: 'pe-${workloadKeyVault.name}'
   location: location
   properties: {
     subnet: {
-      id: targetVirtualNetwork::snetPrivatelinkendpoints.id
+      id: spokeVirtualNetwork::snetPrivatelinkendpoints.id
     }
     privateLinkServiceConnections: [
       {
-        name: 'to_${targetVirtualNetwork.name}'
+        name: 'to_${spokeVirtualNetwork.name}'
         properties: {
-          privateLinkServiceId: kv.id
+          privateLinkServiceId: workloadKeyVault.id
           groupIds: [
             'vault'
           ]
@@ -864,7 +855,7 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
         {
           name: 'privatelink-akv-net'
           properties: {
-            privateDnsZoneId: pdzKv.id
+            privateDnsZoneId: keyVaultDnsZone.id
           }
         }
       ]
@@ -872,6 +863,9 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   }
 }
 
+// TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
+
+@description('A private DNS zone for contoso.com')
 resource pdzVmss 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: ingressDomainName
   location: 'global'
@@ -882,18 +876,18 @@ resource pdzVmss 'Microsoft.Network/privateDnsZones@2020-06-01' = {
       ttl: 3600
       aRecords: [
         {
-          ipv4Address: '10.240.4.4' // Internal Load Balancer IP address
+          ipv4Address: loadBalancer.properties.frontendIPConfigurations[0].properties.privateIPAddress // 10.240.4.4 - Internal Load Balancer IP address
         }
       ]
     }
   }
 
   resource vnetlnk 'virtualNetworkLinks' = {
-    name: 'to_${targetVirtualNetwork.name}'
+    name: 'to_${spokeVirtualNetwork.name}'
     location: 'global'
     properties: {
       virtualNetwork: {
-        id: targetVirtualNetwork.id
+        id: spokeVirtualNetwork.id
       }
       registrationEnabled: false
     }
@@ -927,7 +921,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
       {
         name: 'root-cert-wildcard-vmss-webserver'
         properties: {
-          keyVaultSecretId: kv::kvsAppGwInternalVmssWebserverTls.properties.secretUri
+          keyVaultSecretId: workloadKeyVault::kvsAppGwInternalVmssWebserverTls.properties.secretUri
         }
       }
     ]
@@ -936,7 +930,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
         name: 'agw-ip-configuration'
         properties: {
           subnet: {
-            id: targetVirtualNetwork::snetApplicationGateway.id
+            id: spokeVirtualNetwork::snetApplicationGateway.id
           }
         }
       }
@@ -971,7 +965,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
       {
         name: '${agwName}-ssl-certificate'
         properties: {
-          keyVaultSecretId: kv::kvsGatewayPublicCert.properties.secretUri
+          keyVaultSecretId: workloadKeyVault::kvsGatewayPublicCert.properties.secretUri
         }
       }
     ]
@@ -1062,6 +1056,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
   ]
 }
 
+@description('Internal load balancer that sits between the front end and back end compute.')
 resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
   name: lbName
   location: location
@@ -1071,14 +1066,15 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
   properties: {
     frontendIPConfigurations: [
       {
+        name: 'ilbBackend'
         properties: {
           subnet: {
-            id: targetVirtualNetwork::snetInternalLoadBalancer.id
+            id: spokeVirtualNetwork::snetInternalLoadBalancer.id
           }
           privateIPAddress: '10.240.4.4'
           privateIPAllocationMethod: 'Static'
+          privateIPAddressVersion: 'IPv4'
         }
-        name: 'ilbBackend'
         zones: [
           '1'
           '2'
@@ -1089,10 +1085,12 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
     backendAddressPools: [
       {
         name: 'apiBackendPool'
+        // TODO-CK: Why are the properties not set?
       }
     ]
     loadBalancingRules: [
       {
+        name: 'ilbrule'
         properties: {
           frontendIPConfiguration: {
             id: resourceId('Microsoft.Network/loadBalancers/frontendIpConfigurations', lbName, 'ilbBackend')
@@ -1107,24 +1105,31 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
           frontendPort: 443
           backendPort: 443
           idleTimeoutInMinutes: 15
+          // TODO-CK: Set these properties that were not set.
+          // disableOutboundSnat: true
+          // enableFloatingIP: false
+          // enableTcpReset: false
+          // loadDistribution: 'Default'
         }
-        name: 'ilbrule'
       }
     ]
     probes: [
       {
+        name: 'ilbprobe'
         properties: {
           protocol: 'Tcp'
           port: 80
           intervalInSeconds: 15
           numberOfProbes: 2
+          // TODO-CK: Set these properties that were not set.
+          //probeThreshold: 
+          //requestPath: 
         }
-        name: 'ilbprobe'
       }
     ]
   }
 }
-
+    
 /*** OUTPUTS ***/
 
-output keyVaultName string = kv.name
+output keyVaultName string = workloadKeyVault.name
