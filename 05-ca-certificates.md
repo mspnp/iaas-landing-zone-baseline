@@ -6,6 +6,8 @@ Now that you have an [application landing zone awaiting your worklad](./04-subsc
 
 1. Set a variable for the domain that will be used in the rest of this deployment.
 
+   **TODO-CK: BUG: This cannot be changed from contoso.com due to how Nginx is configured in the baseline, either fix it so that we can change it, or remove the ability to set the domain**
+   
    ```bash
    export DOMAIN_NAME_IAAS_BASELINE="contoso.com"
    ```
