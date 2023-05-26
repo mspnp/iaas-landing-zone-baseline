@@ -411,12 +411,12 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     }
   }
   dependsOn: [
-    agw
+    workloadAppGateway
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
     peKv::pdnszg
-    pdzVmss::vmssBackendDomainName_bu0001a0008_00
-    pdzVmss::vnetlnk
+    contosoPrivateDnsZone::vmssBackendDomainName_bu0001a0008_00
+    contosoPrivateDnsZone::vnetlnk
   ]
 }
 
@@ -661,8 +661,8 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     loadBalancer
     kvMiVmssBackendSecretsUserRole_roleAssignment
     peKv::pdnszg
-    pdzVmss::vmssBackendDomainName_bu0001a0008_00
-    pdzVmss::vnetlnk
+    contosoPrivateDnsZone::vmssBackendDomainName_bu0001a0008_00
+    contosoPrivateDnsZone::vnetlnk
   ]
 }
 
@@ -717,6 +717,7 @@ resource workloadKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
   }
 }
 
+@description('Azure Diagnostics for Key Vault.')
 resource kv_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: workloadKeyVault
   name: 'default'
@@ -737,7 +738,7 @@ resource kv_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01
   }
 }
 
-// Grant the Azure Application Gateway managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the Azure Application Gateway managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiAppGatewayFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-appgateway', keyVaultSecretsUserRole.id)
@@ -748,7 +749,7 @@ resource kvMiAppGatewayFrontendSecretsUserRole_roleAssignment 'Microsoft.Authori
   }
 }
 
-// Grant the Azure Application Gateway managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the Azure Application Gateway managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiAppGatewayFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-appgateway', keyVaultReaderRole.id)
@@ -759,7 +760,7 @@ resource kvMiAppGatewayFrontendKeyVaultReader_roleAssignment 'Microsoft.Authoriz
   }
 }
 
-// Grant the Vmss Frontend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the Vmss Frontend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultSecretsUserRole.id)
@@ -770,7 +771,7 @@ resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization
   }
 }
 
-// Grant the Vmss Frontend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the Vmss Frontend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultReaderRole.id)
@@ -781,7 +782,7 @@ resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/
   }
 }
 
-// Grant the Vmss Frontend managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.
+@description('Grant the frontend compute managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.')
 resource laMiVmssFrontendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-frontent', logAnalyticsContributorUserRole.id)
@@ -792,7 +793,7 @@ resource laMiVmssFrontendContributorUserRole_roleAssignment 'Microsoft.Authoriza
   }
 }
 
-// Grant the Vmss Backend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the backend compute managed identity with Key Vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultSecretsUserRole.id)
@@ -803,7 +804,7 @@ resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/
   }
 }
 
-// Grant the Vmss Backend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.
+@description('Grant the backend compute managed identity with Key Vault reader role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultReaderRole.id)
@@ -814,7 +815,7 @@ resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/r
   }
 }
 
-// Grant the Vmss Backend managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.
+@description('Grant the backend compute managed identity with Log Analytics Contributor role permissions; this allows pushing data with the Azure Monitor Agent to Log Analytics.')
 resource laMiVmssBackendContributorUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
   name: guid(resourceGroup().id, 'mi-vm-backent', logAnalyticsContributorUserRole.id)
@@ -825,9 +826,6 @@ resource laMiVmssBackendContributorUserRole_roleAssignment 'Microsoft.Authorizat
   }
 }
 
-// THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
-// Normally a workload team wouldn't have this permission, and a DINE policy
-// would have taken care of this step.
 resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: 'pe-${workloadKeyVault.name}'
   location: location
@@ -848,6 +846,9 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
     ]
   }
 
+  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
+  // Normally a workload team wouldn't have this permission, and a DINE policy
+  // would have taken care of this step.
   resource pdnszg 'privateDnsZoneGroups' = {
     name: 'default'
     properties: {
@@ -864,9 +865,8 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
 }
 
 // TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
-
 @description('A private DNS zone for contoso.com')
-resource pdzVmss 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: ingressDomainName
   location: 'global'
 
@@ -894,7 +894,8 @@ resource pdzVmss 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
+@description('The Azure Application Gateway that fronts our workload.')
+resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' = {
   name: agwName
   location: location
   identity: {
@@ -939,6 +940,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
       {
         name: 'agw-frontend-ip-configuration'
         properties: {
+          privateIPAddress: null
           publicIPAddress: {
             id: appGatewayPublicIp.id
           }
@@ -961,6 +963,7 @@ resource agw 'Microsoft.Network/applicationGateways@2022-11-01' = {
       id: wafPolicy.id
     }
     enableHttp2: false
+    // TODO-CK: Fill out rest of missing properties
     sslCertificates: [
       {
         name: '${agwName}-ssl-certificate'
