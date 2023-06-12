@@ -69,6 +69,12 @@ resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01'
   location: location
 }
 
+@description('Application Security Group applied to Key Vault private endpoint.')
+resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' = {
+  name: 'asg-keyvault'
+  location: location
+}
+
 @description('Network security group for the front end virtual machines subnet. Feel free to constrict further if your workload allows.')
 resource frontEndSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-frontend'
@@ -480,20 +486,24 @@ resource nsgAppGwSubnet_diagnosticsSettings 'Microsoft.Insights/diagnosticSettin
   }
 }
 
-@description('Network security group for the private endpoint subnet. Feel free to constrict further if your workload allows.')
+@description('Network security group for the private endpoint subnet.')
 resource nsgPrivateLinkEndpointsSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-privatelinkendpoints'
   location: location
   properties: {
     securityRules: [
       {
-        name: 'AllowAll443InFromVnet'
+        name: 'Allow443ToKeyVaultFromVnet'
         properties: {
           protocol: 'Tcp'
           sourcePortRange: '*'
           sourceAddressPrefix: 'VirtualNetwork'
           destinationPortRange: '443'
-          destinationAddressPrefix: 'VirtualNetwork'
+          destinationApplicationSecurityGroups: [
+            {
+              id: asgKeyVault.id
+            }
+          ]
           access: 'Allow'
           priority: 100
           direction: 'Inbound'

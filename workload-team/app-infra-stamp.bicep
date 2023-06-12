@@ -145,6 +145,12 @@ resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01'
   name: 'asg-backend'
 }
 
+@description('Application security group for the backend compute.')
+resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
+  scope: spokeResourceGroup
+  name: 'asg-keyvault'
+}
+
 /*** RESOURCES ***/
 
 @description('Azure WAF policy to apply to our workload\'s inbound traffic.')
@@ -408,6 +414,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv::pdnszg
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
+    contosoPrivateDnsZone::linkToHub
   ]
 }
 
@@ -655,6 +662,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv::pdnszg
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
+    contosoPrivateDnsZone::linkToHub
   ]
 }
 
@@ -670,7 +678,7 @@ resource workloadKeyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    publicNetworkAccess: 'Enabled' //  TODO-CK: this doesn't seem to be working as 'Disabled', but this resource should be configured as disabled.
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'AzureServices' // Required for ARM deployments to set secrets
       defaultAction: 'Deny'
@@ -796,6 +804,7 @@ resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/r
   }
 }
 
+@description('Private Endpoint for Key Vault. All compute in the virtual network will use this endpoint.')
 resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: 'pe-${workloadKeyVault.name}'
   location: location
@@ -803,6 +812,12 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
     subnet: {
       id: spokeVirtualNetwork::snetPrivatelinkendpoints.id
     }
+    customNetworkInterfaceName: 'nic-pe-${workloadKeyVault.name}'
+    applicationSecurityGroups: [
+      {
+        id: asgKeyVault.id
+      }
+    ]
     privateLinkServiceConnections: [
       {
         name: 'to_${spokeVirtualNetwork.name}'
@@ -818,7 +833,7 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
 
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step.
+  // would have taken care of this step. TODO-CK: Evaluate impact on guidance.
   resource pdnszg 'privateDnsZoneGroups' = {
     name: 'default'
     properties: {
@@ -827,6 +842,71 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
           name: 'privatelink-akv-net'
           properties: {
             privateDnsZoneId: keyVaultDnsZone.id
+          }
+        }
+      ]
+    }
+  }
+}
+
+// Application Gateway does not inhert the virtual network DNS settings for the parts of the service that
+// are responsible for getting Key Vault certs connected at resource deployment time, but it does for other parts
+// of the service. To that end, we have a local private DNS zone that is in place just to support Application Gateway.
+// No other resources in this virtual network benefit from this.  If this is ever resolved both keyVaultSpokeDnsZone and
+// peKeyVaultForAppGw can be removed.
+@description('Deploy Key Vault private DNS zone so that Application Gateway can resolve at resource deployment time.')
+resource keyVaultSpokeDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+  properties: {}
+
+  resource spokeLink 'virtualNetworkLinks' = {
+    name: 'link-to-${spokeVirtualNetwork.name}'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: spokeVirtualNetwork.id
+      }
+    }
+  }
+}
+
+@description('Private Endpoint for Key Vault exclusively for the use of Application Gateway.')
+resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+  name: 'pe-${workloadKeyVault.name}-appgw'
+  location: location
+  properties: {
+    subnet: {
+      id: spokeVirtualNetwork::snetPrivatelinkendpoints.id
+    }
+    customNetworkInterfaceName: 'nic-pe-${workloadKeyVault.name}-for-appgw'
+    applicationSecurityGroups: [
+      {
+        id: asgKeyVault.id
+      }
+    ]
+    privateLinkServiceConnections: [
+      {
+        name: 'to_${spokeVirtualNetwork.name}_for_appgw'
+        properties: {
+          privateLinkServiceId: workloadKeyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+
+  resource pdnszg 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'privatelink-akv-net'
+          properties: {
+            privateDnsZoneId: keyVaultSpokeDnsZone.id
           }
         }
       ]
@@ -851,10 +931,6 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
-  // TODO-CK: This is going to need to be solved. As this is configured below, it will not work in this topology.
-  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
-  // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step.
   resource vnetlnk 'virtualNetworkLinks' = {
     name: 'to_${spokeVirtualNetwork.name}'
     location: 'global'
@@ -866,6 +942,10 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
+  // TODO-CK: This is going to need to be solved. As this is configured below, it will not work in this topology.
+  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
+  // Normally a workload team wouldn't have this permission, and a DINE policy
+  // would have taken care of this step.
   resource linkToHub 'virtualNetworkLinks' = {
     name: 'to_${hubVirtualNetwork.name}'
     location: 'global'
@@ -1040,10 +1120,35 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
   }
   dependsOn: [
     contosoPrivateDnsZone::vnetlnk
-    peKv
+    contosoPrivateDnsZone::linkToHub
+    contosoPrivateDnsZone::vmssBackend
+    peKv::pdnszg
+    peKeyVaultForAppGw::pdnszg
+    keyVaultSpokeDnsZone::spokeLink
     kvMiAppGatewayFrontendKeyVaultReader_roleAssignment
     kvMiAppGatewayFrontendSecretsUserRole_roleAssignment
   ]
+}
+
+@description('Azure Diagnostics for Application Gateway.')
+resource workloadAppGateway_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: workloadAppGateway
+  properties: {
+    workspaceId: workloadLogAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
 }
 
 @description('Internal load balancer that sits between the front end and back end compute.')
