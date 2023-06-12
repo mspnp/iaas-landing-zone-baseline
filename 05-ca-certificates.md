@@ -6,7 +6,7 @@ Now that you have an [application landing zone awaiting your workload](./04-subs
 
 1. Generate a client-facing, self-signed TLS certificate.
 
-   > :book: Contoso needs to procure a CA certificate for the web site. As this is going to be a user-facing site, they purchase an EV cert from their CA. This will be served in front of the Azure Application Gateway. They will also procure another one, a standard cert, and the certificate to implement TLS communication among the VMs in the environment. The second one is not EV, as it will not be user facing.
+   > :book: The application team needs to procure a CA certificate for the web site. As this is going to be a user-facing site, they purchase an EV cert from their CA. This will be served in front of the Azure Application Gateway. They will also procure another one, a standard cert, and the certificate to implement TLS communication among the VMs in the environment. The second one is not EV, as it will not be user facing.
 
    :warning: Do not use the certificate created by this script for your solutions. Self-signed certificates are used here for illustration purposes only. For your compute infrastructure, use your organization's requirements for procurement and lifetime management of TLS certificates, _even for development purposes_.
 
@@ -26,15 +26,15 @@ Now that you have an [application landing zone awaiting your workload](./04-subs
    echo APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE: $APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE
    ```
 
-1. Generate the wildcard certificate for the virtual machines.
+1. Generate the wildcard certificate for the internal service to service communication.
 
-   > :book: Contoso will also procure another TLS certificate, a standard cert, to be used by the virtual machines. This one is not EV, as it will not be user facing. The app team decided to use a wildcard certificate `*.iaas-ingress.contoso.com` for both the frontend and backend endpoints.
+   > :book: Contoso will also procure another TLS certificate, a standard cert, to be used by the virtual machines for tier to tier communication. This one is not EV, as it will not be user facing. The app team decided to use a wildcard certificate `*.iaas-ingress.contoso.com` for both the frontend and backend endpoints.
 
    ```bash
    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out nginx-ingress-internal-iaas-ingress-tls.crt -keyout nginx-ingress-internal-iaas-ingress-tls.key -subj "/CN=*.iaas-ingress.contoso.com/O=Contoso IaaS Ingresses"
    ```
 
-1. Base64 encode the VMs certificate.
+1. Base64 encode the internal service to service communication certificate.
 
    :bulb: Regardless of whether you used a certificate from your organization or generated one with the instructions provided in this document, you'll need the public certificate (as `.crt` or `.cer`) to be Base64 encoded for proper storage in Key Vault.
 
@@ -43,7 +43,7 @@ Now that you have an [application landing zone awaiting your workload](./04-subs
    echo VMSS_WILDCARD_CERTIFICATE_BASE64_IAAS_BASELINE: $VMSS_WILDCARD_CERTIFICATE_BASE64_IAAS_BASELINE
    ```
 
-1. Format to PKCS12 the wildcard certificate for `*.iaas-ingress.contoso.com`.
+1. Format the wildcard certificate for `*.iaas-ingress.contoso.com` to PKCS12.
 
    :warning: If you already have access to an [appropriate certificate](https://learn.microsoft.com/azure/key-vault/certificates/certificate-scenarios#formats-of-import-we-support), or can procure one from your organization, consider using it for this step. For more information, please take a look at the [import certificate tutorial using Azure Key Vault](https://learn.microsoft.com/azure/key-vault/certificates/tutorial-import-certificate#import-a-certificate-to-key-vault).
 
@@ -74,4 +74,4 @@ Now that you have an [application landing zone awaiting your workload](./04-subs
 
 ### Next step
 
-:arrow_forward: [ Deploy the compute infrastructure](./06-compute-infra.md)
+:arrow_forward: [Deploy the compute infrastructure](./06-compute-infra.md)
