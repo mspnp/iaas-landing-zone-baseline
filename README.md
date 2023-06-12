@@ -1,32 +1,32 @@
 # Infrastructure-as-a-service baseline for Azure landing zones
 
-This reference implementation demonstrates a _recommended starting (baseline) infrastructure as a service (IaaS) architecture_ with special considerations for Azure landing zone integration. This implementation is a direct continuation of the [IaaS baseline reference implementation](https://github.com/mspnp/iaas-baseline), which did not have any specialized Azure landing zone context.
+This reference implementation demonstrates a _recommended starting (baseline) infrastructure as a service (IaaS) architecture_ with special considerations for Azure landing zone integration. This implementation is a direct continuation of the [IaaS baseline reference implementation](https://github.com/mspnp/iaas-baseline), which did not have any Azure landing zone context.
 
-## Azure landing zone workload focus
+## Azure landing zone workload team focus
 
-This repository and its deployment guide primarily addresses the **workload team** looking to build our their solution expected to be homed within a workload Azure landing zone. The **platform team** will be referenced throughout where their role in this solution is required. However, their role will be abstracted out through proxy deployments and hypotheticals.
+This repository and its deployment guide primarily addresses the **workload team** looking to build our their solution expected to be homed within an [application landing zone](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-landing-zones-vs-application-landing-zones). The **platform team** will be referenced throughout where their role in this solution would typically be required. However, their role will be abstracted out through proxy deployments and hypotheticals.
 
-This solution is written as if it will be deployed into a single sandbox or a standalone subscription. Functions normally provided by your **platform team** will be included in this deployment, but purely a stand-in for your individualized Azure landing zone implementation.
+This deployment guide is written as if it will be deployed into a single sandbox subscription. Functions normally provided by your **platform team** will be included in this deployment, but purely a stand-in for your individualized Azure landing zone implementation.
 
-We walk through the deployment here in a rather _verbose_ method to help you understand each component of this architecture so that you can understand what parts would map back to your responsibility as a **workload team** vs the responsbility of the **platform team**.
+You will walk through the deployment here in a rather _verbose_ method to help you understand each component of this architecture so that you can understand what parts would map back to your responsibility as a **workload team** vs the responsbility of the partner **platform team**.
 
 ## Azure Architecture Center guidance
 
-This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://aka.ms/architecture/iaas-lz-baseline). If you haven't reviewed it, we suggest you read it to learn about the considerations applied in the implementation. Ultimately, this is the direct implementation of that specific architectural guidance.
+This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://aka.ms/architecture/iaas-lz-baseline). If you haven't reviewed it, please first read it to learn about the considerations applied in the implementation. Ultimately, this repository is the direct implementation of that specific architectural guidance.
 
 ## Architecture
 
-**This architecture is infrastructure focused**, more so than on workload. It concentrates on the VMSS itself, including concerns with identity, bootstrapping configuration, secret management, and network topologies, all with the explicit context that it's expected to be deployed within a workload Azure landing zone.
+**This architecture is infrastructure focused**, more so than on the code deployed into it. It concentrates on the virtual machines, including concerns with identity, bootstrapping configuration, secret management, and network topologies, all with the explicit context that it's expected to be deployed within an application landing zone.
 
-The implementation presented here is the _minimum recommended baseline_. This implementation integrates with Azure services provided by the platform team and owned by you, the workload team, that will deliver observability and provide a network topology to help keep the traffic secure. This architecture should be considered your starting point for pre-production and production stages.
+The implementation presented here is the _minimum recommended baseline_ and should be considered your starting point for pre-production & production stages. This implementation integrates with Azure services provided by the platform team and those owned by you, the workload team, that will deliver observability and provide a network topology to help keep the traffic secure.
 
-The material here is relatively dense. We strongly encourage you to dedicate time to walk through this deployment guide, with a mind to _learning_. We do NOT provide any "one click" deployment here. However, once you've understood the components involved and identified the shared responsibilities between your workload team and your platform team, it is encouraged that you build suitable, auditable deployment processes around your final infrastructure.
+The material here is relatively dense. You will need to dedicate time to walk through this deployment guide, with a mind to _learning_. This repo does NOT provide any "one click" deployment. However, once you've understood the components involved and identified the shared responsibilities between your workload team and your platform team, it is encouraged that you build suitable, auditable deployment processes around your final infrastructure, aligned to your workload's needs.
 
-Throughout the reference implementation, you will see reference to _Contoso_. Contoso is a fictional fast-growing startup that has adopted the Azure landing zones conceptual architecture to govern their organization's Azure deployment. Contoso provides online web services to its clientele on the west coast of North America. The company has on-premise data centers and some of their business applications are now about to be run from infrastructure as a service on Azure using Virtual Machine Scale Sets. You can read more about [their requirements and their IT team composition](./contoso/README.md). This narrative provides grounding for some implementation details, naming conventions, etc. You should adapt as you see fit.
+Throughout the reference implementation, you will see reference to _Contoso_. Contoso is a fictional fast-growing startup that has adopted the Azure landing zones conceptual architecture to govern their organization's Azure deployments. Contoso provides online web services to its clientele on the west coast of North America. The company has on-premise data centers and some of their business applications are now about to be run from infrastructure as a service on Azure using Virtual Machine Scale Sets. You can read more about [their requirements and their IT team composition](./contoso/README.md). This narrative provides grounding for some implementation details, naming conventions, etc. You should adapt as you see fit.
 
 ### The workload
 
-This implementation uses [Nginx](https://nginx.org) as an example workload in the the frontend and backend virtual machines. This workload is purposefully _uninteresting_, as it is here exclusively to help you experience the baseline infrastructure running within the context of a landing zone.
+This implementation uses [Nginx](https://nginx.org) as an example workload in the the frontend and backend virtual machines. This workload is purposefully _uninteresting_, as it is here exclusively to help you experience the baseline infrastructure running within the context of an application landing zone.
 
 ### Core architecture components
 
@@ -59,44 +59,42 @@ Azure landing zone implementations are varied, by design. Your implementation li
 
 We acknowledge that you will need to map your organization's Azure landing zone realities onto this architecture. This architecture strives to follow an implementation similar to one described in [Deploy Enterprise-Scale with hub and spoke architecture](https://github.com/Azure/Enterprise-Scale/blob/main/docs/reference/adventureworks/README.md), and as such the deployment guide will reference key concepts like the "Connectivity subscription," "Subscription vending," or "Online" management group; to name a few.
 
-**You do NOT need to fully understand your own Azure landing zone platform implementation in order to use this deployment guide.** You will be deploying into a single subscription, you will not be expected to connect to ANY existing networks or platform resources.
+**You do NOT need to fully understand your own Azure landing zone platform implementation in order to use this deployment guide.** You should be deploying into a single sandbox subscription; you will not be expected to connect to ANY existing networks or platform resources.
 
 ### Application landing zone
 
-The workload that we are deploying in this guide aligns with the Cloud Adoption Framework definition of an _application landing zone_, and specifically the subcategoy of _workload_. We'll be refering to the workload's landing zone as the "application landing zone" in this deployment guide.
-
-See [Platform vs. application landing zones](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-vs-application-landing-zones) as a reminder of the distinction.
+The solution that we are deploying in this guide aligns with the Cloud Adoption Framework definition of an _application landing zone_ with an _application team management_ approach. See [Platform vs. application landing zones](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-vs-application-landing-zones) as a reminder of the distinction.
 
 ## Deploy the reference implementation
 
-Azure landing zone deployments or any workload always experiences a separation of duties and lifecycle management in the area of prerequisites, the host network, the compute infrastructure, and finally the workload itself. This reference implementation acknowledges this. To make that clearer, a "step-by-step" flow will help you learn the pieces of the solution and give you insight into the relationship between them. Ultimately, lifecycle/SDLC management of your compute and its dependencies will depend on your situation (team roles, organizational standards, etc), and will be implemented as appropriate for your needs.
+Azure application landing zone deployments always experiences a separation of duties and lifecycle management in the area of prerequisites, the host network, the compute infrastructure, and finally the workload itself. This reference implementation acknowledges this. To make that clearer, a "step-by-step" flow will help you learn the pieces of the solution and give you insight into the relationship between them. Ultimately, lifecycle/SDLC management of your compute and its dependencies will depend on your situation (team roles, organizational standards, etc), and you'll need to implement as appropriate for your needs.
 
-**Please start this learning journey in the _Preparing for the VMs_ section.** If you follow this through to the end, you'll have our recommended baseline infrastructure as a service installed, with an end-to-end sample workload running for you to reference in your own Azure subscription, mirroring a typical Azure landing zone implementation.
+**Please start this learning journey in the _Build a platform landing zone proxy_ section.** If you follow this through to the end, you'll have the recommended baseline infrastructure deployed, with an end-to-end sample workload running for you to reference in your own Azure subscription, mirroring a typical application landing zone implementation.
 
 ### 1. :rocket: Build a platform landing zone proxy
 
-You are not the platform team, and you are not deploying this into an existing Azure landing zone platform topology, as such we need to set up a proxy version of key typical components to reflect a more realistic resource organization. Also, we just need you to ensure you have the tools and access necessary to accomplish all of the tasks in this deployment guide.
+You are not the platform team, and you are not deploying this into an existing Azure landing zone platform topology, as such you need to set up a proxy version of key typical components to reflect the common resource organization found in Azure landing zones. Also, you to ensure you have the tools & access necessary to accomplish all of the tasks in this deployment guide.
 
 - [ ] Begin by ensuring you [install and meet the prerequisites](./01-prerequisites.md)
 - [ ] [Deploy mock connectitity subscription](./02-connectivity-subscription.md)
 
 ### 2. Request an application landing zone
 
-All landing zone deployments eventually need the actual subscription(s) the workload resources will be deployed to. Most organizations have a subscription vending process to create these application landing zone subscriptions. Let's walk through the request and fulfillment
+All application landing zone deployments need the actual subscription(s) the solution's resources will be deployed to. Most organizations have a subscription vending process to create these application landing zone subscriptions. Let's walk through the request and fulfillment
 
 - [ ] [Submit your application landing zone request](./03-subscription-vending-request.md)
 - [ ] [Deploy a mock application landing zone subscription](./04-subscription-vending-execute.md)
 
-### 3. Deploy the workload infrastructure
+### 3. Deploy the solution infrastructure
 
-This is the heart of the guidance in this reference implementation; paired with prior network topology guidance. Here you will deploy the Azure resources for your compute and the adjacent services such as Azure Application Gateway WAF, Azure Monitor, and Azure Key Vault.
-
-**TODO-CK: Reflow as the narative builds out.**
+This is the heart of the implmented guidance in this reference implementation. Here you will deploy the Azure resources for your compute and the adjacent services such as Azure Application Gateway, Azure Monitor, and Azure Key Vault.
 
 - [ ] [Procure client-facing and VM TLS certificates](./05-ca-certificates.md)
 - [ ] [Deploy the VMs, workload, and supporting services](./06-compute-infra.md)
 
-We perform the prior steps manually here for you to understand the involved components, but we advocate for an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
+You performed the prior steps manually here to help you understand the involved components, with the expectation that you'd implement this via an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
+
+**TODO-CK: Reflow as the narative builds out.**
 
 ### 5. :checkered_flag: Validation
 
