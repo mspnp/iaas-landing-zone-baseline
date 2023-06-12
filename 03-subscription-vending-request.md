@@ -1,10 +1,10 @@
 # Request your application landing zone [Workload team]
 
-In the prior step, you [deployed a fairly basic network hub](./02-connectivity-subscription.md) to stand in for the typical resources found in a Connectivity subscription. Next we start turning our eyes to the workload's needs. You'll start by building a mock landing zone request
+In the prior step, you [deployed a fairly basic network hub](./02-connectivity-subscription.md) to stand in for the typical resources found in your platform team's Connectivity subscription. Next you'll turn your eyes to the workload's needs. You'll start by building a mock landing zone request.
 
 ## Expected results
 
-We're going to take the core workload requirements from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) and capture them as if it was part of the ITSM tooling or portal experience that your landging zone subscripting vending process follows.
+We're going to take the core workload requirements from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) and capture them as if it was part of the ITSM tooling or portal experience that your application landing zone subscripting vending process follows.
 
 **There will be no resources deployed in this step.**
 
@@ -12,7 +12,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 1. Gather initial application requirements and submit application landing zone request.
 
-   > :book: Instead of opening an ITSM ticket or using your portal, we'll document key concepts to communicate to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
+   > :book: Instead of opening an ITSM ticket or using your internal request portal, we'll document key concepts you'd like being communicating to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
 
    - Biographical information
      - Business unit: **03**
@@ -22,7 +22,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
      - Internet ingress: **Workload-managed, one public IP**
        - WAF and DDoS applied by workload team
      - Cross-premises ingress: **None**
-   - Engress information
+   - Egress information
      - Internet egress: **Yes**
      - Known initial firewall allowances
        - Infra: Ubuntu updates and NTP
@@ -49,6 +49,6 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 ### Next step
 
-Now you'll switch back to playing the role of a Platform team member, and will create your workload's landing zone subscription, which in this deployment guide is simply represented as a resource group.
+Now you'll switch back to playing the role of a Platform team member and create your mock application landing zone subscription based on these requirements. The "subscription" in this deployment guide will simply be represented as resource groups.
 
 :arrow_forward: [Deploy your mock application landing zone subscription](./04-subscription-vending-execute.md)
