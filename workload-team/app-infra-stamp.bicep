@@ -268,7 +268,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'Canonical'
           offer: 'UbuntuServer'
-          sku: '18.04-LTS'
+          sku: '18.04-LTS' /* TODO-CK: Move this to a supported version, 18.04 is no longer in support */
           version: 'latest'
         }
       }
@@ -960,7 +960,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
 
 @description('The Azure Application Gateway that fronts our workload.')
 resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' = {
-  name: agwName
+  name: agwName   /* TODO-CK: Give this a human readable name */
   location: location
   identity: {
     type: 'UserAssigned'
@@ -1153,7 +1153,7 @@ resource workloadAppGateway_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-
 
 @description('Internal load balancer that sits between the front end and back end compute.')
 resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
-  name: lbName
+  name: lbName  /* TODO-CK: Give this a human readable name */
   location: location
   sku: {
     name: 'Standard'
