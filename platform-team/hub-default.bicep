@@ -482,7 +482,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
           rules: [
             {
               ruleType: 'ApplicationRule'
-              name: 'msft-common'
+              name: 'msft-common-http'
               description: 'Allow common connections'
               sourceAddresses: [
                 '*'
@@ -494,6 +494,46 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
                 {
                   protocolType: 'Http'
                   port: 80
+                }
+              ]
+              terminateTLS: false
+            }
+            {
+              ruleType: 'ApplicationRule'
+              name: 'crl-common-http'
+              description: 'Allow common certificate revocation list connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetFqdns: [
+                'crl.microsoft.com'
+                '*.digicert.com'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Http'
+                  port: 80
+                }
+              ]
+              terminateTLS: false
+            }
+            {
+              ruleType: 'ApplicationRule'
+              name: 'msft-common-https'
+              description: 'Allow common connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetFqdns: [
+                'wdcp.microsoft.com'
+                'wdcpalt.microsoft.com'
+                'sls.microsoft.com'
+                '*.sls.microsoft.com'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Https'
+                  port: 443
                 }
               ]
               terminateTLS: false
