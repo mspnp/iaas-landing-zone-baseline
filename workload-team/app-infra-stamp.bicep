@@ -35,9 +35,6 @@ param vmssWildcardTlsPublicCertificate string
 @description('The Base64 encoded Vmss Webserver public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
 param vmssWildcardTlsPublicAndKeyCertificates string
 
-@description('Domain name to use for App Gateway and Vmss Webserver.')
-param domainName string = 'contoso.com'
-
 @description('The admin passwork for the Windows backend machines.')
 @secure()
 param adminPassword string
@@ -839,7 +836,7 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
 
 @description('A private DNS zone for iaas-ingress.contoso.com')
 resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'iaas-ingress.${domainName}'
+  name: 'iaas-ingress.contoso.com'
   location: 'global'
 
   resource vmssBackend 'A' = {
@@ -1017,7 +1014,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
           sslCertificate: {
             id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', agwName, 'public-gateway-cert')
           }
-          hostName: domainName
+          hostName: 'contoso.com'
           requireServerNameIndication: true
         }
       }

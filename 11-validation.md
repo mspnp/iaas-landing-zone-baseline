@@ -22,7 +22,7 @@ This section will help you to validate the workload is exposed correctly and res
 
    > :bulb: You can simulate this via a local hosts file modification. You're welcome to add a real DNS entry for your specific deployment's application domain name, if you have access to do so.
 
-   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} ${DOMAIN_NAME_IAAS_BASELINE}` (e.g. `50.140.130.120  contoso.com`)
+   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP}  contoso.com` (e.g. `50.140.130.120  contoso.com`)
 
 1. Validate your workload is reachable over internet through your Azure Application Gateway public endpoint
 
@@ -30,7 +30,7 @@ This section will help you to validate the workload is exposed correctly and res
    curl https://contoso.com/api --resolve contoso.com:443:$APPGW_PUBLIC_IP -k
    ```
 
-1. Browse to the site (e.g. <https://contoso.com>).
+1. Browse to the site.
 
    > :bulb: Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 

@@ -1,16 +1,8 @@
 # Generate your client-facing and mTLS certificates
 
-Now that you have an [application landing zone awaiting your worklad](./04-subscription-vending-execute.md), follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
+Now that you have an [application landing zone awaiting your workload](./04-subscription-vending-execute.md), follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
 
 ## Steps
-
-1. Set a variable for the domain that will be used in the rest of this deployment.
-
-   **TODO-CK: BUG: This cannot be changed from contoso.com due to how Nginx is configured in the baseline, either fix it so that we can change it, or remove the ability to set the domain**
-   
-   ```bash
-   export DOMAIN_NAME_IAAS_BASELINE="contoso.com"
-   ```
 
 1. Generate a client-facing, self-signed TLS certificate.
 
@@ -21,7 +13,7 @@ Now that you have an [application landing zone awaiting your worklad](./04-subsc
    Create the certificate that will be presented to web clients by Azure Application Gateway.
 
    ```bash
-   openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=${DOMAIN_NAME_IAAS_BASELINE}/O=Contoso" -addext "subjectAltName = DNS:${DOMAIN_NAME_IAAS_BASELINE}" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
+   openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=contoso.com/O=Contoso" -addext "subjectAltName = DNS:contoso.com" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
    openssl pkcs12 -export -out appgw.pfx -in appgw.crt -inkey appgw.key -passout pass:
    ```
 
@@ -39,7 +31,7 @@ Now that you have an [application landing zone awaiting your worklad](./04-subsc
    > :book: Contoso will also procure another TLS certificate, a standard cert, to be used by the virtual machines. This one is not EV, as it will not be user facing. The app team decided to use a wildcard certificate `*.iaas-ingress.contoso.com` for both the frontend and backend endpoints.
 
    ```bash
-   openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out nginx-ingress-internal-iaas-ingress-tls.crt -keyout nginx-ingress-internal-iaas-ingress-tls.key -subj "/CN=*.iaas-ingress.${DOMAIN_NAME_IAAS_BASELINE}/O=Contoso IaaS Ingresses"
+   openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out nginx-ingress-internal-iaas-ingress-tls.crt -keyout nginx-ingress-internal-iaas-ingress-tls.key -subj "/CN=*.iaas-ingress.contoso.com/O=Contoso IaaS Ingresses"
    ```
 
 1. Base64 encode the VMs certificate.

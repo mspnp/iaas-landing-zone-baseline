@@ -35,9 +35,6 @@ param vmssWildcardTlsPublicCertificate string
 @description('The Base64 encoded Vmss Webserver public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
 param vmssWildcardTlsPublicAndKeyCertificates string
 
-@description('Domain name to use for App Gateway and Vmss Webserver.')
-param domainName string
-
 @description('The admin passwork for the Windows backend machines.')
 @secure()
 param adminPassword string
@@ -98,7 +95,6 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     targetVnetResourceId: landingZoneVirtualNetwork.id
     vmssWildcardTlsPublicAndKeyCertificates: vmssWildcardTlsPublicAndKeyCertificates
     vmssWildcardTlsPublicCertificate: vmssWildcardTlsPublicCertificate
-    domainName: domainName
     subComputeRgUniqueString: subComputeRgUniqueString
   }
   dependsOn: [
