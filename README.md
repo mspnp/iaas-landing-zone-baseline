@@ -8,7 +8,7 @@ This repository and its deployment guide primarily addresses the **workload team
 
 This deployment guide is written as if it will be deployed into a single sandbox subscription. Functions normally provided by your **platform team** will be included in this deployment, but purely a stand-in for your individualized Azure landing zone implementation.
 
-You will walk through the deployment here in a rather _verbose_ method to help you understand each component of this architecture so that you can understand what parts would map back to your responsibility as a **workload team** vs the responsbility of the partner **platform team**.
+You will walk through the deployment here in a rather _verbose_ method to help you understand each component of this architecture so that you can understand what parts would map back to your responsibility as a **workload team** vs the responsibility of the partner **platform team**.
 
 ## Azure Architecture Center guidance
 
@@ -55,7 +55,7 @@ This implementation uses [Nginx](https://nginx.org) as an example workload in th
 
 ## Which Azure landing zone implementation?
 
-Azure landing zone implementations are varied, by design. Your implementation likely will share some similarities with the conceptual architecture used here, but likely may deviate in significant ways. These ways could be as fundimental as a different NVA instead of Azure Firewall running from a Secured Vitual Hub in a Azure Virtual WAN to subtle things like an Azure Policy applied to your target management group that disallows a feature showcased in this implementation.
+Azure landing zone implementations are varied, by design. Your implementation likely will share some similarities with the conceptual architecture used here, but likely may deviate in significant ways. These ways could be as fundamental as a different NVA instead of Azure Firewall running from a Secured Virtual Hub in a Azure Virtual WAN to subtle things like an Azure Policy applied to your target management group that disallows a feature showcased in this implementation.
 
 We acknowledge that you will need to map your organization's Azure landing zone realities onto this architecture. This architecture strives to follow an implementation similar to one described in [Deploy Enterprise-Scale with hub and spoke architecture](https://github.com/Azure/Enterprise-Scale/blob/main/docs/reference/adventureworks/README.md), and as such the deployment guide will reference key concepts like the "Connectivity subscription," "Subscription vending," or "Online" management group; to name a few.
 
@@ -76,7 +76,7 @@ Azure application landing zone deployments always experiences a separation of du
 You are not the platform team, and you are not deploying this into an existing Azure landing zone platform topology, as such you need to set up a proxy version of key typical components to reflect the common resource organization found in Azure landing zones. Also, you to ensure you have the tools & access necessary to accomplish all of the tasks in this deployment guide.
 
 - [ ] Begin by ensuring you [install and meet the prerequisites](./01-prerequisites.md)
-- [ ] [Deploy mock connectitity subscription](./02-connectivity-subscription.md)
+- [ ] [Deploy mock connectivity subscription](./02-connectivity-subscription.md)
 
 ### 2. Request an application landing zone
 
@@ -87,20 +87,20 @@ All application landing zone deployments need the actual subscription(s) the sol
 
 ### 3. Deploy the solution infrastructure
 
-This is the heart of the implmented guidance in this reference implementation. Here you will deploy the Azure resources for your compute and the adjacent services such as Azure Application Gateway, Azure Monitor, and Azure Key Vault.
+This is the heart of the implemented guidance in this reference implementation. Here you will deploy the Azure resources for your compute and the adjacent services such as Azure Application Gateway, Azure Monitor, and Azure Key Vault.
 
 - [ ] [Procure client-facing and VM TLS certificates](./05-ca-certificates.md)
 - [ ] [Deploy the VMs, workload, and supporting services](./06-compute-infra.md)
 
 You performed the prior steps manually here to help you understand the involved components, with the expectation that you'd implement this via an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
 
-**TODO-CK: Reflow as the narative builds out.**
+**TODO-CK: Reflow as the narrative builds out.**
 
 ### 5. :checkered_flag: Validation
 
 Now that the compute and the sample workload is deployed; it's time to look at how it's all working.
 
-- [ ] [Validate compute infrastructure bootsrapping](./07-bootstrap-validation.md)
+- [ ] [Validate compute infrastructure bootstrapping](./07-bootstrap-validation.md)
 - [ ] [Perform end-to-end deployment validation](./11-validation.md)
 
 ## :broom: Clean up resources
