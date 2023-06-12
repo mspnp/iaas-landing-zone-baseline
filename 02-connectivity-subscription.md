@@ -51,7 +51,7 @@ The hub will be a virtual network based hub, containing common shared resources 
    > The networking team has registered `10.200.[0-9].0` in their IP address management (IPAM) system for all regional hubs. The `eastus2` hub created below will be `10.200.0.0/24`.
 
    ```bash
-   # [This takes about nine minutes to run.]
+   # [This takes about ten minutes to run.]
    az deployment group create -g rg-plz-connectivity-regional-hubs -f platform-team/hub-default.bicep -p location=eastus2
 
    export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-connectivity-regional-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)

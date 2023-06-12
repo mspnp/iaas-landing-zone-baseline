@@ -329,6 +329,10 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2022-11-01' = {
   resource azureFirewallSubnet 'subnets' existing = {
     name: 'AzureFirewallSubnet'
   }
+
+  resource azureBastionSubnet 'subnets' existing = {
+    name: 'azureBastionSubnet'
+  }
 }
 
 @description('Azure Diagnostics for the regional hub network')
@@ -574,6 +578,90 @@ resource allPrivateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetwor
     }
   }
 }]
+
+@description('The public IP for the regional hub\'s Azure Bastion service.')
+resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+  name: 'pip-ab-eastus2'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    idleTimeoutInMinutes: 4
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+@description('Azure Diagnostics for the hub\'s regional Azure Bastion ingress IP addresses')
+resource pipRegionalBastionHost_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: pipRegionalBastionHost
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        categoryGroup: 'audit'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+@description('This regional hub\'s Azure Bastion service.')
+resource regionalBastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = {
+  name: 'ab-eastus2'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    disableCopyPaste: false
+    enableFileCopy: true
+    enableIpConnect: true
+    enableKerberos: false
+    enableShareableLink: false
+    enableTunneling: true
+    scaleUnits: 2
+    ipConfigurations: [
+      {
+        name: 'hub-subnet'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: pipRegionalBastionHost.id
+          }
+          subnet: {
+            id: vnetHub::azureBastionSubnet.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+@description('Azure Diagnostics for the hub\'s regional Azure Bastion host')
+resource regionalBastionHost_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: regionalBastionHost
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
 
 /*** OUTPUTS ***/
 
