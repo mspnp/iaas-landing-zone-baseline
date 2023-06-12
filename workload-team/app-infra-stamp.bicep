@@ -55,7 +55,7 @@ var defaultAdminUserName = uniqueString('vmss', subComputeRgUniqueString, resour
 
 /*** EXISTING SUBSCRIPTION RESOURCES ***/
 
-@description('Built-in Azure RBAC role that is applied a Key Vault to grant with metadata, certificates, keys and secrets read privileges.  Granted to App Gateway\'s managed identity.')
+@description('Built-in Azure RBAC role that is applied a Key Vault to grant with metadata, certificates, keys and secrets read privileges. Granted to App Gateway\'s managed identity.')
 resource keyVaultReaderRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   name: '21090545-7ca7-4776-b22c-e363652d74d2'
   scope: subscription()
@@ -76,7 +76,7 @@ resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' exis
 @description('Existing resource group that has our regional hub network. This is owned by the platform team, and usually is in another subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
-  name: 'rg-plz-enterprise-networking-hubs'
+  name: 'rg-plz-connectivity-regional-hubs'
 }
 
 /*** EXISTING RESOURCES ***/
@@ -854,7 +854,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
-  // TODO-CK: This is going to need to be solved.  As this is configured below, it will not work in this topology.
+  // TODO-CK: This is going to need to be solved. As this is configured below, it will not work in this topology.
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
   // would have taken care of this step.

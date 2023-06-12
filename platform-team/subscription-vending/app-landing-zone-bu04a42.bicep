@@ -28,7 +28,7 @@ param location string
 
 /*** EXISTING HUB RESOURCES ***/
 
-@description('This is rg-plz-enterprise-networking-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
+@description('This is rg-plz-connectivity-regional-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
   name: split(hubVnetResourceId,'/')[4]

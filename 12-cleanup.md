@@ -20,7 +20,7 @@ After you are done exploring your deployed [IaaS baseline](./11-validation.md), 
    ```bash
    az group delete -n rg-alz-bu04a42-compute
    az group delete -n rg-alz-bu04a42-spoke 
-   az group delete -n rg-plz-enterprise-networking-hubs
+   az group delete -n rg-plz-connectivity-regional-hubs
    ```
 
 1. Purge Azure Key Vault

@@ -19,7 +19,7 @@ targetScope = 'subscription'
   'japaneast'
   'southeastasia'
 ])
-@description('The region for IaaS resources, and supporting managed services (i.e. KeyVault, App Gateway, etc) . This needs to be the same region as the target vnet provided.')
+@description('The region for IaaS resources, and supporting managed services (i.e. KeyVault, App Gateway, etc). This needs to be the same region as the target vnet provided.')
 param location string
 
 @description('The existing regional network spoke resource ID, provided by the landing zone platform team, that will host the virtual machines.')

@@ -4,7 +4,7 @@
 
     Subscription vending is typically done as a "one shot" process to bootstrap a subscription.
     There is no expectation that this bicep file is idempotent once the application team has started
-    to apply subnets to the virtual network.  It is idempotent up until that point though. Once the
+    to apply subnets to the virtual network. It is idempotent up until that point though. Once the
     workload team deploys subnets you cannot run this script again.
 
 */
@@ -39,7 +39,7 @@ param location string
 
 /*** EXISTING RESOURCES ***/
 
-@description('This is rg-plz-enterprise-networking-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
+@description('This is rg-plz-connectivity-regional-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   name: split(hubVnetResourceId,'/')[4]
 }
