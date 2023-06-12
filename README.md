@@ -78,11 +78,11 @@ You are not the platform team, and you are not deploying this into an existing A
 - [ ] Begin by ensuring you [install and meet the prerequisites](./01-prerequisites.md)
 - [ ] [Deploy mock connectivity subscription](./02-connectivity-subscription.md)
 
-### 2. Request an application landing zone
+### 2. Obtain an application landing zone
 
 All application landing zone deployments need the actual subscription(s) the solution's resources will be deployed to. Most organizations have a subscription vending process to create these application landing zone subscriptions. Let's walk through the request and fulfillment
 
-- [ ] [Submit your application landing zone request](./03-subscription-vending-request.md)
+- [ ] [Request your application landing zone](./03-subscription-vending-request.md)
 - [ ] [Deploy a mock application landing zone subscription](./04-subscription-vending-execute.md)
 
 ### 3. Deploy the solution infrastructure

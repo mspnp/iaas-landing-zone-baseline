@@ -12,7 +12,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 1. Gather initial application requirements and submit application landing zone request.
 
-   > :book: Instead of opening an ITSM ticket or using your internal request portal, we'll document key concepts you'd like being communicating to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
+   > :book: Instead of opening an ITSM ticket or using your internal request portal, listed below are key factors you'd likely be communicating to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
 
    - Biographical information
      - Business unit: **03**
