@@ -19,23 +19,24 @@ targetScope = 'subscription'
   'japaneast'
   'southeastasia'
 ])
-@description('The region for IaaS resources, and supporting managed services (i.e. KeyVault, App Gateway, etc). This needs to be the same region as the target vnet provided.')
+@description('The region for IaaS resources, and supporting managed services (i.e. Key Vault, Application Gateway, etc). This needs to be the same region as the target virtual network provided.')
 param location string
 
 @description('The existing regional network spoke resource ID, provided by the landing zone platform team, that will host the virtual machines.')
 @minLength(79)
 param targetVnetResourceId string
 
-@description('The certificate data for app gateway TLS termination. It is base64 encoded')
+@description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
 param appGatewayListenerCertificate string
 
-@description('The Base64 encoded Vmss Webserver public certificate (as .crt or .cer) to be stored in Azure Key Vault as secret and referenced by Azure Application Gateway as a trusted root certificate.')
+@description('The Base64 encoded VMSS web server public certificate (as .crt or .cer) to be stored in Azure Key Vault as secret and referenced by Azure Application Gateway as a trusted root certificate.')
 param vmssWildcardTlsPublicCertificate string
 
-@description('The Base64 encoded Vmss Webserver public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
+@description('The Base64 encoded VMSS web server public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
 param vmssWildcardTlsPublicAndKeyCertificates string
 
-@description('The admin passwork for the Windows backend machines.')
+@description('The admin password for the virtual machines machines.')
+@minLength(12)
 @secure()
 param adminPassword string
 

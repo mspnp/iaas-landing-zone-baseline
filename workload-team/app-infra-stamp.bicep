@@ -36,6 +36,7 @@ param vmssWildcardTlsPublicCertificate string
 param vmssWildcardTlsPublicAndKeyCertificates string
 
 @description('The admin password for the Windows backend machines.')
+@minLength(12)
 @secure()
 param adminPassword string
 
