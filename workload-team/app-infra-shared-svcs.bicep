@@ -48,21 +48,6 @@ resource workloadLogSink 'Microsoft.OperationalInsights/workspaces@2022-10-01' =
   }
 }
 
-@description('Since we know that our solution involves Virtual Machines, add the Azure Monitor solution up front.')
-resource omsVMInsights 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
-  name: 'VMInsights(${workloadLogSink.name})'
-  location: location
-  properties: {
-    workspaceResourceId: workloadLogSink.id
-  }
-  plan: {
-    name: 'VMInsights(${workloadLogSink.name})'
-    product: 'OMSGallery/VMInsights'
-    promotionCode: ''
-    publisher: 'Microsoft'
-  }
-}
-
 /*** OUTPUTS ***/
 
 output logAnalyticsWorkspaceResourceId string = workloadLogSink.id

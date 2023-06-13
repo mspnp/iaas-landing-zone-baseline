@@ -38,7 +38,7 @@ Now that you have a [mock application landing zone deployed](./04-subscription-v
    az deployment group create -g rg-bu0001a0008 -f shared-svcs-stamp.bicep -p targetVnetResourceId=${RESOURCEID_VNET_SPOKE_IAAS_BASELINE} location=eastus2
    ```
 
-### Save your work in-progress
+### Save your work-in-progress
 
 ```bash
 # run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env

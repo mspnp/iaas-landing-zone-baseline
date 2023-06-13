@@ -141,6 +141,8 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             description: 'Allow outbound to support package upgrades'
             targetFqdns: [
               'azure.archive.ubuntu.com'
+              'archive.ubuntu.com'
+              'security.ubuntu.com'
             ]
             protocols: [
               {

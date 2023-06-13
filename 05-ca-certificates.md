@@ -62,7 +62,7 @@ Now that you have an [application landing zone awaiting your workload](./04-subs
    echo VMSS_WILDCARD_CERT_PUBLIC_PRIVATE_KEYS_BASE64_IAAS_BASELINE: $VMSS_WILDCARD_CERT_PUBLIC_PRIVATE_KEYS_BASE64_IAAS_BASELINE
    ```
 
-### Save your work in-progress
+### Save your work-in-progress
 
 ```bash
 # run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env

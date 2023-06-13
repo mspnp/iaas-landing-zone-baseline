@@ -14,7 +14,7 @@ The following resource group will be created and populated with core networking 
 
 | Name                 | Purpose                                   |
 | :------------------- | :---------------------------------------- |
-| rg-alz-bu04a42-spoke | This is a stand-in for in your application landing zone subscription, and specifically the virtual network in which your architecture will reside within. |
+| rg-alz-bu04a42-spoke | This is a stand-in for part of your application landing zone subscription. This specifically contains the virtual network in which your architecture will reside within. |
 
 #### Resource group naming convention
 
@@ -55,7 +55,7 @@ Typically your subscription vending process would yield identities that can then
    >
    > The vending process is complete and the application team will now start using their new subscription for their solution. The platform team is not involved in the deployment of the actual solution's architecture. Once the application team starts deploying resources into their subscription, the vending process is considered frozen as re-running the prior vendor process would potentially render the workload inoperable as it is non-idempotent.
 
-### Save your work in-progress
+### Save your work-in-progress
 
 ```bash
 # run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env

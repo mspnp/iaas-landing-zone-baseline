@@ -217,7 +217,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachineScaleSets', location, 3)
   identity: {
-    type: 'SystemAssigned, UserAssigned'
+    type: 'UserAssigned'
     userAssignedIdentities: {
       '${miVmssFrontend.id}': {}
     }
@@ -314,51 +314,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       extensionProfile: {
         extensions: [
           {
-            name: 'KeyVaultForLinux'
-            properties: {
-              publisher: 'Microsoft.Azure.KeyVault'
-              type: 'KeyVaultForLinux'
-              typeHandlerVersion: '2.2'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-              settings: {
-                secretsManagementSettings: {
-                  certificateStoreLocation: '/var/lib/waagent/Microsoft.Azure.KeyVault.Store'
-                  observedCertificates: [
-                    workloadKeyVault::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
-                  ]
-                  requireInitialSync: 'true'  // Ensures all certs have been downloaded before the extension is considered installed
-                  pollingIntervalInS: '3600'
-                }
-                authenticationSettings: {
-                  msiClientId: miVmssFrontend.properties.clientId
-                }
-              }
-            }
-          }
-          {
-            name: 'CustomScript'
-            properties: {
-              provisionAfterExtensions: [
-                'KeyVaultForLinux'
-              ]
-              publisher: 'Microsoft.Azure.Extensions'
-              type: 'CustomScript'
-              typeHandlerVersion: '2.1'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-              protectedSettings: {
-                // TODO-CK: This won't work on 'internal', so temp moved to base64
-                // commandToExecute: 'sh configure-nginx-frontend.sh'
-                // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
-                //fileUris: [
-                //  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/content-pass/workload-team/workload/configure-nginx-frontend.sh'
-                //]
-                script: 'H4sIAAAAAAACA7VU22rcMBB991dMk8AmEFtJmz60SQohbCHkUsimhVKKkeWxLaKVjDR7cdP8e0f25tIQ6I36QcLSzJmjM0dafyEKbUUhQ5Mk63Ds2g4mwYBCTwEq76Zwit0nOTOU4LJ1nmDy+fzs5OI0Px5fXl0cnY8PNzbDrHRgAoi59MLoQiykrNGSONfKu+Aqyo6+zTxmd1jZhJxHAd+h9thCqiEdw1q2cP7aOFmm7awwWqWt13NJmEY2axzcoCwh3d1K+oKuRRuY6/L1zhuGsH9cfuPm6VluIXUzAoGkBEOLXgZha22XXIC5hsAzobfSpFrKcL9KJmTK08/MfJD/idhKmd+mdo1d7O/HtuQskC2BkqrBbODL/2mNBLN+Owae2EDSGLiI+E+i9Gov7aAvPxjHVrrmowwZsNDUgHeOoOUTbwNz3o7tM7zgXYGAtmwd890GaUvwOEcfMO4tu0RJgnfDWfsCImjCkKKVhcFSVM4vpC/h4ADGH94nAT0nw00C/BkdCC3s7b2KJff7tSEgt3KK0dGskS3TnZ3ssUiZ4nXuCM/TVVYweWy/rrSKmv29J57Fy7kj/9TOB1QWjZxyfP+uzibz3WHM7uaX+8mgjOOy2rEZV1LFr9c7b2UI0BC14a3gp0Bd/0IgsX8PEGZFXmnDPGH05U7cryMYbWw2LlDUfGv0XHjurEJwVTVs3j4heQiiknPNRTMeHjHGaUtdXuvqAVQqxQRz4+rHeLdJNAdb8xLZrvxuDcYkfqj4hQFqECwuQK2M25cdfB469tBUEd/fVWrfliz6SCtMfgAd7CO5NAUAAA=='
-              }
-            }
-          }
-          {
             name: 'AzureMonitorLinuxAgent'
             properties: {
               publisher: 'Microsoft.Azure.Monitor'
@@ -390,6 +345,82 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             }
           }
           {
+            name: 'NetworkWatcherAgentLinux'
+            properties: {
+              provisionAfterExtensions: [
+                'DependencyAgentLinux'
+              ]
+              publisher: 'Microsoft.Azure.NetworkWatcher'
+              type: 'NetworkWatcherAgentLinux'
+              typeHandlerVersion: '1.4'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+            }
+          }
+          // While this is installed, this requires a system-managed identity to be associated
+          // with the invidual VM.  Flex doesn't support handing out system-managed identities,
+          // only user-managed identities.  It installs without an issue, to prep for having
+          // AAD-based auth.  TODO-CK: See if we can get it to work with user-managed anyway.
+          {
+            name: 'AADSSHLogin'
+            properties: {
+              provisionAfterExtensions: [
+                'NetworkWatcherAgentLinux'
+              ]
+              publisher: 'Microsoft.Azure.ActiveDirectory'
+              type: 'AADSSHLoginForLinux'
+              typeHandlerVersion: '1.0'
+              autoUpgradeMinorVersion: true
+            }
+          }
+          {
+            name: 'KeyVaultForLinux'
+            properties: {
+              provisionAfterExtensions: [
+                'AADSSHLogin'
+              ]
+              publisher: 'Microsoft.Azure.KeyVault'
+              type: 'KeyVaultForLinux'
+              typeHandlerVersion: '2.2'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+              settings: {
+                secretsManagementSettings: {
+                  certificateStoreLocation: '/var/lib/waagent/Microsoft.Azure.KeyVault.Store'
+                  observedCertificates: [
+                    workloadKeyVault::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
+                  ]
+                  requireInitialSync: true  // Ensures all certs have been downloaded before the extension is considered installed
+                  pollingIntervalInS: '3600'
+                }
+                authenticationSettings: {
+                  msiClientId: miVmssFrontend.properties.clientId
+                }
+              }
+            }
+          }
+          {
+            name: 'CustomScript'
+            properties: {
+              provisionAfterExtensions: [
+                'KeyVaultForLinux'
+              ]
+              publisher: 'Microsoft.Azure.Extensions'
+              type: 'CustomScript'
+              typeHandlerVersion: '2.1'
+              autoUpgradeMinorVersion: true
+              protectedSettings: {
+                // TODO-CK: This won't work on 'internal', so temp moved to base64
+                // commandToExecute: 'sh configure-nginx-frontend.sh'
+                // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
+                //fileUris: [
+                //  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/content-pass/workload-team/workload/configure-nginx-frontend.sh'
+                //]
+                script: 'H4sIAAAAAAACA7VU22rcMBB991dMk8AmEFtJmz60SQohbCHkUsimhVKKkeWxLaKVjDR7cdP8e0f25tIQ6I36QcLSzJmjM0dafyEKbUUhQ5Mk63Ds2g4mwYBCTwEq76Zwit0nOTOU4LJ1nmDy+fzs5OI0Px5fXl0cnY8PNzbDrHRgAoi59MLoQiykrNGSONfKu+Aqyo6+zTxmd1jZhJxHAd+h9thCqiEdw1q2cP7aOFmm7awwWqWt13NJmEY2axzcoCwh3d1K+oKuRRuY6/L1zhuGsH9cfuPm6VluIXUzAoGkBEOLXgZha22XXIC5hsAzobfSpFrKcL9KJmTK08/MfJD/idhKmd+mdo1d7O/HtuQskC2BkqrBbODL/2mNBLN+Owae2EDSGLiI+E+i9Gov7aAvPxjHVrrmowwZsNDUgHeOoOUTbwNz3o7tM7zgXYGAtmwd890GaUvwOEcfMO4tu0RJgnfDWfsCImjCkKKVhcFSVM4vpC/h4ADGH94nAT0nw00C/BkdCC3s7b2KJff7tSEgt3KK0dGskS3TnZ3ssUiZ4nXuCM/TVVYweWy/rrSKmv29J57Fy7kj/9TOB1QWjZxyfP+uzibz3WHM7uaX+8mgjOOy2rEZV1LFr9c7b2UI0BC14a3gp0Bd/0IgsX8PEGZFXmnDPGH05U7cryMYbWw2LlDUfGv0XHjurEJwVTVs3j4heQiiknPNRTMeHjHGaUtdXuvqAVQqxQRz4+rHeLdJNAdb8xLZrvxuDcYkfqj4hQFqECwuQK2M25cdfB469tBUEd/fVWrfliz6SCtMfgAd7CO5NAUAAA=='
+              }
+            }
+          }
+          {
             name: 'HealthExtension'
             properties: {
               provisionAfterExtensions: [
@@ -397,7 +428,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               ]
               publisher: 'Microsoft.ManagedServices'
               type: 'ApplicationHealthLinux'
-              typeHandlerVersion: '2.0'
+              typeHandlerVersion: '1.0'  // In 2.x, you need to hit an endpoint that returns { "ApplicationHealthState": "Healthy" } or { "ApplicationHealthState": "Unhealthy" }
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -406,32 +437,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 requestPath: '/favicon.ico'
                 intervalInSeconds: 5
                 numberOfProbes: 3
-                gracePeriod: 60
               }
-            }
-          }
-          {
-            name: 'AADSSHLoginForLinux'
-            properties: {
-              publisher: 'Microsoft.Azure.ActiveDirectory'
-              type: 'AADSSHLoginForLinux'
-              typeHandlerVersion: '1.0'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-              settings: {}
-              protectedSettings: {}
-            }
-          }
-          {
-            name: 'NetworkWatcherAgentLinux'
-            properties: {
-              publisher: 'Microsoft.Azure.NetworkWatcher'
-              type: 'NetworkWatcherAgentLinux'
-              typeHandlerVersion: '1.4'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-              settings: {}
-              protectedSettings: {}
             }
           }
         ]
@@ -483,6 +489,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       diagnosticsProfile: {
         bootDiagnostics: {
           enabled: true
+          /* TODO-CK: Why not to our own storage account? */
         }
       }
       osProfile: {
@@ -941,6 +948,10 @@ resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
       ]
     }
   }
+
+  dependsOn: [
+    peKv::pdnszg    // Deploying both endpoints at the same time can cause ConflictErrors
+  ]
 }
 
 @description('A private DNS zone for iaas-ingress.contoso.com')

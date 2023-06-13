@@ -42,7 +42,6 @@ We're going to take the core workload requirements from the [IaaS baseline](http
      - Azure Application Gateway (with WAF)
    - Azure Bastion Access: **Yes**, platform provided
    - Solution uses Private Link: **Yes**
-     - Azure Storage
      - Azure Key Vault
    - … plenty more such as: environment, latency sensitivity, user and service principal auth needs, etc.
 

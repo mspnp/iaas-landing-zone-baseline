@@ -84,7 +84,7 @@ If you are using a single tenant for this walk-through, the compute deployment s
 
 Using Azure RBAC as your authorization approach is ultimately preferred as it allows for the unified management and access control across Azure Resources, VMs, and VM resources. At the time of this writing there are ten [Azure RBAC roles](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#compute) that represent typical compute access patterns.
 
-### Save your work in-progress
+### Save your work-in-progress
 
 ```bash
 # run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env

@@ -58,7 +58,7 @@ The hub will be a virtual network based hub, containing common shared resources 
    echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
    ```
 
-### Save your work in-progress
+### Save your work-in-progress
 
 ```bash
 # run the saveenv.sh script at any time to save environment variables created above to iaas_baseline.env
