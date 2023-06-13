@@ -709,3 +709,5 @@ resource regionalBastionHost_diagnosticSettings 'Microsoft.Insights/diagnosticSe
 /*** OUTPUTS ***/
 
 output hubVnetId string = vnetHub.id
+
+output regionalBastionHostName string = regionalBastionHost.name

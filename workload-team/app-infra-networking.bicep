@@ -798,3 +798,5 @@ resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSe
 }
 
 /*** OUTPUTS ***/
+
+output appGwPublicIpAddress string = pipPrimaryWorkloadIp.properties.ipAddress

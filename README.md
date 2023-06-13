@@ -100,7 +100,7 @@ You performed the prior steps manually here to help you understand the involved 
 
 Now that the compute and the sample workload is deployed; it's time to look at how it's all working.
 
-- [ ] [Validate compute infrastructure bootstrapping](./07-bootstrap-validation.md)
+- [ ] [Validate your compute infrastructure is operational](./07-bootstrap-validation.md)
 - [ ] [Perform end-to-end deployment validation](./11-validation.md)
 
 ## :broom: Clean up resources
