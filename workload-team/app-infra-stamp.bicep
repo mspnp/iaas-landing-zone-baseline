@@ -26,13 +26,13 @@ param targetVnetResourceId string
 ])
 param location string = 'eastus2'
 
-@description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded')
+@description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
 param appGatewayListenerCertificate string
 
 @description('The Base64 encoded VMSS web server public certificate (as .crt or .cer) to be stored in Azure Key Vault as secret and referenced by Azure Application Gateway as a trusted root certificate.')
 param vmssWildcardTlsPublicCertificate string
 
-@description('The Base64 encoded VMSS Webserver public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
+@description('The Base64 encoded VMSS web server public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
 param vmssWildcardTlsPublicAndKeyCertificates string
 
 @description('The admin password for the Windows backend machines.')
@@ -45,8 +45,8 @@ param subComputeRgUniqueString string
 
 /*** VARIABLES ***/
 
-var agwName = 'agw-${subComputeRgUniqueString}'
-var lbName = 'ilb-${subComputeRgUniqueString}'
+var agwName = 'agw-public-ingress'
+var lbName = 'ilb-backend'
 
 var defaultAdminUserName = uniqueString('vmss', subComputeRgUniqueString, resourceGroup().id)
 
@@ -988,7 +988,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
 
 @description('The Azure Application Gateway that fronts our workload.')
 resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' = {
-  name: agwName   /* TODO-CK: Give this a human readable name */
+  name: agwName
   location: location
   identity: {
     type: 'UserAssigned'
@@ -1181,7 +1181,7 @@ resource workloadAppGateway_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-
 
 @description('Internal load balancer that sits between the front end and back end compute.')
 resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
-  name: lbName  /* TODO-CK: Give this a human readable name */
+  name: lbName
   location: location
   sku: {
     name: 'Standard'
