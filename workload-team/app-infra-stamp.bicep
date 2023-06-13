@@ -216,7 +216,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachineScaleSets', location, 3)
   identity: {
-    type: 'UserAssigned'
+    type: 'SystemAssigned, UserAssigned'
     userAssignedIdentities: {
       '${miVmssFrontend.id}': {}
     }
@@ -317,7 +317,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             properties: {
               publisher: 'Microsoft.Azure.KeyVault'
               type: 'KeyVaultForLinux'
-              typeHandlerVersion: '2.0'
+              typeHandlerVersion: '2.2'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -326,9 +326,12 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                   observedCertificates: [
                     workloadKeyVault::kvsWorkloadPublicAndPrivatePublicCerts.properties.secretUri
                   ]
+                  requireInitialSync: 'true'  // Ensures all certs have been downloaded before the extension is considered installed
                   pollingIntervalInS: '3600'
                 }
-                /* TODO-CK: Where is the managed identity selection? */
+                authenticationSettings: {
+                  msiClientId: miVmssFrontend.properties.clientId
+                }
               }
             }
           }
@@ -342,6 +345,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               type: 'CustomScript'
               typeHandlerVersion: '2.1'
               autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
               protectedSettings: {
                 // TODO-CK: This won't work on 'internal', so temp moved to base64
                 // commandToExecute: 'sh configure-nginx-frontend.sh'
@@ -358,7 +362,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             properties: {
               publisher: 'Microsoft.Azure.Monitor'
               type: 'AzureMonitorLinuxAgent'
-              typeHandlerVersion: '1.25'
+              typeHandlerVersion: '1.26'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -392,7 +396,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               ]
               publisher: 'Microsoft.ManagedServices'
               type: 'ApplicationHealthLinux'
-              typeHandlerVersion: '1.0'
+              typeHandlerVersion: '2.0'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -401,7 +405,32 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 requestPath: '/favicon.ico'
                 intervalInSeconds: 5
                 numberOfProbes: 3
+                gracePeriod: 60
               }
+            }
+          }
+          {
+            name: 'AADSSHLoginForLinux'
+            properties: {
+              publisher: 'Microsoft.Azure.ActiveDirectory'
+              type: 'AADSSHLoginForLinux'
+              typeHandlerVersion: '1.0'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+              settings: {}
+              protectedSettings: {}
+            }
+          }
+          {
+            name: 'NetworkWatcherAgentLinux'
+            properties: {
+              publisher: 'Microsoft.Azure.NetworkWatcher'
+              type: 'NetworkWatcherAgentLinux'
+              typeHandlerVersion: '1.4'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+              settings: {}
+              protectedSettings: {}
             }
           }
         ]
@@ -578,7 +607,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               }
             }
           }
-
           {
             name: 'CustomScript'
             properties: {

@@ -529,6 +529,9 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
                 'wdcpalt.microsoft.com'
                 'sls.microsoft.com'
                 '*.sls.microsoft.com'
+                'pas.windows.net'
+                'packages.microsoft.com'
+                'login.microsoftonline.com'
               ]
               protocols: [
                 {
