@@ -52,6 +52,19 @@ resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@20
   location: location
 }
 
+@description('Deploy common Azure Policies to apply to the application landing zone. These are NOT workload specific, but instead examples of some common Azure Landing Zone policies.')
+module deployManagementGroupProxy 'management-group-proxy.bicep' = {
+  name: 'deploy-management-group-proxy'
+  scope: subscription()
+  params: {
+    applicationLandingZoneResourceGroups: [
+      appLandingZoneSpokeResourceGroup.name
+      'rg-alz-bu04a42-compute'
+    ]
+    location: location
+  }
+}
+
 @description('Deploy the application landing zone (specifically just the network part)')
 module deployApplicationLandingZone 'app-landing-zone-bu04a42.bicep' = {
   scope: appLandingZoneSpokeResourceGroup

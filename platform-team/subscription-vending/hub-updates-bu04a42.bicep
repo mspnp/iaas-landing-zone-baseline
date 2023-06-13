@@ -161,7 +161,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
             ]
             protocols: [
               {
-                protocolType: 'Http'  // May of the calls are HTTP, just like in Linux.
+                protocolType: 'Http'  // Many of the calls are HTTP, just like in Linux.
                 port: 80
               }
               {
@@ -179,7 +179,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
           {
             ruleType: 'ApplicationRule'
             name: 'windows-diagnostics'
-            description: 'Allow outbound to support windows diagnostics'
+            description: 'Allow outbound to support Windows diagnostics'
             fqdnTags: [
               'WindowsDiagnostics'
             ]
