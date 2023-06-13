@@ -200,13 +200,13 @@ resource miAppGatewayFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@
 
 @description('The managed identity for all frontend virtual machines.')
 resource miVmssFrontend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'mi-vm-frontent'
+  name: 'mi-vm-frontend'
   location: location
 }
 
 @description('The managed identity for all backend virtual machines.')
 resource miVmssBackend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'mi-vm-backent'
+  name: 'mi-vm-backend'
   location: location
 }
 
@@ -791,7 +791,7 @@ resource kvMiAppGatewayFrontendKeyVaultReader_roleAssignment 'Microsoft.Authoriz
 @description('Grant the Vmss Frontend managed identity with key vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultSecretsUserRole.id)
+  name: guid(resourceGroup().id, 'mi-vm-frontend', keyVaultSecretsUserRole.id)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole.id
     principalId: miVmssFrontend.properties.principalId
@@ -802,7 +802,7 @@ resource kvMiVmssFrontendSecretsUserRole_roleAssignment 'Microsoft.Authorization
 @description('Grant the Vmss Frontend managed identity with key vault reader role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-frontent', keyVaultReaderRole.id)
+  name: guid(resourceGroup().id, 'mi-vm-frontend', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
     principalId: miVmssFrontend.properties.principalId
@@ -813,7 +813,7 @@ resource kvMiVmssFrontendKeyVaultReader_roleAssignment 'Microsoft.Authorization/
 @description('Grant the backend compute managed identity with Key Vault secrets role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultSecretsUserRole.id)
+  name: guid(resourceGroup().id, 'mi-vm-backend', keyVaultSecretsUserRole.id)
   properties: {
     roleDefinitionId: keyVaultSecretsUserRole.id
     principalId: miVmssBackend.properties.principalId
@@ -824,7 +824,7 @@ resource kvMiVmssBackendSecretsUserRole_roleAssignment 'Microsoft.Authorization/
 @description('Grant the backend compute managed identity with Key Vault reader role permissions; this allows pulling frontend and backend certificates.')
 resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   scope: workloadKeyVault
-  name: guid(resourceGroup().id, 'mi-vm-backent', keyVaultReaderRole.id)
+  name: guid(resourceGroup().id, 'mi-vm-backend', keyVaultReaderRole.id)
   properties: {
     roleDefinitionId: keyVaultReaderRole.id
     principalId: miVmssBackend.properties.principalId
