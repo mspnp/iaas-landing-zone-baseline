@@ -1,6 +1,6 @@
 # Validate your compute infrastructure is operational [Workload team]
 
-Now that [the compute infrastructure](./06-compute-infra.md) has been deployed, the next step to validate that your virtual machines are running.
+Now that [the compute infrastructure](./07-compute-infra.md) has been deployed, the next step to validate that your virtual machines are running.
 
 A web server is enabled on both tiers of this deployment so that you can test end to end connectivity. It was installed & configured with a custom script extension on the virtual machines you just deployed. This is NOT how applications should be deployed, it's simply deployed like this so you have a connectivity experience to work with out of the box.
 

@@ -51,9 +51,7 @@ Typically your subscription vending process would yield identities that can then
    echo "RESOURCEID_VNET_SPOKE_IAAS_BASELINE: $RESOURCEID_VNET_SPOKE_IAAS_BASELINE"
    ```
 
-   > :book: The application landing zone has been created, ready for the workload team to use for their scenario. The application team nows has a subscription dedicated to their scenario, with core networking components in place, connected to its regional hub, enrolled in cost management, and placed under organizational governance. Initial RBAC permissions have been assigned as well. As the application requirements evolve, their will undoubtedly be future requests from the application team to the platform team, such as Azure Firewall changes to support new egress flows. Likewise, the application team may submit troubleshooting requests for Connectivity resources. When the platform team has new Azure policy assignments or updates to roll out, there would be conversations to the impacted application team.
-   >
-   > The vending process is complete and the application team will now start using their new subscription for their solution. The platform team is not involved in the deployment of the actual solution's architecture. Once the application team starts deploying resources into their subscription, the vending process is considered frozen as re-running the prior vendor process would potentially render the workload inoperable as it is non-idempotent.
+   > :book: The application landing zone has been created, almost ready for the workload team to use for their scenario. The application team nows has a subscription dedicated to their scenario, with core networking components in place, connected to its regional hub, enrolled in cost management, and placed under organizational governance. Initial RBAC permissions have been assigned as well. As the application requirements evolve, their will undoubtedly be future requests from the application team to the platform team, such as Azure Firewall changes to support new egress flows. Likewise, the application team may submit troubleshooting requests for Connectivity resources. When the platform team has new Azure policy assignments or updates to roll out, there would be conversations to the impacted application team.
 
 ### Save your work-in-progress
 
@@ -67,6 +65,8 @@ Typically your subscription vending process would yield identities that can then
 
 ### Next step
 
-This is the last step in which you'll be directly acting in the role of someone on the platform team. Thanks for role playing that role. From this point forward, you now will be deploying the IaaS baseline architecture into your prepared application landing zone.
+:arrow_forward: [Configure user access for application team](./05-aad.md)
+
+
 
 :arrow_forward: Let's start by [getting your TLS certificates ready for workload deployment](./05-ca-certificates.md)

@@ -1,6 +1,6 @@
 # Deploy the compute infrastructure [Workload team]
 
-Now that you have a [mock application landing zone deployed](./04-subscription-vending-execute.md) and procured your TLS certificates for your solution, the next step in the [IaaS baseline reference implementation](./README.md) is deploying the frontend and backend compute resources and the Azure managed services they depend on.
+Now that you have [procured your TLS certificates for your solution](./06-ca-certificates.md), the next step in the [IaaS baseline reference implementation](./README.md) is deploying the frontend and backend compute resources and the Azure managed services they depend on. These are the resources for your application's architecture.
 
 ## Expected results
 
@@ -40,4 +40,4 @@ Azure Application Gateway, for this reference implementation, is placed in the s
 
 ### Next step
 
-:arrow_forward: [Validate your compute infrastructure is deployed](./07-bootstrap-validation.md)
+:arrow_forward: [Validate your compute infrastructure is deployed](./08-bootstrap-validation.md)
