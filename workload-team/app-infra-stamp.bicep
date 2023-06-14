@@ -44,6 +44,17 @@ param adminPassword string
 @maxLength(13)
 param subComputeRgUniqueString string
 
+@description('The Azure Active Directory group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
+@minLength(36)
+param adminAadSecurityPrincipalObjectId string
+
+@description('The principal type of the adminAadSecurityPrincipalObjectId ID.')
+@allowed([
+  'User'
+  'Group'
+])
+param adminAddSecurityPrincipalType string
+
 /*** VARIABLES ***/
 
 var agwName = 'agw-public-ingress'
@@ -62,6 +73,12 @@ resource keyVaultReaderRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-
 @description('Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload\'s identity.')
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
+  scope: subscription()
+}
+
+@description('Built-in Azure RBAC role that is applied to the virtual machines to grant remote user access to them via SSH or RDP. Granted to the provided group object id.')
+resource virtualMachineAdminLoginRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  name: '1c0163c0-47e6-4577-8991-ea5c82e286e4'
   scope: subscription()
 }
 
@@ -153,6 +170,18 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
 }
 
 /*** RESOURCES ***/
+
+@description('Sets up the provided group object id to have access to SSH or RDP into all virtual machines with the AAD login extension installed in this resource group.')
+resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, adminAadSecurityPrincipalObjectId, virtualMachineAdminLoginRole.id)
+  scope: resourceGroup()
+  properties: {
+    principalId: adminAadSecurityPrincipalObjectId
+    roleDefinitionId: virtualMachineAdminLoginRole.id
+    principalType: adminAddSecurityPrincipalType
+    description: 'Allows all users in this group access to log into virtual machines that use the AAD login extension.'
+  }
+}
 
 @description('Azure WAF policy to apply to our workload\'s inbound traffic.')
 resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-11-01' = {
@@ -451,6 +480,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
+    grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
 
@@ -699,6 +729,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
+    grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
 

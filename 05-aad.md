@@ -32,15 +32,19 @@ The platform identity team probably manages your Azure Active Directory groups a
    If you already have a security group that is appropriate for your compute's admin user accounts, use that group and don't create a new one. If using your own group or your Azure AD administrator created one for you to use as part of the subscription vending landing zone process; set that Object ID below.
 
    ```bash
-   export AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE="Paste your existing compute admin group Object ID (guid) in these quotes."
-   echo AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE
+   export COMPUTEADMIN_TYPE_IAAS_BASELINE="Group"
+   export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="Paste your existing compute admin group Object ID (guid) in these quotes."
+   echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
+   echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
    ```
 
    If you want to create a new one instead, and have the permissions to do so, you can use the following command:
 
    ```bash
-   export AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE=$(az ad group create --display-name 'compute-admins-bu04a42' --mail-nickname 'compute-admins-bu04a42' --description "Principals in this group are compute admins in the bu04a42 virtual machines." --query id -o tsv)
-   echo AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE
+   export COMPUTEADMIN_TYPE_IAAS_BASELINE="Group"
+   export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE=$(az ad group create --display-name 'compute-admins-bu04a42' --mail-nickname 'compute-admins-bu04a42' --description "Principals in this group are compute admins in the bu04a42 virtual machines." --query id -o tsv)
+   echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
+   echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
    ```
 
    This Azure AD group object ID will be used later while creating the virtual machines so that once the virtual machines gets deployed the identified group will get the proper Azure role assignment to be able to login.
@@ -52,7 +56,7 @@ The platform identity team probably manages your Azure Active Directory groups a
    If instead followed the instructions above to create a new security group, you can use the follow command to add yourself:
 
    ```bash
-   az ad group member add -g $AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE --member-id $(az ad signed-in-user show --query id -o tsv)
+   az ad group member add -g $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE --member-id $(az ad signed-in-user show --query id -o tsv)
    ```
 
 ### Alternative if group management access is not possible in your environment
@@ -60,10 +64,10 @@ The platform identity team probably manages your Azure Active Directory groups a
 If an existing suitable group is not available or access to do the above is not possible, please execute the following and the deployment guide will provide RBAC access to _your user_ directly instead of being group-based.
 
 ```bash
-export AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE=""
-export AADOBJECTID_SIGNEDINUSER_IAAS_BASELINE="$(az ad signed-in-user show --query "id" -o tsv)"
-echo AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_GROUP_COMPUTEADMIN_IAAS_BASELINE
-echo AADOBJECTID_SIGNEDINUSER_IAAS_BASELINE: $AADOBJECTID_SIGNEDINUSER_IAAS_BASELINE
+export COMPUTEADMIN_TYPE_IAAS_BASELINE="User"
+export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="$(az ad signed-in-user show --query "id" -o tsv)"
+echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
+echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
 ```
 
 ### Final thoughts

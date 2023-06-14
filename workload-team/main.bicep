@@ -35,10 +35,21 @@ param vmssWildcardTlsPublicCertificate string
 @description('The Base64 encoded VMSS web server public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
 param vmssWildcardTlsPublicAndKeyCertificates string
 
-@description('The admin password for the virtual machines machines.')
+@description('The admin password for the virtual machines machines. This account will not be used for access.')
 @minLength(12)
 @secure()
 param adminPassword string
+
+@description('The Azure Active Directory group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
+@minLength(36)
+param adminAadSecurityPrincipalObjectId string
+
+@description('The principal type of the adminAadSecurityPrincipalObjectId ID.')
+@allowed([
+  'User'
+  'Group'
+])
+param adminAddSecurityPrincipalType string
 
 /*** VARIABLES ***/
 
@@ -97,6 +108,8 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     vmssWildcardTlsPublicAndKeyCertificates: vmssWildcardTlsPublicAndKeyCertificates
     vmssWildcardTlsPublicCertificate: vmssWildcardTlsPublicCertificate
     subComputeRgUniqueString: subComputeRgUniqueString
+    adminAadSecurityPrincipalObjectId: adminAadSecurityPrincipalObjectId
+    adminAddSecurityPrincipalType: adminAddSecurityPrincipalType
   }
   dependsOn: [
     applySubnetsAndUdrs
