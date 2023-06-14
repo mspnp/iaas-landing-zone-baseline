@@ -1,6 +1,8 @@
-# Azure Landing Zone IaaS baseline network topology
+# Azure landing zone IaaS baseline network topology
 
 > Note: This is part of the IaaS baseline reference implementation. For more information see the [readme file in the root](../README.md).
+
+![Subnet layout for the reference implementation](./network-topology.png)
 
 ## Hub virtual network
 
