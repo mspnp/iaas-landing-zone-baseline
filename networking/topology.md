@@ -1,55 +1,66 @@
-# IaaS baseline network topology
+# Azure Landing Zone IaaS baseline network topology
 
 > Note: This is part of the IaaS baseline reference implementation. For more information see the [readme file in the root](../README.md).
 
 ## Hub virtual network
 
-`CIDR: 10.200.0.0/24`
+- Location: Connectivity subscription
+- CIDR: `10.200.0.0/24`
 
-This regional VNet hub (shared) is meant to hold the following subnets:
+This regional virtual network hub is meant to hold the following subnets:
 
-* [Azure Firewall subnet]
-* [Gateway subnet]
-* [Azure Bastion subnet], with reference NSG in place
+- [Azure Firewall subnet]
+- [Gateway subnet]
+- [Azure Bastion subnet], with reference NSG in place
 
 > Note: For more information about this topology, you can read more at [Azure hub-spoke topology].
 
+### Hub subnet details
+
+| Subnet                | IPs (as deployed)  | IPs (max potential) | CIDR            |
+| :-------------------- | -----------------: | ------------------: | :-------------- |
+| `GatewaySubnet`       |            dynamic |                [27] | 10.200.0.64/27  |
+| `AzureFirewallSubnet` |                  1 |           [57][57f] | 10.200.0.0/26   |
+| `AzureBastionSubnet`  |            dynamic |           [57][57b] | 10.200.0.128/26 |
+
 ## Spoke virtual network
 
-`CIDR: 10.240.0.0/16`
+- Location: Application landing zone subscription
+- CIDR: `10.240.0.0/21`
 
-This VNet spoke is meant to hold the following subnets:
+This virtual network spoke is meant to hold the following subnets:
 
-* [VMSS Frontend] and [VMSS Backend] subnet
-* [Internal Load Balancer subnet]
-* [Azure Application Gateway subnet]
-* [Private Link Endpoint subnet]
-* All with basic NSGs around each
+- VMSS frontend and VMSS backend subnets
+- Internal Load Balancer subnet
+- [Azure Application Gateway subnet]
+- [Private Link Endpoint subnet]
+- Deployment (or build) agent subnet
+- All with NSGs around each
 
-## Subnet details
+### Spoke subnet details
 
-| Subnet                                      | Upgrade VM   | VMs/Instance | % Seasonal scale out | +VMs       | Max IPs per VM           | % Max Surge   | % Max Unavailable   | Tot. IPs per VM           | [Azure Subnet not assignable IPs factor] | [Private Endpoints] | Minimum Subnet size]  | Scaled Subnet size | [Subnet Mask bits] | CIDR            | Host         | Broadcast    |
-|---------------------------------------------|-------------:|-------------:|---------------------:|-----------:|-------------------------:|--------------:|--------------------:|--------------------------:|-----------------------------------------:|--------------------:|----------------------:|-------------------:|-------------------:|-----------------|--------------|--------------|
-| VMSS Frontend Subnet                        | -            | 3            | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 0                   | 7                     | 7                  | 24                 | 10.240.0.0/24   | 10.240.0.0   | 10.240.0.255 |
-| VMSS Backend Subnet                         | -            | 3            | -                    | -          | -                        | 100           | 100                 | 5                         | 5                                        | 0                   | 7                     | 7                  | 24                 | 10.240.1.0/24   | 10.240.4.0   | 10.240.1.255 |
-| Internal Load Balancer Subnet               | -            | -            | -                    | -          | 5                        | 100           | 100                 | 5                         | 5                                        | 0                   | 10                    | 10                 | 28                 | 10.240.4.0/28   | 10.240.4.0   | 10.240.4.15  |
-| Private Link Endpoint Subnet                | -            | -            | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 1                   | 7                     | 7                  | 28                 | 10.240.4.32/28  | 10.240.4.32  | 10.240.4.47  |
-| Azure Application Gateway Subnet            | -            | [251]        | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 0                   | 256                   | 256                | 24                 | 10.240.5.0/24   | 10.240.5.0   | 10.240.5.255 |
-| Gateway Subnet (GatewaySubnet)              | -            | [27]         | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 0                   | 32                    | 32                 | 27                 | 10.200.0.64/27  | 10.200.0.64  | 10.200.0.95  |
-| Azure Firewall Subnet (AzureFirewallSubnet) | -            | [59]         | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 0                   | 64                    | 64                 | 26                 | 10.200.0.0/26   | 10.200.0.0   | 10.200.0.63  |
-| Azure Bastion Subnet (AzureBastionSubnet)   | -            | [50]         | -                    | -          | -                        | 100           | 100                 | 0                         | 5                                        | 0                   | 64                    | 64                 | 26                 | 10.200.0.128/26 | 10.200.0.128 | 10.200.0.191 |
+| Subnet                      | IPs (as deployed)  | IPs (max potential) | CIDR           |
+| :-------------------------- | -----------------: | ------------------: | :------------- |
+| `snet-frontend`             |                  3 |                 251 | 10.240.0.0/24  |
+| `snet-backend`              |                  3 |                 251 | 10.240.1.0/24  |
+| `snet-ilbs`                 |                  1 |                  11 | 10.240.4.0/28  |
+| `snet-privatelinkendpoints` |                  2 |                  11 | 10.240.4.32/28 |
+| `snet-applicationgateway`   |            dynamic |               [251] | 10.240.5.0/24  |
+| `snet-deploymentagents`     |                  0 |                  11 | 10.240.4.96/28 |
+
+### Growth
+
+The spoke virtual network was allocated with room for about 2000 IP addresses. This would support additional growth of the solution, and ultimately complete A/B deployment (or recovery deployment) of the above infrastructure if desired with that growth. The spoke is oversized to ensure the application team has room to grow without needing to get more space allocated from the organization's IPAM system. While you shouldn't grab more IPs than are ever expected to be used, always request IP space up front that reflect realistic growth and advanced deployment models.
 
 ## Additional considerations
 
-* [Private Endpoints] subnet: Private Links are created for Azure Key Vault, so this Azure service can be accessed using Private Endpoints within the spoke virtual network. There are multiple [Private Link deployment options]; in this implementation they are deployed to a dedicated subnet within the spoke virtual network.
+[Private Endpoints] are used for Azure Key Vault, so this Azure service can be accessed using Private Endpoints within the spoke virtual network. There are multiple [Private Link deployment options]; in this implementation they are deployed to a dedicated subnet within the spoke virtual network.
 
 [27]: https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#gwsub
 [251]: https://learn.microsoft.com/azure/application-gateway/configuration-overview#size-of-the-subnet
-[59]: https://learn.microsoft.com/azure/firewall/firewall-faq#does-the-firewall-subnet-size-need-to-change-as-the-service-scales
-[50]: https://learn.microsoft.com/azure/bastion/configuration-settings#instance
-[Azure Subnet not assignable IPs factor]: https://learn.microsoft.com/azure/virtual-network/virtual-network-ip-addresses-overview-arm#allocation-method-1
+[57f]: https://learn.microsoft.com/azure/firewall/firewall-faq#does-the-firewall-subnet-size-need-to-change-as-the-service-scales
+[57b]: https://learn.microsoft.com/azure/bastion/configuration-settings#instance
 [Private Endpoints]: https://learn.microsoft.com/azure/private-link/private-endpoint-overview#private-endpoint-properties
-[Subnet Mask bits]: https://learn.microsoft.com/azure/virtual-network/virtual-networks-faq#how-small-and-how-large-can-vnets-and-subnets-be
 [Azure hub-spoke topology]: https://learn.microsoft.com/azure/architecture/reference-architectures/hybrid-networking/hub-spoke
 [Azure Firewall subnet]: https://learn.microsoft.com/azure/firewall/firewall-faq#does-the-firewall-subnet-size-need-to-change-as-the-service-scales
 [Gateway subnet]: https://learn.microsoft.com/azure/vpn-gateway/vpn-gateway-about-vpn-gateway-settings#gwsub
