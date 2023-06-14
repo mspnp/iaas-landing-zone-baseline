@@ -23,6 +23,19 @@ Azure Application Gateway, for this reference implementation, is placed in the s
    ```bash
    # [This takes about 18 minutes.]
    az deployment sub create -l eastus2 -n application-infra -f workload-team/main.bicep -p targetVnetResourceId=${RESOURCEID_VNET_SPOKE_IAAS_BASELINE} location=eastus2 appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE} vmssWildcardTlsPublicCertificate=${VMSS_WILDCARD_CERTIFICATE_BASE64_IAAS_BASELINE} vmssWildcardTlsPublicAndKeyCertificates=${VMSS_WILDCARD_CERT_PUBLIC_PRIVATE_KEYS_BASE64_IAAS_BASELINE}
+
+   export RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE = $(az deployment sub show -n application --query properties.outputs.frontendVmssResourceId.value -o tsv)
+   export RESOURCEID_VMSS_BACKEND_IAAS_BASELINE = $(az deployment sub show -n application --query properties.outputs.backendVmssResourceId.value -o tsv)
+   echo "RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE: $RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE"
+   echo "RESOURCEID_VMSS_BACKEND_IAAS_BASELINE: $RESOURCEID_VMSS_BACKEND_IAAS_BASELINE"
+   ```
+
+1. Assign system managed identities to all virtual machines.
+
+   The virtual machines each need a system managed identity assigned to [support Azure Active Directory authentication](https://learn.microsoft.com/azure/active-directory/devices/howto-vm-sign-in-azure-ad-linux#virtual-machine). This is not possible to assign within the Bicep, unless implemented similarly through deploymentScripts which would be an option. Generally speaking, you should strive to minimize mixing declarative deployments (Bicep) and imperative control (az cli, DINE policies, portal) in your workload.
+
+   ```bash
+   az vm identity assign --identities [system] --ids $(az vm list --vmss ${RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE} --query '[[].id]' -o tsv)  $(az vm list --vmss ${RESOURCEID_VMSS_BACKEND_IAAS_BASELINE} --query '[[].id]' -o tsv)
    ```
 
 ### Next step

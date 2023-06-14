@@ -1264,3 +1264,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
 /*** OUTPUTS ***/
 
 output keyVaultName string = workloadKeyVault.name
+
+output frontendVmssResourceId string = vmssFrontend.id
+
+output backendVmssResourceId string = vmssBackend.id

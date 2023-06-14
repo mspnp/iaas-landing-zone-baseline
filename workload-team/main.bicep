@@ -104,3 +104,7 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
 }
 
 /*** OUTPUTS ***/
+
+output frontendVmssResourceId string = deployWorkloadInfrastructure.outputs.frontendVmssResourceId
+
+output backendVmssResourceId string = deployWorkloadInfrastructure.outputs.backendVmssResourceId
