@@ -99,4 +99,4 @@ A web server is enabled on both tiers of this deployment so that you can test en
 
 ### Next step
 
-:arrow_forward: [End to end infrastructure validation](./11-validation.md)
+:arrow_forward: [End to end infrastructure validation](./09-validation.md)

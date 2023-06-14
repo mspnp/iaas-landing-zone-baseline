@@ -95,20 +95,18 @@ This is the heart of the implemented guidance in this reference implementation. 
 
 You performed the prior steps manually here to help you understand the involved components, with the expectation that you'd implement this via an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
 
-**TODO-CK: Reflow as the narrative builds out.**
-
 ### 5. :checkered_flag: Validation
 
 Now that the compute and the sample workload is deployed; it's time to look at how it's all working.
 
 - [ ] [Validate your compute infrastructure is operational](./08-bootstrap-validation.md)
-- [ ] [Perform end-to-end deployment validation](./11-validation.md)
+- [ ] [Perform end-to-end deployment validation](./09-validation.md)
 
 ## :broom: Clean up resources
 
 Most of the Azure resources deployed in the prior steps will incur ongoing charges unless removed.
 
-- [ ] [Cleanup all resources](./12-cleanup.md)
+- [ ] [Cleanup all resources](./10-cleanup.md)
 
 ## Related documentation
 

@@ -1,6 +1,6 @@
 # Clean up
 
-After you are done exploring your deployed [IaaS baseline](./11-validation.md), you'll want to delete the created Azure resources to prevent undesired costs from accruing. Follow these steps to delete all resources created as part of this reference implementation.
+After you are done exploring your deployed [IaaS baseline](./09-validation.md), you'll want to delete the created Azure resources to prevent undesired costs from accruing. Follow these steps to delete all resources created as part of this reference implementation.
 
 ## Steps
 
