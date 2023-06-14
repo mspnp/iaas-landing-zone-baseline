@@ -1,4 +1,4 @@
-# Perform end-to-end validation
+# Perform end-to-end validation [Workload team]
 
 Now that you have [validated the compute infrastructure is operational](./07-boostrap-validation.md), you can start validating and exploring the rest of the reference implementation of the [IaaS baseline](./). In addition to the workload, there are some observability validation you can perform as well.
 

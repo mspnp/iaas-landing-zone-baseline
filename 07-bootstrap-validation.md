@@ -1,4 +1,4 @@
-# Validate your compute infrastructure is operational
+# Validate your compute infrastructure is operational [Workload team]
 
 Now that [the compute infrastructure](./06-compute-infra.md) has been deployed, the next step to validate that your virtual machines are running.
 
