@@ -24,7 +24,7 @@ param targetVnetResourceId string
   'japaneast'
   'southeastasia'
 ])
-param location string = 'eastus2'
+param location string
 
 @description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
 param appGatewayListenerCertificate string

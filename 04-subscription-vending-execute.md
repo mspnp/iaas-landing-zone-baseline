@@ -45,7 +45,7 @@ Typically your subscription vending process would yield identities that can then
 
    ```bash
    # [This takes about seven minutes to run.]
-   az deployment sub create -l eastus2 -f platform-team/subscription-vending/deploy-alz-bu04a42.bicep -p location=eastus2 hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   az deployment sub create -l $REGION_IAAS_BASELINE -f platform-team/subscription-vending/deploy-alz-bu04a42.bicep -p location=${REGION_IAAS_BASELINE} hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
 
    export RESOURCEID_VNET_SPOKE_IAAS_BASELINE=$(az deployment sub show -n deploy-alz-bu04a42 --query properties.outputs.spokeVirtualNetworkResourceId.value -o tsv)
    echo "RESOURCEID_VNET_SPOKE_IAAS_BASELINE: $RESOURCEID_VNET_SPOKE_IAAS_BASELINE"

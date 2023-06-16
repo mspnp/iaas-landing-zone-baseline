@@ -35,9 +35,15 @@ The hub will be a virtual network based hub, containing common shared resources 
    az account show
    ```
 
+1. Select a region with availability zones for this deployment guide's resources.
+
+   ```bash
+   REGION_IAAS_BASELINE=eastus2
+   ```
+
 1. Create the networking hubs resource group.
 
-   > :book: The networking team has all their regional networking hubs in the following resource group in their Connectivity subscription. (This resource group would have already existed as part of your platform team's Connectivity subscription.)
+   > :book: The networking team has all their regional networking hubs in the following resource group in their Connectivity subscription. (This resource group would have already existed as part of your platform team's Connectivity subscription. Also, the region indicated below is not related to the deployment region of the resources set in the prior step.)
 
    ```bash
    # [This takes less than one minute to run.]
@@ -48,11 +54,11 @@ The hub will be a virtual network based hub, containing common shared resources 
 
    > :book: In this scenario, the platform team has a regional hub that contains an Azure Firewall (with some existing org-wide policies), Azure Bastion, a gateway subnet for cross-premises connectivity, and Azure Monitor for hub network observability. They follow Microsoft's recommended sizing for the subnets. (These resources would have already existed as part of your platform team's Connectivity subscription.)
    >
-   > The networking team has registered `10.200.[0-9].0` in their IP address management (IPAM) system for all regional hubs. The `eastus2` hub created below will be `10.200.0.0/24`.
+   > The networking team has registered `10.200.[0-9].0` in their IP address management (IPAM) system for all regional hubs. The regional hub created below will be `10.200.0.0/24`.
 
    ```bash
    # [This takes about ten minutes to run.]
-   az deployment group create -g rg-plz-connectivity-regional-hubs -f platform-team/hub-default.bicep -p location=eastus2
+   az deployment group create -g rg-plz-connectivity-regional-hubs -f platform-team/hub-default.bicep -p location=${REGION_IAAS_BASELINE}
 
    export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-connectivity-regional-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
    echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"

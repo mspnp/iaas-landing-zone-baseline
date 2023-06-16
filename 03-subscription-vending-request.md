@@ -35,7 +35,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
      - High SNAT port usage on egress: **No**
    - Number of virtual networks needed: **One**
      - Size: **/21**
-     - Region: **eastus2**
+     - Region: **$REGION_IAAS_BASELINE**, what a coincidence :)
    - Primary Azure resources:
      - Linux virtual machines
      - Windows virtual machines

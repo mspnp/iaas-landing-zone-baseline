@@ -624,7 +624,7 @@ resource allPrivateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetwor
 
 @description('The public IP for the regional hub\'s Azure Bastion service.')
 resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
-  name: 'pip-ab-eastus2'
+  name: 'pip-ab-${location}'
   location: location
   sku: {
     name: 'Standard'
@@ -661,7 +661,7 @@ resource pipRegionalBastionHost_diagnosticSetting 'Microsoft.Insights/diagnostic
 
 @description('This regional hub\'s Azure Bastion service.')
 resource regionalBastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = {
-  name: 'ab-eastus2'
+  name: 'ab-${location}'
   location: location
   sku: {
     name: 'Standard'
