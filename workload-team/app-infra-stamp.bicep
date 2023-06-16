@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 @minLength(79)
 param targetVnetResourceId string
 
-@description('IaaS region. This needs to be the same region as the virtual netwoork provided in these parameters.')
+@description('IaaS region. This needs to be the same region as the virtual network provided in these parameters.')
 @allowed([
   'australiaeast'
   'canadacentral'

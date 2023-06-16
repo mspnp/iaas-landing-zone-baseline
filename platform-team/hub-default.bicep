@@ -32,7 +32,7 @@ param hubVirtualNetworkAddressSpace string = '10.200.0.0/24'
 @minLength(10)
 param hubVirtualNetworkAzureFirewallSubnetAddressSpace string = '10.200.0.0/26'
 
-@description('Optional. A /27 under the virtual network address space for our regional cross-premisis gateway. Defaults to 10.200.0.64/27')
+@description('Optional. A /27 under the virtual network address space for our regional cross-premises gateway. Defaults to 10.200.0.64/27')
 @maxLength(18)
 @minLength(10)
 param hubVirtualNetworkGatewaySubnetAddressSpace string = '10.200.0.64/27'
@@ -44,7 +44,7 @@ param hubVirtualNetworkBastionSubnetAddressSpace string = '10.200.0.128/26'
 
 /*** VARIABLES ***/
 
-@description('Going to deploy a few private DNS zones for Private Link as an example of what might already exist in a hub.')
+@description('Examples of private DNS zones for Private Link that might already exist in a hub.')
 var privateDnsZones = [
   'privatelink.blob.${environment().suffixes.storage}'
   'privatelink.vaultcore.azure.net'
@@ -95,7 +95,7 @@ resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-0
   }
 }
 
-@description('The network security group around the Azure Bastion subnet.')
+@description('The network security group for the Azure Bastion subnet.')
 resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-${location}-bastion'
   location: location

@@ -15,7 +15,7 @@ This does not configure anything related to workload identities. This configurat
 
 ### Azure AD login
 
-Using Azure RBAC as your virtual machine user authorization approach is often preferred as it allows for the unified management and access control across Azure Resources, virtual machines, and other resources. You organization instead might desire to use alternative access methods like self-managed SSH keys or domain joined machines. This deployment guide is only set up to use Azure RBAC access; other access methods are beyond the scope of this guide.
+Using Azure RBAC as your virtual machine user authorization approach is often preferred as it allows for the unified management and access control across Azure Resources, virtual machines, and other resources. Your organization may use other methods like self-managed SSH keys or domain joined machines. This deployment guide is only set up to use Azure RBAC access.
 
 ### Platform team integration
 
@@ -38,7 +38,7 @@ The platform identity team probably manages your Azure Active Directory groups a
    echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
    ```
 
-   If you want to create a new one instead, and have the permissions to do so, you can use the following command:
+   If you want to create a new one instead, and have the permissions to do so, you can use the following commands:
 
    ```bash
    export COMPUTEADMIN_TYPE_IAAS_BASELINE="Group"
@@ -86,7 +86,7 @@ For your eventual actual workload deployment, follow your organization's best pr
 
 ### Next step
 
-> The vending process is now complete and the application team will now start using their new subscription for their solution, complete with Azure AD configured. The platform team is not involved in the deployment of the actual solution's architecture. Once the application team starts deploying resources into their subscription, the vending process is considered frozen as re-running the complete vending process would potentially render the workload inoperable as it is non-idempotent.
+> The vending process is now complete, and the application team will now start using their new subscription for their solution, complete with Azure AD configured. The platform team is not involved in the deployment of the actual solution's architecture. Once the application team starts deploying resources into their subscription, the vending process is considered frozen as re-running this implementation's vending process would potentially render the workload inoperable as it is non-idempotent.
 
 This is the last step in which you'll be directly acting in the role of someone on the platform team. Thanks for role playing that role. From this point forward, you now will be deploying the IaaS baseline architecture into your prepared application landing zone.
 

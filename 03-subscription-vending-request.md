@@ -1,6 +1,6 @@
 # Request your application landing zone [Workload team]
 
-In the prior step, you [deployed a fairly basic network hub](./02-connectivity-subscription.md) to stand in for the typical resources found in your platform team's Connectivity subscription. Next you'll turn your eyes to the workload's needs. You'll start by building a mock landing zone request.
+In the prior step, you [deployed a basic network hub](./02-connectivity-subscription.md) to stand-in for the typical resources found in your platform team's Connectivity subscription. Next, you'll turn your eyes to the workload's needs. You'll start by building a mock landing zone request.
 
 ## Expected results
 
@@ -12,7 +12,7 @@ We're going to take the core workload requirements from the [IaaS baseline](http
 
 1. Gather initial application requirements and submit application landing zone request.
 
-   > :book: Instead of opening an ITSM ticket or using your internal request portal, listed below are key factors you'd likely be communicating to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture.
+   > :book: Instead of opening an ITSM ticket or using your internal request portal, listed below are key factors you'd likely be communicating to the platform team which will be used in the next step. These values are all from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) architecture's technical requirements.
 
    - Biographical information
      - Business unit: **03**
