@@ -90,7 +90,7 @@ All application landing zone deployments need the actual subscription(s) the sol
 
 This is the heart of the implemented guidance in this reference implementation. Here you will deploy the Azure resources for your compute and the adjacent services such as Azure Application Gateway, Azure Monitor, and Azure Key Vault.
 
-- [ ] [Procure client-facing and VM TLS certificates](./06-ca-certificates.md)
+- [ ] [Procure client-facing and service-to-service certificates](./06-ca-certificates.md)
 - [ ] [Deploy the VMs, workload, and supporting services](./07-compute-infra.md)
 
 You performed the prior steps manually here to help you understand the involved components, with the expectation that you'd implement this via an automated DevOps process. Therefore, incorporate the prior steps into your CI/CD pipeline, as you would any infrastructure as code (IaC).
