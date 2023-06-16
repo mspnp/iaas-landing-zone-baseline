@@ -53,7 +53,7 @@ resource hubFirewall 'Microsoft.Network/azureFirewalls@2022-11-01' existing = {
 @description('The regional log analytics workspace in the Connectivity subscription.')
 resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   scope: hubResourceGroup
-  name: 'la-hub-${location}'
+  name: 'log-hub-${location}'
 }
 
 /*** RESOURCES ***/

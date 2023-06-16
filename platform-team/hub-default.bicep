@@ -55,7 +55,7 @@ var privateDnsZones = [
 
 @description('This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion. Log analytics is a regional resource, as such there will be one workspace per hub (region).')
 resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: 'la-hub-${location}'
+  name: 'log-hub-${location}'
   location: location
   properties: {
     sku: {
