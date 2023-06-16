@@ -778,8 +778,8 @@ resource pipPrimaryWorkloadIp 'Microsoft.Network/publicIPAddresses@2022-11-01' =
 
 @description('Azure Diagnostics for the Application Gateway public IP.')
 resource pipPrimaryWorkloadIp_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: pipPrimaryWorkloadIp
+  name: 'default'
   properties: {
     workspaceId: workloadLogAnalytics.id
     logs: [

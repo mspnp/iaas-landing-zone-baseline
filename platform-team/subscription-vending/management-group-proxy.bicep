@@ -22,8 +22,8 @@ param location string
 /*** EXISTING HUB RESOURCES ***/
 
 resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  name: 'vnet-${location}-hub'
   scope: resourceGroup('rg-plz-connectivity-regional-hubs')
+  name: 'vnet-${location}-hub'
 }
 
 // TODO-CK: Fill this up!

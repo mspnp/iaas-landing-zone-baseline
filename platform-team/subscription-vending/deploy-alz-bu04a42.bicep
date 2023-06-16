@@ -41,6 +41,7 @@ param location string
 
 @description('This is rg-plz-connectivity-regional-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
+  scope: subscription()
   name: split(hubVnetResourceId,'/')[4]
 }
 
@@ -54,8 +55,8 @@ resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@20
 
 @description('Deploy common Azure Policies to apply to the application landing zone. These are NOT workload specific, but instead examples of some common Azure Landing Zone policies.')
 module deployManagementGroupProxy 'management-group-proxy.bicep' = {
-  name: 'deploy-management-group-proxy'
   scope: subscription()
+  name: 'deploy-management-group-proxy'
   params: {
     applicationLandingZoneResourceGroups: [
       appLandingZoneSpokeResourceGroup.name

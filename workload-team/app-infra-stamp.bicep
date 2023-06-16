@@ -66,20 +66,20 @@ var defaultAdminUserName = uniqueString('vmss', subComputeRgUniqueString, resour
 
 @description('Built-in Azure RBAC role that is applied a Key Vault to grant with metadata, certificates, keys and secrets read privileges. Granted to App Gateway\'s managed identity.')
 resource keyVaultReaderRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  name: '21090545-7ca7-4776-b22c-e363652d74d2'
   scope: subscription()
+  name: '21090545-7ca7-4776-b22c-e363652d74d2'
 }
 
 @description('Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload\'s identity.')
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
+  name: '4633458b-17de-408a-b874-0445c86b69e6'
 }
 
 @description('Built-in Azure RBAC role that is applied to the virtual machines to grant remote user access to them via SSH or RDP. Granted to the provided group object id.')
 resource virtualMachineAdminLoginRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  name: '1c0163c0-47e6-4577-8991-ea5c82e286e4'
   scope: subscription()
+  name: '1c0163c0-47e6-4577-8991-ea5c82e286e4'
 }
 
 @description('Existing resource group that holds our application landing zone\'s network.')
@@ -173,8 +173,8 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
 
 @description('Sets up the provided group object id to have access to SSH or RDP into all virtual machines with the AAD login extension installed in this resource group.')
 resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, adminAadSecurityPrincipalObjectId, virtualMachineAdminLoginRole.id)
   scope: resourceGroup()
+  name: guid(resourceGroup().id, adminAadSecurityPrincipalObjectId, virtualMachineAdminLoginRole.id)
   properties: {
     principalId: adminAadSecurityPrincipalObjectId
     roleDefinitionId: virtualMachineAdminLoginRole.id
@@ -1203,8 +1203,8 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
 
 @description('Azure Diagnostics for Application Gateway.')
 resource workloadAppGateway_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: workloadAppGateway
+  name: 'default'
   properties: {
     workspaceId: workloadLogAnalytics.id
     logs: [

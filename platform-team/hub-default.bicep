@@ -76,8 +76,8 @@ resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
 }
 
 resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: laHub
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -370,8 +370,8 @@ resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2022-11-01' = [f
 
 @description('Azure Diagnostics for the hub\'s regional Azure Firewall egress IP addresses')
 resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [for i in range(0, numFirewallIpAddressesToAssign): {
-  name: 'default'
   scope: pipsAzureFirewall[i]
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -583,8 +583,8 @@ resource hubFirewall 'Microsoft.Network/azureFirewalls@2022-11-01' = {
 
 @description('Azure Diagnostics for the hub\'s regional Azure Firewall')
 resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: hubFirewall
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -640,8 +640,8 @@ resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2022-11-01'
 
 @description('Azure Diagnostics for the hub\'s regional Azure Bastion ingress IP addresses')
 resource pipRegionalBastionHost_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: pipRegionalBastionHost
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -693,8 +693,8 @@ resource regionalBastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = {
 
 @description('Azure Diagnostics for the hub\'s regional Azure Bastion host')
 resource regionalBastionHost_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: regionalBastionHost
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
