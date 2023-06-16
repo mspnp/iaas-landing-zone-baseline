@@ -75,7 +75,7 @@ http {
 
     server {
         listen 443 ssl;
-        server_name bu0001a0008-00-backend.iaas-ingress.contoso.com;
+        server_name backend-00.iaas-ingress.contoso.com;
         ssl_certificate w:/nginx/ssl/nginx-ingress-internal-iaas-ingress-tls.crt;
         ssl_certificate_key w:/nginx/ssl/nginx-ingress-internal-iaas-ingress-tls.key;
         ssl_protocols TLSv1 TLSv1.1 TLSv1.2;

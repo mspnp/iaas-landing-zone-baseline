@@ -1,6 +1,6 @@
 # Clean up
 
-After you are done exploring your deployed [IaaS baseline](./11-validation.md), you'll want to delete the created Azure resources to prevent undesired costs from accruing. Follow these steps to delete all resources created as part of this reference implementation.
+After you are done exploring your deployed [IaaS baseline](./09-validation.md), you'll want to delete the created Azure resources to prevent undesired costs from accruing. Follow these steps to delete all resources created as part of this reference implementation.
 
 ## Steps
 
@@ -18,9 +18,9 @@ After you are done exploring your deployed [IaaS baseline](./11-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-bu0001a0008
-   az group delete -n rg-enterprise-networking-spokes
-   az group delete -n rg-enterprise-networking-hubs
+   az group delete -n rg-alz-bu04a42-compute
+   az group delete -n rg-alz-bu04a42-spoke 
+   az group delete -n rg-plz-connectivity-regional-hubs
    ```
 
 1. Purge Azure Key Vault

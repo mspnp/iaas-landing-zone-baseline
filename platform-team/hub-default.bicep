@@ -32,7 +32,7 @@ param hubVirtualNetworkAddressSpace string = '10.200.0.0/24'
 @minLength(10)
 param hubVirtualNetworkAzureFirewallSubnetAddressSpace string = '10.200.0.0/26'
 
-@description('Optional. A /27 under the virtual network address space for our regional On-Prem Gateway. Defaults to 10.200.0.64/27')
+@description('Optional. A /27 under the virtual network address space for our regional cross-premises gateway. Defaults to 10.200.0.64/27')
 @maxLength(18)
 @minLength(10)
 param hubVirtualNetworkGatewaySubnetAddressSpace string = '10.200.0.64/27'
@@ -42,12 +42,20 @@ param hubVirtualNetworkGatewaySubnetAddressSpace string = '10.200.0.64/27'
 @minLength(10)
 param hubVirtualNetworkBastionSubnetAddressSpace string = '10.200.0.128/26'
 
+/*** VARIABLES ***/
+
+@description('Examples of private DNS zones for Private Link that might already exist in a hub.')
+var privateDnsZones = [
+  'privatelink.blob.${environment().suffixes.storage}'
+  'privatelink.vaultcore.azure.net'
+  'privatelink.file.${environment().suffixes.storage}'
+]
+
 /*** RESOURCES ***/
 
-// This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion.
-// Log analytics is a regional resource, as such there will be one workspace per hub (region)
-resource laHub 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
-  name: 'la-hub-${location}'
+@description('This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion. Log analytics is a regional resource, as such there will be one workspace per hub (region).')
+resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'log-hub-${location}'
   location: location
   properties: {
     sku: {
@@ -68,8 +76,8 @@ resource laHub 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
 }
 
 resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: laHub
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -87,8 +95,8 @@ resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-0
   }
 }
 
-// NSG around the Azure Bastion Subnet.
-resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+@description('The network security group for the Azure Bastion subnet.')
+resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-${location}-bastion'
   location: location
   properties: {
@@ -257,6 +265,7 @@ resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2021-05-01' =
   }
 }
 
+@description('Azure Diagnostics for Bastion NSG')
 resource nsgBastionSubnet_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: nsgBastionSubnet
   name: 'default'
@@ -271,8 +280,8 @@ resource nsgBastionSubnet_diagnosticSettings 'Microsoft.Insights/diagnosticSetti
   }
 }
 
-// The regional hub network
-resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+@description('Regional hub network')
+resource vnetHub 'Microsoft.Network/virtualNetworks@2022-11-01' = {
   name: 'vnet-${location}-hub'
   location: location
   properties: {
@@ -286,12 +295,20 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
         name: 'AzureFirewallSubnet'
         properties: {
           addressPrefix: hubVirtualNetworkAzureFirewallSubnetAddressSpace
+          networkSecurityGroup: null
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+          serviceEndpoints: []
         }
       }
       {
         name: 'GatewaySubnet'
         properties: {
           addressPrefix: hubVirtualNetworkGatewaySubnetAddressSpace
+          networkSecurityGroup: null
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+          serviceEndpoints: []
         }
       }
       {
@@ -301,6 +318,9 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
           networkSecurityGroup: {
             id: nsgBastionSubnet.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+          serviceEndpoints: []
         }
       }
     ]
@@ -309,8 +329,13 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   resource azureFirewallSubnet 'subnets' existing = {
     name: 'AzureFirewallSubnet'
   }
+
+  resource azureBastionSubnet 'subnets' existing = {
+    name: 'azureBastionSubnet'
+  }
 }
 
+@description('Azure Diagnostics for the regional hub network')
 resource vnetHub_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: vnetHub
   name: 'default'
@@ -325,19 +350,17 @@ resource vnetHub_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-
   }
 }
 
-// Allocate three IP addresses to the firewall
+@description('Number of IP addresses to apply to the firewall')
 var numFirewallIpAddressesToAssign = 3
-resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for i in range(0, numFirewallIpAddressesToAssign): {
+
+@description('Azure Firewall often has multiple IPs associated to avoid port exhaustion on egress. This applies three.')
+resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2022-11-01' = [for i in range(0, numFirewallIpAddressesToAssign): {
   name: 'pip-fw-${location}-${padLeft(i, 2, '0')}'
   location: location
   sku: {
     name: 'Standard'
   }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   properties: {
     publicIPAllocationMethod: 'Static'
     idleTimeoutInMinutes: 4
@@ -345,9 +368,10 @@ resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2021-05-01' = [f
   }
 }]
 
+@description('Azure Diagnostics for the hub\'s regional Azure Firewall egress IP addresses')
 resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = [for i in range(0, numFirewallIpAddressesToAssign): {
-  name: 'default'
   scope: pipsAzureFirewall[i]
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
@@ -365,8 +389,8 @@ resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettin
   }
 }]
 
-// Azure Firewall starter policy
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
+@description('Azure Firewall configuration. DNS proxy is enabled. The network and application policies are generic and do not account for any specific application landing zones.')
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
   name: 'fw-policies-${location}'
   location: location
   properties: {
@@ -418,20 +442,17 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
           rules: [
             {
               ruleType: 'NetworkRule'
-              name: 'DNS'
-              description: 'Allow DNS outbound (for simplicity, adjust as needed)'
-              ipProtocols: [
-                'UDP'
-              ]
+              name: 'azure-dns'
+              description: 'Allow Azure DNS outbound (for simplicity, adjust as needed)'
               sourceAddresses: [
                 '*'
               ]
-              sourceIpGroups: []
               destinationAddresses: [
-                '*'
+                '168.63.129.16'
               ]
-              destinationIpGroups: []
-              destinationFqdns: []
+              ipProtocols: [
+                'UDP'
+              ]
               destinationPorts: [
                 '53'
               ]
@@ -442,7 +463,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
     }
   }
 
-  // Network hub starts out with no allowances for appliction rules
+  // Network hub starts out with very few allowances for appliction rules
   resource defaultApplicationRuleCollectionGroup 'ruleCollectionGroups@2021-05-01' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     dependsOn: [
@@ -450,20 +471,88 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2021-05-01' = {
     ]
     properties: {
       priority: 300
-      ruleCollections: []
+      ruleCollections: [
+        {
+          ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+          name: ''
+          action: {
+            type: 'Allow'
+          }
+          priority: 100
+          rules: [
+            {
+              ruleType: 'ApplicationRule'
+              name: 'msft-common-http'
+              description: 'Allow common connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetUrls: [
+                'www.msftconnecttest.com/connecttest.txt'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Http'
+                  port: 80
+                }
+              ]
+              terminateTLS: false
+            }
+            {
+              ruleType: 'ApplicationRule'
+              name: 'crl-common-http'
+              description: 'Allow common certificate revocation list connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetFqdns: [
+                'crl.microsoft.com'
+                '*.digicert.com'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Http'
+                  port: 80
+                }
+              ]
+              terminateTLS: false
+            }
+            {
+              ruleType: 'ApplicationRule'
+              name: 'msft-common-https'
+              description: 'Allow common connections'
+              sourceAddresses: [
+                '*'
+              ]
+              targetFqdns: [
+                'wdcp.microsoft.com'
+                'wdcpalt.microsoft.com'
+                'sls.microsoft.com'
+                '*.sls.microsoft.com'
+                'pas.windows.net'
+                'packages.microsoft.com'
+                'login.microsoftonline.com'
+              ]
+              protocols: [
+                {
+                  protocolType: 'Https'
+                  port: 443
+                }
+              ]
+              terminateTLS: false
+            }
+          ]
+        }
+      ]
     }
   }
 }
 
-// This is the regional Azure Firewall that all regional spoke networks can egress through.
-resource hubFirewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
+@description('This is the regional Azure Firewall that all regional spoke networks in application landing zones can egress through.')
+resource hubFirewall 'Microsoft.Network/azureFirewalls@2022-11-01' = {
   name: 'fw-${location}'
   location: location
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'azureFirewalls', location, 3)
   dependsOn: [
     // This helps prevent multiple PUT updates happening to the firewall causing a CONFLICT race condition
     // Ref: https://learn.microsoft.com/azure/firewall-manager/quick-firewall-policy
@@ -492,14 +581,15 @@ resource hubFirewall 'Microsoft.Network/azureFirewalls@2021-05-01' = {
   }
 }
 
+@description('Azure Diagnostics for the hub\'s regional Azure Firewall')
 resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
   scope: hubFirewall
+  name: 'default'
   properties: {
     workspaceId: laHub.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs' // Cost Optimization Tip: tune as necessary
         enabled: true
       }
     ]
@@ -512,6 +602,112 @@ resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2
   }
 }
 
+@description('Deploy all private DNS zones expected to be used in application landing zones. This is just a subset for example purposes. This is not a "per hub" deployment, but is included in here for simplicity.')
+resource allPrivateDnsZones 'Microsoft.Network/privateDnsZones@2020-06-01' = [for privateDnsZone in privateDnsZones: {
+  name: privateDnsZone
+  location: 'global'
+  properties: {}
+}]
+
+@description('Link the private DNS zones to all the regional hub networks. There is only one hub in this example.')
+resource allPrivateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = [for (privateDnsZone, index) in privateDnsZones: {
+  parent: allPrivateDnsZones[index]
+  name: 'link-to-${vnetHub.name}'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnetHub.id
+    }
+  }
+}]
+
+@description('The public IP for the regional hub\'s Azure Bastion service.')
+resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+  name: 'pip-ab-${location}'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    idleTimeoutInMinutes: 4
+    publicIPAddressVersion: 'IPv4'
+  }
+}
+
+@description('Azure Diagnostics for the hub\'s regional Azure Bastion ingress IP addresses')
+resource pipRegionalBastionHost_diagnosticSetting 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: pipRegionalBastionHost
+  name: 'default'
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        categoryGroup: 'audit'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+@description('This regional hub\'s Azure Bastion service.')
+resource regionalBastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = {
+  name: 'ab-${location}'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    disableCopyPaste: false
+    enableFileCopy: true
+    enableIpConnect: true
+    enableKerberos: false
+    enableShareableLink: false
+    enableTunneling: true
+    scaleUnits: 2
+    ipConfigurations: [
+      {
+        name: 'hub-subnet'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: pipRegionalBastionHost.id
+          }
+          subnet: {
+            id: vnetHub::azureBastionSubnet.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+@description('Azure Diagnostics for the hub\'s regional Azure Bastion host')
+resource regionalBastionHost_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: regionalBastionHost
+  name: 'default'
+  properties: {
+    workspaceId: laHub.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
+}
+
 /*** OUTPUTS ***/
 
 output hubVnetId string = vnetHub.id
+
+output regionalBastionHostName string = regionalBastionHost.name
