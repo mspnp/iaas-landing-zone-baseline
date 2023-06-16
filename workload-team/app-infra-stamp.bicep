@@ -1233,6 +1233,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
     frontendIPConfigurations: [
       {
         name: 'backend'
+        zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
         properties: {
           subnet: {
             id: spokeVirtualNetwork::snetInternalLoadBalancer.id
@@ -1241,11 +1242,6 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddressVersion: 'IPv4'
         }
-        zones: [
-          '1'
-          '2'
-          '3'
-        ]
       }
     ]
     backendAddressPools: [
