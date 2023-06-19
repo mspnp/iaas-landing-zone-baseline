@@ -171,6 +171,15 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
 
 /*** RESOURCES ***/
 
+/* TODO-CK -- private endpoint disk access 
+resource x 'Microsoft.Compute/diskAccesses@2022-07-02' = {
+  name: 'TODO-CK'
+  location: location
+  properties: {
+  }
+}
+*/
+
 @description('Sets up the provided group object id to have access to SSH or RDP into all virtual machines with the AAD login extension installed in this resource group.')
 resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()

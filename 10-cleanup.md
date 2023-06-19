@@ -18,7 +18,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-alz-bu04a42-compute
+   az group delete -n rg-alz-bu04a42-compute -f Microsoft.Compute/virtualMachineScaleSets
    az group delete -n rg-alz-bu04a42-spoke 
    az group delete -n rg-plz-connectivity-regional-hubs
    ```
@@ -29,6 +29,14 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
 
    ```bash
    az keyvault purge -n $KEYVAULT_NAME_IAAS_BASELINE
+   ```
+
+1. Remove Policy Assignments
+
+   > As part of the deployment, Azure Policy Assignments were applied to the reference implementation's resource groups to simulate policies that came from the Online management group and also policies that your application team desired to have in place. All of the applied policies were prefixed with `[IaaS baseline Online] - `. To remove these policy assignments, execute the following:
+
+   ```bash
+   { az policy assignment list -g rg-alz-bu04a42-compute --query [].[name,scope] -o tsv; az policy assignment list -g rg-alz-bu04a42-spoke --query [].[name,scope] -o tsv; az policy assignment list -g rg-plz-connectivity-regional-hubs --query [].[name,scope] -o tsv; } | awk '{ print "-n "$1" --scope "$2 }' | xargs -n4 -r -t az policy assignment delete
    ```
 
 1. If any temporary changes were made to Azure AD or Azure RBAC permissions consider removing those as well.
