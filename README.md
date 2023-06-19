@@ -65,6 +65,10 @@ We acknowledge that you will need to map your organization's Azure landing zone 
 
 The solution that we are deploying in this guide aligns with the Cloud Adoption Framework definition of an _application landing zone_ with an _application team management_ approach. See [Platform vs. application landing zones](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-vs-application-landing-zones) as a reminder of the distinction.
 
+### Management group
+
+Based on the common management groups definitions of "Corp," "Online," "SAP," "Sandbox," ...; this specific web app implementation would normally be expected to live under the "Online" management group, because that management group is defined as: "Online Landing Zones include all Virtual Networks that have internet-facing applications via an Azure Application Gateway (v2)." And does not align with "Corp" which is defined as: "Corp Landing Zones will include all Virtual Networks that do not expose public endpoints and that require connectivity to on-premises, as well as connectivity to other Landing Zones." Your IaaS workload however might be instead placed "Corp" or another based on its requirements. For this deployment guide, we'll assume similar policies are in place as found in "Online."
+
 ## Deploy the reference implementation
 
 Azure application landing zone deployments always experiences a separation of duties and lifecycle management in the area of prerequisites, the host network, the compute infrastructure, and finally the workload itself. This reference implementation acknowledges this. To make that clearer, a "step-by-step" flow will help you learn the pieces of the solution and give you insight into the relationship between them. Ultimately, lifecycle/SDLC management of your compute and its dependencies will depend on your situation (team roles, organizational standards, etc), and you'll need to implement as appropriate for your needs.
