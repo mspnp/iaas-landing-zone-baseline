@@ -38,7 +38,7 @@ The hub will be a virtual network based hub, containing common shared resources 
 1. Select a region with availability zones for this deployment guide's resources.
 
    ```bash
-   REGION_IAAS_BASELINE=eastus2
+   export REGION_IAAS_BASELINE=eastus2
    ```
 
 1. Create the networking hubs resource group.
