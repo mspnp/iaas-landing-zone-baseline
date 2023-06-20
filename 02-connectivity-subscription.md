@@ -24,10 +24,6 @@ Please notice resource groups that are prefixed `rg-plz-` are proxies for resour
 
 The hub will be a virtual network based hub, containing common shared resources like Azure Bastion, Azure Firewall for egress, and Private DNS zones for common services.
 
-### Azure policy
-
-Sample and relevant Azure policies will be deployed to represent the types of policies you'd expect to see from your Online and Intermediate root management groups.
-
 ## Steps
 
 1. Login into Azure and select the subscription that you'll be deploying into.

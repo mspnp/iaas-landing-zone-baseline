@@ -101,13 +101,7 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
   name: 'log-${subComputeRgUniqueString}'
 }
 
-@description('Private DNS zone for Key Vault in the Hub. This is owned by the platform team.')
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
-  scope: hubResourceGroup
-  name: 'privatelink.vaultcore.azure.net'
-}
-
-@description('TEMP: TODO-CK: Provide a solution.')
+@description('TEMP: TODO: Provide a solution.')
 resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   scope: hubResourceGroup
   name: 'vnet-${location}-hub'
@@ -171,9 +165,9 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
 
 /*** RESOURCES ***/
 
-/* TODO-CK -- private endpoint disk access 
+/* TODO: private endpoint disk access 
 resource x 'Microsoft.Compute/diskAccesses@2022-07-02' = {
-  name: 'TODO-CK'
+  name: ''
   location: location
   properties: {
   }
@@ -307,7 +301,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'Canonical'
           offer: 'UbuntuServer'
-          sku: '18.04-LTS' /* TODO-CK: Move this to a supported version, 18.04 is no longer in support */
+          sku: '18.04-LTS' /* TODO: Move this to a supported version, 18.04 is no longer in support */
           version: 'latest'
         }
       }
@@ -395,10 +389,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               enableAutomaticUpgrade: true
             }
           }
-          // While this is installed, this requires a system-managed identity to be associated
-          // with the invidual VM.  Flex doesn't support handing out system-managed identities,
-          // only user-managed identities.  It installs without an issue, to prep for having
-          // AAD-based auth.  TODO-CK: See if we can get it to work with user-managed anyway.
           {
             name: 'AADSSHLogin'
             properties: {
@@ -448,7 +438,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '2.1'
               autoUpgradeMinorVersion: true
               protectedSettings: {
-                // TODO-CK: This won't work on 'internal', so temp moved to base64
+                // TODO: This won't work on 'internal', so temp moved to base64
                 // commandToExecute: 'sh configure-nginx-frontend.sh'
                 // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 //fileUris: [
@@ -485,7 +475,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   dependsOn: [
     kvMiVmssFrontendSecretsUserRole_roleAssignment
     kvMiVmssFrontendKeyVaultReader_roleAssignment
-    peKv::pdnszg
+    peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
@@ -528,7 +518,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       diagnosticsProfile: {
         bootDiagnostics: {
           enabled: true
-          /* TODO-CK: Why not to our own storage account? */
+          /* TODO: Why not to our own storage account? */
         }
       }
       osProfile: {
@@ -667,7 +657,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               protectedSettings: {
                 commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File configure-nginx-backend.ps1'
                 // The following installs and configure Nginx for the backend Windows machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
-                // TODO-CK: This won't work on 'internal', so temp moved to blob
+                // TODO: This won't work on 'internal', so temp moved to blob
                 fileUris: [
                   'https://pnpgithubfuncst.blob.core.windows.net/temp/configure-nginx-backend.ps1'
                 ]
@@ -734,7 +724,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
   }
   dependsOn: [
     kvMiVmssBackendSecretsUserRole_roleAssignment
-    peKv::pdnszg
+    peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
@@ -907,10 +897,15 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
     ]
   }
 
+  // The DNS zone group for this is deployed to the hub via the DINE policy that is applied
+  // at via our imposed management groups (in this reference implementation, faked by being applied
+  // directly on our resource group to limit impact to the rest of your sandbox subscription).
+  // TODO: Evaluate impact on guidance.
+
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step. TODO-CK: Evaluate impact on guidance.
-  resource pdnszg 'privateDnsZoneGroups' = {
+  // would have taken care of this step. 
+  /* resource pdnszg 'privateDnsZoneGroups' = {
     name: 'default'
     properties: {
       privateDnsZoneConfigs: [
@@ -922,7 +917,7 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
         }
       ]
     }
-  }
+  } */
 }
 
 // Application Gateway does not inhert the virtual network DNS settings for the parts of the service that
@@ -948,7 +943,7 @@ resource keyVaultSpokeDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-@description('Private Endpoint for Key Vault exclusively for the use of Application Gateway.')
+@description('Private Endpoint for Key Vault exclusively for the use of Application Gateway, which doesn\'t seem to pick up on DNS settings for Key Vault access.')
 resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: 'pe-${workloadKeyVault.name}-appgw'
   location: location
@@ -986,11 +981,11 @@ resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
           }
         }
       ]
-    }
+    } 
   }
-
+  
   dependsOn: [
-    peKv::pdnszg    // Deploying both endpoints at the same time can cause ConflictErrors
+    peKv    // Deploying both endpoints at the same time can cause ConflictErrors
   ]
 }
 
@@ -1022,7 +1017,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
-  // TODO-CK: This is going to need to be solved. As this is configured below, it will not work in this topology.
+  // TODO: This is going to need to be solved. As this is configured below, it will not work in this topology.
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
   // would have taken care of this step.
@@ -1202,7 +1197,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
     contosoPrivateDnsZone::vmssBackend
-    peKv::pdnszg
+    peKv
     peKeyVaultForAppGw::pdnszg
     keyVaultSpokeDnsZone::spokeLink
     kvMiAppGatewayFrontendKeyVaultReader_roleAssignment

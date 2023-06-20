@@ -51,6 +51,14 @@ var privateDnsZones = [
   'privatelink.file.${environment().suffixes.storage}'
 ]
 
+/*** EXISTING SUBSCRIPTION RESOURCES ***/
+
+@description('Existing network contributor role.')
+resource networkContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  scope: subscription()
+  name: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+}
+
 /*** RESOURCES ***/
 
 @description('This Log Analytics workspace stores logs from the regional hub network, its spokes, and bastion. Log analytics is a regional resource, as such there will be one workspace per hub (region).')
@@ -405,6 +413,14 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
         defaultWorkspaceId: {
           id: laHub.id
         }
+        workspaces: [
+          {
+            region: location
+            workspaceId: {
+              id: laHub.id
+            }
+          }
+        ]
       }
     }
     threatIntelWhitelist: {
@@ -531,6 +547,9 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
                 '*.sls.microsoft.com'
                 'pas.windows.net'
                 'packages.microsoft.com'
+                // This cannot be obtained without manipulating environment().authentication.loginEndpoint
+                // to remove the https:// and tailing /
+                #disable-next-line no-hardcoded-env-urls
                 'login.microsoftonline.com'
               ]
               protocols: [
@@ -587,9 +606,10 @@ resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2
   name: 'default'
   properties: {
     workspaceId: laHub.id
+    logAnalyticsDestinationType: 'Dedicated'
     logs: [
       {
-        categoryGroup: 'allLogs' // Cost Optimization Tip: tune as necessary
+        categoryGroup: 'allLogs' // TODO: Cost Optimization Tip: tune as necessary
         enabled: true
       }
     ]
@@ -705,6 +725,23 @@ resource regionalBastionHost_diagnosticSettings 'Microsoft.Insights/diagnosticSe
     ]
   }
 }
+
+@description('This is an identity that can be used by Azure Policies to perform private DNS zone management.')
+resource dinePrivateDnsZoneIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'mi-privatednszoneadmin-dinepolicies'
+  location: location
+}
+
+@description('Ensure the managed identity for DINE policies in DNS can manage the zones.')
+resource dinePolicyAssignmentToDnsZones 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (privateDnsZone, index) in privateDnsZones: {
+  scope: allPrivateDnsZones[index]
+  name: guid(allPrivateDnsZones[index].id, networkContributorRole.id, dinePrivateDnsZoneIdentity.id)
+  properties: {
+    principalId: dinePrivateDnsZoneIdentity.properties.principalId
+    roleDefinitionId: networkContributorRole.id
+    principalType: 'ServicePrincipal'
+  }
+}]
 
 /*** OUTPUTS ***/
 

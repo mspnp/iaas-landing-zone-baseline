@@ -33,6 +33,8 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
 
 1. Remove Policy Assignments
 
+   TODO: Validate if this is needed, right now they are all scoped to resource groups, so might not be necessary.
+
    > As part of the deployment, Azure Policy Assignments were applied to the reference implementation's resource groups to simulate policies that came from the Online management group and also policies that your application team desired to have in place. All of the applied policies were prefixed with `[IaaS baseline Online] - `. To remove these policy assignments, execute the following:
 
    ```bash

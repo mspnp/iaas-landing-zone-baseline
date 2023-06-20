@@ -42,19 +42,14 @@ param location string
 @description('This is rg-plz-connectivity-regional-hubs if using the default values in this deployment guide. In practice, this likely would be in a different subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
-  name: split(hubVnetResourceId,'/')[4]
+  name: split(hubVnetResourceId, '/')[4]
 }
 
-@description('This is rg-alz-bu04a42-compute, which doesn\'t technically exist. We need a fake reference to it to scope Azure Policy assignments to simulate policies being applied from the Online management group.')
-resource knownFutureResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
-  scope: subscription()
-  name: 'rg-alz-bu04a42-compute'
+@description('This is the existing hub virtual network found in rg-plz-connectivity-regional-hubs.')
+resource regionalHubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  scope: hubResourceGroup
+  name: (last(split(hubVnetResourceId, '/')))
 }
-
-var landingZoneSubscriptionResourceGroups = [
-  knownFutureResourceGroup.name
-  appLandingZoneSpokeResourceGroup.name
-]
 
 /*** RESOURCES ***/
 
@@ -64,21 +59,18 @@ resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@20
   location: location
 }
 
-@description('Apply a sampling of Online management group policies to the application landing zone for a more realistic goverance experience in this deployment guide. These are NOT workload specific.')
-module deployAlzPolicy 'management-group-proxy.bicep' = [for resourceGroupToEnrollInPolicy in landingZoneSubscriptionResourceGroups: {
-  scope: resourceGroup(resourceGroupToEnrollInPolicy)
-  name: 'deploy-alzpolicy-to-${resourceGroupToEnrollInPolicy}'
-  params: {
-    location: location
-  }
-}]
+@description('This is rg-alz-bu04a42-compute, which wouldn\'t technically exist at this point. We need a fake reference to it to scope Azure Policy assignments to simulate policies being applied from the Online management group.')
+resource knownFutureAppResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
+  name: 'rg-alz-bu04a42-compute'
+  location: location
+}
 
 @description('Deploy the application landing zone (specifically just the network part)')
 module deployApplicationLandingZone 'app-landing-zone-bu04a42.bicep' = {
   scope: appLandingZoneSpokeResourceGroup
   name: 'deploy-alz-bu04a42'
   params: {
-    hubVnetResourceId: hubVnetResourceId
+    hubVnetResourceId: regionalHubVirtualNetwork.id
     location: location
   }
 }
@@ -90,6 +82,26 @@ module deployHubUpdate 'hub-updates-bu04a42.bicep' = {
   params: {
     spokeVirtualNetworkResourceId: deployApplicationLandingZone.outputs.spokeVnetResourceId
     location: location
+  }
+}
+
+@description('Apply a sampling of Online management group policies to the application landing zone for a more realistic goverance experience in this deployment guide. These are NOT workload specific.')
+module deployAlzOnlinePoliciesToSpoke './management-group-proxy.bicep' = {
+  scope: appLandingZoneSpokeResourceGroup
+  name: 'deploy-alzonlinepolicy-${appLandingZoneSpokeResourceGroup.name}'
+  params: {
+    location: location
+    dnsZoneResourceGroupId: hubResourceGroup.id
+  }
+}
+
+@description('Apply a sampling of Online management group policies to the application landing zone for a more realistic goverance experience in this deployment guide. These are NOT workload specific.')
+module deployAlzOnlinePoliciesToApp './management-group-proxy.bicep' = {
+  scope: knownFutureAppResourceGroup
+  name: 'deploy-alzonlinepolicy-${knownFutureAppResourceGroup.name}'
+  params: {
+    location: location
+    dnsZoneResourceGroupId: hubResourceGroup.id
   }
 }
 

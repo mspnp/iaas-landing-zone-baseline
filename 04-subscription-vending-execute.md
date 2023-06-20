@@ -37,6 +37,10 @@ Azure Firewall egress rules often need to be updated based on the gathered requi
 
 Typically your subscription vending process would yield identities that can then be used in your pipelines. This deployment guide will not be simulating this part. Also, it would be expected that you do not have full control over the network resources deployed. The network resources have a shared ownership/manipulation model between the platform team and you, the application team.
 
+### Azure policy
+
+Sample relevant Azure policies will be deployed to represent the types of policies you'd expect to see from your Online and Intermediate root management groups that govern application workloads. These policies would have existed PRIOR TO any individual application landing zone deployment, but since policies are going to be scoped to resource groups for isolation within your sandbox subscription, they are deployed at this point.  You may notice an empty "compute" resource group being deployed as well, that normally wouldn't have been part of this vending process, but is there just to get policy applied.
+
 ## Steps
 
 1. Deploy and configure the application landing zone
