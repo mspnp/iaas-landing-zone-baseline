@@ -21,7 +21,7 @@ This is the starting point for deploying the [IaaS baseline reference implementa
 
 - An Azure AD tenant to associate your compute authentication to.
 
-   **TODO-CK: Align this with final requirements**
+   **TODO: Align this with final requirements**
 
    > :warning: The user or service principal initiating the deployment process _must_ have the following minimal set of Azure AD permissions assigned:
    >

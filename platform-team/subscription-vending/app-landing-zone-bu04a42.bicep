@@ -139,8 +139,8 @@ resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
   }
 }
 
-// TODO-CK: Consider: Add DINE for Private DNS
-// TODO-CK: Add all the basic Azure Policies
+// TODO: Consider: Add DINE for Private DNS
+// TODO: Add all the basic Azure Policies
 
 /*** OUTPUTS ***/
 

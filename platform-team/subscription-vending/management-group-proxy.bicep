@@ -26,6 +26,6 @@ resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existi
   name: 'vnet-${location}-hub'
 }
 
-// TODO-CK: Fill this up!
+// TODO: Fill this up!
 
 

@@ -107,7 +107,7 @@ resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing
   name: 'privatelink.vaultcore.azure.net'
 }
 
-@description('TEMP: TODO-CK: Provide a solution.')
+@description('TEMP: TODO: Provide a solution.')
 resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   scope: hubResourceGroup
   name: 'vnet-${location}-hub'
@@ -298,7 +298,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'Canonical'
           offer: 'UbuntuServer'
-          sku: '18.04-LTS' /* TODO-CK: Move this to a supported version, 18.04 is no longer in support */
+          sku: '18.04-LTS' /* TODO: Move this to a supported version, 18.04 is no longer in support */
           version: 'latest'
         }
       }
@@ -389,7 +389,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           // While this is installed, this requires a system-managed identity to be associated
           // with the invidual VM.  Flex doesn't support handing out system-managed identities,
           // only user-managed identities.  It installs without an issue, to prep for having
-          // AAD-based auth.  TODO-CK: See if we can get it to work with user-managed anyway.
+          // AAD-based auth.  TODO: See if we can get it to work with user-managed anyway.
           {
             name: 'AADSSHLogin'
             properties: {
@@ -439,7 +439,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '2.1'
               autoUpgradeMinorVersion: true
               protectedSettings: {
-                // TODO-CK: This won't work on 'internal', so temp moved to base64
+                // TODO: This won't work on 'internal', so temp moved to base64
                 // commandToExecute: 'sh configure-nginx-frontend.sh'
                 // The following installs and configure Nginx for the frontend Linux machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
                 //fileUris: [
@@ -519,7 +519,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       diagnosticsProfile: {
         bootDiagnostics: {
           enabled: true
-          /* TODO-CK: Why not to our own storage account? */
+          /* TODO: Why not to our own storage account? */
         }
       }
       osProfile: {
@@ -658,7 +658,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               protectedSettings: {
                 commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File configure-nginx-backend.ps1'
                 // The following installs and configure Nginx for the backend Windows machine, which is used as an application stand-in for this reference implementation. Using the CustomScript extension can be useful for bootstrapping VMs in leu of a larger DSC solution, but is generally not recommended for application deployment in production environments.
-                // TODO-CK: This won't work on 'internal', so temp moved to blob
+                // TODO: This won't work on 'internal', so temp moved to blob
                 fileUris: [
                   'https://pnpgithubfuncst.blob.core.windows.net/temp/configure-nginx-backend.ps1'
                 ]
@@ -900,7 +900,7 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
 
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step. TODO-CK: Evaluate impact on guidance.
+  // would have taken care of this step. TODO: Evaluate impact on guidance.
   resource pdnszg 'privateDnsZoneGroups' = {
     name: 'default'
     properties: {
@@ -1013,7 +1013,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
     }
   }
 
-  // TODO-CK: This is going to need to be solved. As this is configured below, it will not work in this topology.
+  // TODO: This is going to need to be solved. As this is configured below, it will not work in this topology.
   // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
   // Normally a workload team wouldn't have this permission, and a DINE policy
   // would have taken care of this step.

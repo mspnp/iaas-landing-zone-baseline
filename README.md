@@ -49,7 +49,7 @@ This implementation uses [Nginx](https://nginx.org) as an example workload in th
 - Azure Application Gateway (WAF)
 - Internal Load Balancers
 
-**TODO-CK: Need to replace image with a landing zone aligned image and this actual architecture.**
+**TODO: Need to replace image with a landing zone aligned image and this actual architecture.**
 
 ![Network diagram depicting a hub-spoke network with two peered virtual networks and main Azure resources used in the architecture.](https://learn.microsoft.com/azure/architecture/reference-architectures/containers/aks/images/secure-baseline-architecture.svg)
 
