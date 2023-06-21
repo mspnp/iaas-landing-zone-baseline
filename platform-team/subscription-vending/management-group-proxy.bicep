@@ -218,11 +218,6 @@ resource noHybridNetworkingResourcesPolicyAssignment 'Microsoft.Authorization/po
         ]
       }
     }
-    nonComplianceMessages: [
-      {
-        message: 'vWAN/ER/VPN gateway resources must not be deployed in the application landing zone.'
-      }
-    ]
   }
 }
 
@@ -240,11 +235,6 @@ resource noAppGwWithoutWafPolicyAssignment 'Microsoft.Authorization/policyAssign
         value: 'Deny'
       }
     }
-    nonComplianceMessages: [
-      {
-        message: 'Web Application Firewall (WAF) must be enabled for Application Gateway.'
-      }
-    ]
   }
 }
 
@@ -258,11 +248,6 @@ resource noIpForwardingOnNicsPolicyAssignment 'Microsoft.Authorization/policyAss
     enforcementMode: 'Default'
     policyDefinitionId: denyIPForwardingPolicyDefinition.id
     parameters: {}
-    nonComplianceMessages: [
-      {
-        message: 'Network interfaces must disable IP forwarding.'
-      }
-    ]
   }
 }
 
@@ -280,11 +265,6 @@ resource noHttpCommunicationOnStorageAccountsPolicyAssignment 'Microsoft.Authori
         value: 'Deny'
       }
     }
-    nonComplianceMessages: [
-      {
-        message: 'Secure transfer to storage accounts must be enabled.'
-      }
-    ]
   }
 }
 
@@ -298,11 +278,6 @@ resource noPublicIpsOnNicsPolicyAssignment 'Microsoft.Authorization/policyAssign
     enforcementMode: 'Default'
     policyDefinitionId: noPublicIpsOnNicsPolicyDefinition.id
     parameters: {}
-    nonComplianceMessages: [
-      {
-        message: 'Network interfaces must not have a public IP associated.'
-      }
-    ]
   }
 }
 
@@ -320,11 +295,6 @@ resource noUnmanagedVirtualMachineDisksPolicyAssignment 'Microsoft.Authorization
       {
         kind: 'policyEffect'
         value: 'Deny'
-      }
-    ]
-    nonComplianceMessages: [
-      {
-        message: 'Virtual machines and virtual machine scales sets must use a managed disk.'
       }
     ]
   }
