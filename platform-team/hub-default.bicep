@@ -44,6 +44,8 @@ param hubVirtualNetworkBastionSubnetAddressSpace string = '10.200.0.128/26'
 
 /*** VARIABLES ***/
 
+// TODO: Consider using a connectivity resource group dedicated to these dns zones
+
 @description('Examples of private DNS zones for Private Link that might already exist in a hub.')
 var privateDnsZones = [
   'privatelink.blob.${environment().suffixes.storage}'
