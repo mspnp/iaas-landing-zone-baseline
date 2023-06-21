@@ -29,7 +29,7 @@ param subComputeRgUniqueString string
 /*** RESOURCES ***/
 
 @description('Common log sink across all resources in this architecture that are owned by the workload team.')
-resource workloadLogSink 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'log-${subComputeRgUniqueString}'
   location: location
   properties: {
@@ -48,6 +48,21 @@ resource workloadLogSink 'Microsoft.OperationalInsights/workspaces@2022-10-01' =
   }
 }
 
+@description('Enable the change tracking features of Azure Monitor')
+resource vmChangeTrackingTables 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
+  name: 'ChangeTracking(${workloadLogAnalytics.name})'
+  location: location
+  plan: {
+    name: 'ChangeTracking(${workloadLogAnalytics.name})'
+    publisher: 'Microsoft'
+    promotionCode: ''
+    product: 'OMSGallery/ChangeTracking'
+  }
+  properties: {
+    workspaceResourceId: workloadLogAnalytics.id
+  }
+}
+
 /*** OUTPUTS ***/
 
-output logAnalyticsWorkspaceResourceId string = workloadLogSink.id
+output logAnalyticsWorkspaceResourceId string = workloadLogAnalytics.id
