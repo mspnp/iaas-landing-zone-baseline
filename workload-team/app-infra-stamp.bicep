@@ -95,13 +95,13 @@ resource logAnalyticsContributorRole 'Microsoft.Authorization/roleDefinitions@20
 }
 
 @description('Built-in: Azure Backup should be enabled for Virtual Machines.')
-resource configureLinuxMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing  = {
+resource configureLinuxMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing = {
   scope: tenant()
   name: '2ea82cdd-f2e8-4500-af75-67a2e084ca74'
 }
 
 @description('Built-in: Azure Backup should be enabled for Virtual Machines.')
-resource configureWindowsMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing  = {
+resource configureWindowsMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing = {
   scope: tenant()
   name: 'eab1f514-22e3-42e3-9a1f-e1dc9199355c'
 }
@@ -763,6 +763,19 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             }
           }
           {
+            name: 'AzureSecurityLinuxAgent'
+            properties: {
+              provisionAfterExtensions: [
+                'AzureMonitorLinuxAgent'
+              ]
+              publisher: 'Microsoft.Azure.Security.Monitoring'
+              type: 'AzureSecurityLinuxAgent'
+              typeHandlerVersion: '2.0'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+            }
+          }
+          {
             name: 'DependencyAgentLinux'
             properties: {
               provisionAfterExtensions: [
@@ -1098,6 +1111,19 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             }
           }
           {
+            name: 'AzureSecurityWindowsAgent'
+            properties: {
+              provisionAfterExtensions: [
+                'AzureMonitorWindowsAgent'
+              ]
+              publisher: 'Microsoft.Azure.Security.Monitoring'
+              type: 'AzureSecurityWindowsAgent'
+              typeHandlerVersion: '1.0'
+              autoUpgradeMinorVersion: true
+              enableAutomaticUpgrade: true
+            }
+          }
+          {
             name: 'DependencyAgentWindows'
             properties: {
               provisionAfterExtensions: [
@@ -1395,9 +1421,9 @@ resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
           }
         }
       ]
-    } 
+    }
   }
-  
+
   dependsOn: [
     peKv    // Deploying both endpoints at the same time can cause ConflictErrors
   ]
@@ -1463,7 +1489,7 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
       name: 'WAF_v2'
       tier: 'WAF_v2'
     }
-    sslPolicy: {      
+    sslPolicy: {
       policyType: 'Predefined'
       policyName: 'AppGwSslPolicy20220101S'
     }
@@ -1705,7 +1731,7 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
     ]
   }
 }
-    
+
 /*** OUTPUTS ***/
 
 output keyVaultName string = workloadKeyVault.name
