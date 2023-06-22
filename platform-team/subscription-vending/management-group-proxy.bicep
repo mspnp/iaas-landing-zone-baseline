@@ -14,9 +14,11 @@ targetScope = 'resourceGroup'
     Azure Policy environment in this reference implementation.
 
     Also, please be aware that this deployment guide is only deploying a handful of common policies, this is
-    not all of the policies that your workload would be subject to under an "Online" (or "Corp") management
-    group. For example, none of the custom Azure Landing Zone policies are deployed, and only a few select
-    built-in ones are.
+    about 20% all of the policies that your workload would be subject to under an "Online" (or "Corp") management
+    group. For example, none of the custom Azure Landing Zone policies or policy initaitives are deployed.
+
+    To see all 100+ of the policies recommended by Azure Landing Zone implementations, please see:
+    https://github.com/Azure/Enterprise-Scale/wiki/ALZ-Policies
 */
 
 param location string
