@@ -215,7 +215,8 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               '*.ods.opinsights.azure.com'
               '*.oms.opinsights.azure.com'
               '${location}.monitoring.azure.com'
-              '*.blob.core.windows.net'  // TODO: this was added, but not sure where to set it.
+              '*.blob.${environment().suffixes.storage}'  // Unpredictable endpoint. This is used by Azure Monitor agents hourly.
+              '*.blob.storage.azure.net' // Unpredicatable endpoint (but always starts with "md-hdd-"). This can stay blocked, but might impact the ability for Microsoft Support to troubleshoot issues.
             ]
             terminateTLS: false
             // This covers the whole IP space of the spoke virtual network, if you have the ability to work
