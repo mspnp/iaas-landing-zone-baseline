@@ -18,7 +18,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-alz-bu04a42-compute
+   az group delete -n rg-alz-bu04a42-compute -f Microsoft.Compute/virtualMachineScaleSets
    az group delete -n rg-alz-bu04a42-spoke 
    az group delete -n rg-plz-connectivity-regional-hubs
    ```

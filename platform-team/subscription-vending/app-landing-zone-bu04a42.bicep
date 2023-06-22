@@ -139,9 +139,6 @@ resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
   }
 }
 
-// TODO: Consider: Add DINE for Private DNS
-// TODO: Add all the basic Azure Policies
-
 /*** OUTPUTS ***/
 
 output spokeVnetResourceId string = vnetSpoke.id
