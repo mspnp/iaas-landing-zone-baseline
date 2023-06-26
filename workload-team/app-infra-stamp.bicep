@@ -503,11 +503,11 @@ resource windowsEventsAndMetricsDataCollectionRule 'Microsoft.Insights/dataColle
         }
       ]
     }
-    description: 'Default data collection rule for Windows VMs.'
+    description: 'Default data collection rule for Windows virtual machine.'
   }
 }
 
-@description('Data collection rule for Windows virtual machines.')
+@description('Data collection rule for Linux virtual machines.')
 resource linuxEventsAndMetricsDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
   name: 'dcrLinuxSyslogAndMetrics'
   location: location
@@ -652,7 +652,7 @@ resource linuxEventsAndMetricsDataCollectionRule 'Microsoft.Insights/dataCollect
         }
       ]
     }
-    description: 'Default data collection rule for Windows VMs.'
+    description: 'Default data collection rule for Linux virtual machines.'
   }
 }
 
@@ -1023,7 +1023,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           disablePasswordAuthentication: true
           provisionVMAgent: true
           patchSettings: {
-            assessmentMode: 'AutomaticByPlatform'
+            assessmentMode: 'ImageDefault'
             automaticByPlatformSettings: {
               bypassPlatformSafetyChecksOnUserSchedule: false
               rebootSetting: 'IfRequired'
@@ -1053,8 +1053,8 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         }
         imageReference: {
           publisher: 'Canonical'
-          offer: 'UbuntuServer'
-          sku: '18.04-LTS' /* TODO: Move this to a supported version, 18.04 is no longer in support */
+          offer: '0001-com-ubuntu-server-focal'
+          sku: '20_04-lts-gen2' /* TODO: Move this to a supported version, 18.04 is no longer in support */
           version: 'latest'
         }
       }
@@ -1314,8 +1314,8 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               bypassPlatformSafetyChecksOnUserSchedule: false
               rebootSetting: 'IfRequired'
             }
-            assessmentMode: 'AutomaticByPlatform'
-            enableHotpatching: true
+            assessmentMode: 'ImageDefault'
+            enableHotpatching: false
           }
         }
         adminUsername: defaultAdminUserName
