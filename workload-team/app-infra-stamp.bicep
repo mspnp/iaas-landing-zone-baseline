@@ -200,7 +200,7 @@ resource x 'Microsoft.Compute/diskAccesses@2022-07-02' = {
   }
 }
 */
-@description('Deny deploying hybrid networking resources.')
+@description('Add Change Tracking to Linux virtual machines.')
 resource configureLinuxMachinesWithDataCollectionRulePolicyAssignment 'Microsoft.Authorization/policyAssignments@2022-06-01' = {
   name: guid('workload', 'dca-ct-linux', configureLinuxMachinesWithDataCollectionRulePolicy.id, resourceGroup().id)
   location: location
@@ -226,6 +226,32 @@ resource configureLinuxMachinesWithDataCollectionRulePolicyAssignment 'Microsoft
   }
 }
 
+@description('Add log and metrics DCR to Linux virtual machines.')
+resource configureLinuxMachinesWithSyslogPolicyAssignment 'Microsoft.Authorization/policyAssignments@2022-06-01' = {
+  name: guid('workload', 'dca-syslog-linux', configureLinuxMachinesWithDataCollectionRulePolicy.id, resourceGroup().id)
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    displayName: take('${policyAssignmentNamePrefix} Configure Linux virtual machines with syslog data collection', 120)
+    description: take(configureLinuxMachinesWithDataCollectionRulePolicy.properties.description, 500)
+    enforcementMode: 'Default'
+    policyDefinitionId: configureLinuxMachinesWithDataCollectionRulePolicy.id
+    parameters: {
+      effect: {
+        value: 'DeployIfNotExists'
+      }
+      dcrResourceId: {
+        value: linuxEventsAndMetricsDataCollectionRule.id
+      }
+      resourceType: {
+        value: linuxEventsAndMetricsDataCollectionRule.type
+      }
+    }
+  }
+}
+
 @description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
 resource dineLinuxDcrPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
@@ -243,6 +269,28 @@ resource dineLinuxDcrPolicyMonitoringContributorRoleAssignment 'Microsoft.Author
   name: guid(resourceGroup().id, monitoringContributorRole.id, configureLinuxMachinesWithDataCollectionRulePolicyAssignment.id)
   properties: {
     principalId: configureLinuxMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
+    roleDefinitionId: monitoringContributorRole.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
+resource dineLinuxDcrSyslogPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, logAnalyticsContributorRole.id, configureLinuxMachinesWithSyslogPolicyAssignment.id)
+  properties: {
+    principalId: configureLinuxMachinesWithSyslogPolicyAssignment.identity.principalId
+    roleDefinitionId: logAnalyticsContributorRole.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
+resource dineLinuxDcrSyslogPolicyMonitoringContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, monitoringContributorRole.id, configureLinuxMachinesWithSyslogPolicyAssignment.id)
+  properties: {
+    principalId: configureLinuxMachinesWithSyslogPolicyAssignment.identity.principalId
     roleDefinitionId: monitoringContributorRole.id
     principalType: 'ServicePrincipal'
   }
@@ -274,6 +322,32 @@ resource configureWindowsMachinesWithDataCollectionRulePolicyAssignment 'Microso
   }
 }
 
+@description('Add log and metrics DCR to Windows virtual machines.')
+resource configureWindowsMachinesWithEventAndMetricsDataCollectionRulePolicyAssignment 'Microsoft.Authorization/policyAssignments@2022-06-01' = {
+  name: guid('workload', 'dca-logs-windows', configureWindowsMachinesWithDataCollectionRulePolicy.id, resourceGroup().id)
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    displayName: take('${policyAssignmentNamePrefix} Configure Windows virtual machines with event log and metrics data collection rule.', 120)
+    description: take(configureWindowsMachinesWithDataCollectionRulePolicy.properties.description, 500)
+    enforcementMode: 'Default'
+    policyDefinitionId: configureWindowsMachinesWithDataCollectionRulePolicy.id
+    parameters: {
+      effect: {
+        value: 'DeployIfNotExists'
+      }
+      dcrResourceId: {
+        value: windowsEventsAndMetricsDataCollectionRule.id
+      }
+      resourceType: {
+        value: windowsEventsAndMetricsDataCollectionRule.type
+      }
+    }
+  }
+}
+
 @description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
 resource dineWindowsDcrPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
@@ -293,6 +367,292 @@ resource dineWindowsDcrPolicyMonitoringContributorRoleAssignment 'Microsoft.Auth
     principalId: configureWindowsMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
     roleDefinitionId: monitoringContributorRole.id
     principalType: 'ServicePrincipal'
+  }
+}
+
+@description('Ensure the managed identity for DCR Log DINE policies is has needed permissions.')
+resource dineWindowsLogDcrPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, logAnalyticsContributorRole.id, configureWindowsMachinesWithEventAndMetricsDataCollectionRulePolicyAssignment.id)
+  properties: {
+    principalId: configureWindowsMachinesWithEventAndMetricsDataCollectionRulePolicyAssignment.identity.principalId
+    roleDefinitionId: logAnalyticsContributorRole.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+@description('Ensure the managed identity for DCR Log DINE policies is has needed permissions.')
+resource dineWindowsDcrLogPolicyMonitoringContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
+  name: guid(resourceGroup().id, monitoringContributorRole.id, configureWindowsMachinesWithEventAndMetricsDataCollectionRulePolicyAssignment.id)
+  properties: {
+    principalId: configureWindowsMachinesWithEventAndMetricsDataCollectionRulePolicyAssignment.identity.principalId
+    roleDefinitionId: monitoringContributorRole.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
+@description('Data collection rule for Windows virtual machines.')
+resource windowsEventsAndMetricsDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+  name: 'dcrWindowsEventsAndMetrics'
+  location: location
+  kind: 'Windows'
+  properties: {
+    dataSources: {
+      performanceCounters: [
+        {
+          name: 'perfCounterDataSource'
+          samplingFrequencyInSeconds: 60
+          streams: [
+            'Microsoft-InsightsMetrics'
+          ]
+          counterSpecifiers: [
+            '\\Processor Information(_Total)\\% Processor Time'
+            '\\Processor Information(_Total)\\% Privileged Time'
+            '\\Processor Information(_Total)\\% User Time'
+            '\\Processor Information(_Total)\\Processor Frequency'
+            '\\System\\Processes'
+            '\\Process(_Total)\\Thread Count'
+            '\\Process(_Total)\\Handle Count'
+            '\\System\\System Up Time'
+            '\\System\\Context Switches/sec'
+            '\\System\\Processor Queue Length'
+            '\\Memory\\% Committed Bytes In Use'
+            '\\Memory\\Available Bytes'
+            '\\Memory\\Committed Bytes'
+            '\\Memory\\Cache Bytes'
+            '\\Memory\\Pool Paged Bytes'
+            '\\Memory\\Pool Nonpaged Bytes'
+            '\\Memory\\Pages/sec'
+            '\\Memory\\Page Faults/sec'
+            '\\Process(_Total)\\Working Set'
+            '\\Process(_Total)\\Working Set - Private'
+            '\\LogicalDisk(_Total)\\% Disk Time'
+            '\\LogicalDisk(_Total)\\% Disk Read Time'
+            '\\LogicalDisk(_Total)\\% Disk Write Time'
+            '\\LogicalDisk(_Total)\\% Idle Time'
+            '\\LogicalDisk(_Total)\\Disk Bytes/sec'
+            '\\LogicalDisk(_Total)\\Disk Read Bytes/sec'
+            '\\LogicalDisk(_Total)\\Disk Write Bytes/sec'
+            '\\LogicalDisk(_Total)\\Disk Transfers/sec'
+            '\\LogicalDisk(_Total)\\Disk Reads/sec'
+            '\\LogicalDisk(_Total)\\Disk Writes/sec'
+            '\\LogicalDisk(_Total)\\Avg. Disk sec/Transfer'
+            '\\LogicalDisk(_Total)\\Avg. Disk sec/Read'
+            '\\LogicalDisk(_Total)\\Avg. Disk sec/Write'
+            '\\LogicalDisk(_Total)\\Avg. Disk Queue Length'
+            '\\LogicalDisk(_Total)\\Avg. Disk Read Queue Length'
+            '\\LogicalDisk(_Total)\\Avg. Disk Write Queue Length'
+            '\\LogicalDisk(_Total)\\% Free Space'
+            '\\LogicalDisk(_Total)\\Free Megabytes'
+            '\\Network Interface(*)\\Bytes Total/sec'
+            '\\Network Interface(*)\\Bytes Sent/sec'
+            '\\Network Interface(*)\\Bytes Received/sec'
+            '\\Network Interface(*)\\Packets/sec'
+            '\\Network Interface(*)\\Packets Sent/sec'
+            '\\Network Interface(*)\\Packets Received/sec'
+            '\\Network Interface(*)\\Packets Outbound Errors'
+            '\\Network Interface(*)\\Packets Received Errors'
+          ]
+        }
+      ]
+      windowsEventLogs: [
+        {
+          name: 'eventLogsDataSource'
+          streams: [
+            'Microsoft-Event'
+          ]
+          xPathQueries: [
+            'Application!*[System[(Level=1 or Level=2 or Level=3 or Level=4 or Level=0)]]'
+            'Security!*[System[(band(Keywords,13510798882111488))]]'
+            'System!*[System[(Level=1 or Level=2 or Level=3 or Level=4 or Level=0)]]'
+          ]
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Microsoft-InsightsMetrics'
+        ]
+        destinations: [
+          'azureMonitorMetrics-default'
+        ]
+        transformKql: 'source'
+        outputStream: 'Microsoft-InsightsMetrics'
+      }
+      {
+        streams: [
+          'Microsoft-Event'
+        ]
+        destinations: [
+          workloadLogAnalytics.name
+        ]
+        transformKql: 'source'
+        outputStream: 'Microsoft-Event'
+      }
+    ]
+    destinations: {
+      azureMonitorMetrics: {
+        name: 'azureMonitorMetrics-default'
+      }
+      logAnalytics: [
+        {
+          name: workloadLogAnalytics.name
+          workspaceResourceId: workloadLogAnalytics.id
+        }
+      ]
+    }
+    description: 'Default data collection rule for Windows VMs.'
+  }
+}
+
+@description('Data collection rule for Windows virtual machines.')
+resource linuxEventsAndMetricsDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+  name: 'dcrLinuxSyslogAndMetrics'
+  location: location
+  kind: 'Linux'
+  properties: {
+    dataSources: {
+      performanceCounters: [
+        {
+          name: 'perfCounterDataSource'
+          samplingFrequencyInSeconds: 60
+          streams: [
+            'Microsoft-InsightsMetrics'
+          ]
+          counterSpecifiers: [
+            'Processor(*)\\% Processor Time'
+            'Processor(*)\\% Idle Time'
+            'Processor(*)\\% User Time'
+            'Processor(*)\\% Nice Time'
+            'Processor(*)\\% Privileged Time'
+            'Processor(*)\\% IO Wait Time'
+            'Processor(*)\\% Interrupt Time'
+            'Processor(*)\\% DPC Time'
+            'Memory(*)\\Available MBytes Memory'
+            'Memory(*)\\% Available Memory'
+            'Memory(*)\\Used Memory MBytes'
+            'Memory(*)\\% Used Memory'
+            'Memory(*)\\Pages/sec'
+            'Memory(*)\\Page Reads/sec'
+            'Memory(*)\\Page Writes/sec'
+            'Memory(*)\\Available MBytes Swap'
+            'Memory(*)\\% Available Swap Space'
+            'Memory(*)\\Used MBytes Swap Space'
+            'Memory(*)\\% Used Swap Space'
+            'Logical Disk(*)\\% Free Inodes'
+            'Logical Disk(*)\\% Used Inodes'
+            'Logical Disk(*)\\Free Megabytes'
+            'Logical Disk(*)\\% Free Space'
+            'Logical Disk(*)\\% Used Space'
+            'Logical Disk(*)\\Logical Disk Bytes/sec'
+            'Logical Disk(*)\\Disk Read Bytes/sec'
+            'Logical Disk(*)\\Disk Write Bytes/sec'
+            'Logical Disk(*)\\Disk Transfers/sec'
+            'Logical Disk(*)\\Disk Reads/sec'
+            'Logical Disk(*)\\Disk Writes/sec'
+            'Network(*)\\Total Bytes Transmitted'
+            'Network(*)\\Total Bytes Received'
+            'Network(*)\\Total Bytes'
+            'Network(*)\\Total Packets Transmitted'
+            'Network(*)\\Total Packets Received'
+            'Network(*)\\Total Rx Errors'
+            'Network(*)\\Total Tx Errors'
+            'Network(*)\\Total Collisions'
+          ]
+        }
+      ]
+      syslog: [
+        {
+          name: 'eventLogsDataSource-info'
+          streams: [
+            'Microsoft-Syslog'
+          ]
+          facilityNames: [
+            'auth'
+            'authpriv'
+          ]
+          logLevels: [
+            'Info'
+            'Notice'
+            'Warning'
+            'Error'
+            'Critical'
+            'Alert'
+            'Emergency'
+          ]
+        }
+        {
+          name: 'eventLogsDataSource-notice'
+          streams: [
+            'Microsoft-Syslog'
+          ]
+          facilityNames: [
+            'cron'
+            'daemon'
+            'mark'
+            'kern'
+            'local0'
+            'local1'
+            'local2'
+            'local3'
+            'local4'
+            'local5'
+            'local6'
+            'local7'
+            'lpr'
+            'mail'
+            'news'
+            'syslog'
+            'user'
+            'uucp'
+          ]
+          logLevels: [
+            'Notice'
+            'Warning'
+            'Error'
+            'Critical'
+            'Alert'
+            'Emergency'
+          ]
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Microsoft-InsightsMetrics'
+        ]
+        destinations: [
+          'azureMonitorMetrics-default'
+        ]
+        transformKql: 'source'
+        outputStream: 'Microsoft-InsightsMetrics'
+      }
+      {
+        streams: [
+          'Microsoft-Syslog'
+        ]
+        destinations: [
+          workloadLogAnalytics.name
+        ]
+        transformKql: 'source'
+        outputStream: 'Microsoft-Syslog'
+      }
+    ]
+    destinations: {
+      azureMonitorMetrics: {
+        name: 'azureMonitorMetrics-default'
+      }
+      logAnalytics: [
+        {
+          name: workloadLogAnalytics.name
+          workspaceResourceId: workloadLogAnalytics.id
+        }
+      ]
+    }
+    description: 'Default data collection rule for Windows VMs.'
   }
 }
 
