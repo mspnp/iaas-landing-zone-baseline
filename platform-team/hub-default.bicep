@@ -553,6 +553,9 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
                 // to remove the https:// and tailing /
                 #disable-next-line no-hardcoded-env-urls
                 'login.microsoftonline.com'
+                'go.microsoft.com'
+                'enterpriseregistration.windows.net'
+                'clientconfig.passport.net'
               ]
               protocols: [
                 {

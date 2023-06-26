@@ -968,7 +968,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           osType: 'Windows'
           diffDiskSettings: {
             option: 'Local'
-            placement: 'ResourceDisk'
+            placement: 'CacheDisk'
           }
           caching: 'ReadOnly'
           createOption: 'FromImage'
@@ -981,7 +981,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'MicrosoftWindowsServer'
           offer: 'WindowsServer'
-          sku: '2022-datacenter-azure-edition-core-smalldisk'
+          sku: '2022-datacenter-azure-edition-smalldisk'
           version: 'latest'
         }
         dataDisks: [
@@ -1039,6 +1039,18 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       }
       extensionProfile: {
         extensions: [
+          {
+            name: 'AADLogin'
+            properties: {
+              autoUpgradeMinorVersion: true
+              publisher: 'Microsoft.Azure.ActiveDirectory'
+              type: 'AADLoginForWindows'
+              typeHandlerVersion: '2.0'
+              settings: {
+                mdmId: ''
+              }
+            }
+          }
           {
             name: 'KeyVaultForWindows'
             properties: {
