@@ -614,7 +614,63 @@ resource hubFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2
     logAnalyticsDestinationType: 'Dedicated'
     logs: [
       {
-        categoryGroup: 'allLogs' // TODO: Cost Optimization Tip: tune as necessary
+        category: 'AzureFirewallApplicationRule'
+        enabled: false
+      }
+      {
+        category: 'AzureFirewallNetworkRule'
+        enabled: false
+      }
+      {
+        category: 'AzureFirewallDnsProxy'
+        enabled: false
+      }
+      {
+        category: 'AZFWNetworkRule'
+        enabled: true
+      }
+      {
+        category: 'AZFWApplicationRule'
+        enabled: true
+      }
+      {
+        category: 'AZFWNatRule'
+        enabled: true
+      }
+      {
+        category: 'AZFWThreatIntel'
+        enabled: true
+      }
+      {
+        category: 'AZFWIdpsSignature'
+        enabled: true
+      }
+      {
+        category: 'AZFWDnsQuery'
+        enabled: true
+      }
+      {
+        category: 'AZFWFqdnResolveFailure'
+        enabled: true
+      }
+      {
+        category: 'AZFWFatFlow'
+        enabled: true
+      }
+      {
+        category: 'AZFWFlowTrace'
+        enabled: true
+      }
+      {
+        category: 'AZFWApplicationRuleAggregation'
+        enabled: true
+      }
+      {
+        category: 'AZFWNetworkRuleAggregation'
+        enabled: true
+      }
+      {
+        category: 'AZFWNatRuleAggregation'
         enabled: true
       }
     ]
