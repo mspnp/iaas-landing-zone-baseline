@@ -662,6 +662,14 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         linuxConfiguration: {
           disablePasswordAuthentication: true
           provisionVMAgent: true
+          patchSettings: {
+            assessmentMode: 'AutomaticByPlatform'
+            automaticByPlatformSettings: {
+              bypassPlatformSafetyChecksOnUserSchedule: false
+              rebootSetting: 'IfRequired'
+            }
+            patchMode: 'AutomaticByPlatform'
+          }
           ssh: {
             publicKeys: [
               {
@@ -943,9 +951,10 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           patchSettings: {
             patchMode: 'AutomaticByPlatform'
             automaticByPlatformSettings: {
+              bypassPlatformSafetyChecksOnUserSchedule: false
               rebootSetting: 'IfRequired'
             }
-            assessmentMode: 'ImageDefault'
+            assessmentMode: 'AutomaticByPlatform'
             enableHotpatching: true
           }
         }
