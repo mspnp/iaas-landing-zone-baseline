@@ -137,7 +137,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
         rules: [
           {
             ruleType: 'ApplicationRule'
-            name: 'ubuntu-package-upgrades'
+            name: 'ubuntu-package-upgrades-http'
             description: 'Allow outbound to support package upgrades'
             targetFqdns: [
               'azure.archive.ubuntu.com'
@@ -148,6 +148,23 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
               {
                 protocolType: 'Http'
                 port: 80
+              }
+            ]
+            httpHeadersToInsert: []
+            terminateTLS: false
+            sourceAddresses: spokeVirtualNetwork.properties.addressSpace.addressPrefixes
+          }
+          {
+            ruleType: 'ApplicationRule'
+            name: 'ubuntu-package-upgrades-https'
+            description: 'Allow outbound to support package upgrades'
+            targetFqdns: [
+              'api.snapcraft.io'
+            ]
+            protocols: [
+              {
+                protocolType: 'Https'
+                port: 443
               }
             ]
             httpHeadersToInsert: []

@@ -556,6 +556,9 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
                 'go.microsoft.com'
                 'enterpriseregistration.windows.net'
                 'clientconfig.passport.net'
+                'config.edge.skype.com'
+                'msedge.api.cdp.microsoft.com'
+                'licensing.mp.microsoft.com'
               ]
               protocols: [
                 {
