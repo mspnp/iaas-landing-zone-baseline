@@ -35,7 +35,8 @@ Azure Application Gateway, for this reference implementation, is placed in the s
    The virtual machines each need a system managed identity assigned to [support Azure Active Directory authentication](https://learn.microsoft.com/azure/active-directory/devices/howto-vm-sign-in-azure-ad-linux#virtual-machine). This is not possible to assign within the Bicep, unless implemented similarly through a deploymentScript in the template. Generally speaking, you should strive to minimize mixing declarative deployments (Bicep) and imperative control (az cli, DINE policies, portal) in your workload.
 
    ```bash
-   az vm identity assign --identities [system] --ids $(az vm list --vmss ${RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE} --query '[[].id]' -o tsv)  $(az vm list --vmss ${RESOURCEID_VMSS_BACKEND_IAAS_BASELINE} --query '[[].id]' -o tsv)
+   # [This takes about one minute.]
+   az vm identity assign --identities [system] --ids $(az vm list --vmss ${RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE} --query '[[].id]' -o tsv) $(az vm list --vmss ${RESOURCEID_VMSS_BACKEND_IAAS_BASELINE} --query '[[].id]' -o tsv)
    ```
 
 ### Next step
