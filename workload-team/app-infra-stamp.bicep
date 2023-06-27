@@ -1054,7 +1054,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'Canonical'
           offer: '0001-com-ubuntu-server-focal'
-          sku: '20_04-lts-gen2' /* TODO: Move this to a supported version, 18.04 is no longer in support */
+          sku: '20_04-lts-gen2'
           version: 'latest'
         }
       }
@@ -1128,19 +1128,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '2.0'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: false
-            }
-          }
-          {
-            name: 'AzureSecurityLinuxAgent'
-            properties: {
-              provisionAfterExtensions: [
-                'AzureMonitorLinuxAgent'
-              ]
-              publisher: 'Microsoft.Azure.Security.Monitoring'
-              type: 'AzureSecurityLinuxAgent'
-              typeHandlerVersion: '2.0'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
             }
           }
           {
