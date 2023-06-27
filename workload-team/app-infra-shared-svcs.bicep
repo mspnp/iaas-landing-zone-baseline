@@ -357,6 +357,9 @@ resource windowsVmDataCollectionRule 'Microsoft.Insights/dataCollectionRules@202
     }
     description: 'Default data collection rule for Windows virtual machine.'
   }
+  dependsOn: [
+    vmChangeTrackingTables
+  ]
 }
 
 @description('Add data collection rules to Windows virtual machines.')
@@ -583,6 +586,9 @@ resource linuxVmDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-
     }
     description: 'Default data collection rule for Linux virtual machines.'
   }
+  dependsOn: [
+    vmChangeTrackingTables
+  ]
 }
 
 @description('Add data collection rules to Linux virtual machines.')
