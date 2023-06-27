@@ -64,7 +64,7 @@ Your workload is placed behind a Web Application Firewall (WAF), which has rules
 
 ## Validate Virtual Machine logs and diagnostics
 
-Monitoring your compute infrastructure is critical, especially when you're running in production. Therefore, your VMs are configured with [boot diagnostics](https://learn.microsoft.com/troubleshoot/azure/virtual-machines/boot-diagnostics) and to send [diagnostic information](https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings?tabs=portal) to the Log Analytics Workspace deployed with your compute.
+Monitoring your compute infrastructure is critical, especially when you're running in production. Therefore, your virtual machines are configured with [boot diagnostics](https://learn.microsoft.com/troubleshoot/azure/virtual-machines/boot-diagnostics) and Azure Monitor and VM Insights sends sends logs and metrics to the Log Analytics Workspace deployed with your compute.
 
 ```bash
 az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-alz-bu04a42-compute --query "[0].id" -o tsv)
@@ -72,8 +72,8 @@ az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-alz-bu04a42-compute
 
 ### Steps
 
-1. In the Azure Portal, navigate to your virtual machine resources.
-1. Click _Insights_ to see captured data. For more information please take a look at <https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview>
+1. In the Azure Portal, navigate to any of your virtual machine resources.
+1. Click _Insights_ to see captured metric and connection data. For more information please take a look at <https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview>
 
 You can also execute [queries](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial) on the [VM Insights logs captured](https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-log-query).
 

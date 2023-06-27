@@ -7,8 +7,8 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
 1. Obtain the Azure KeyVault resource name
 
    ```bash
-   export KEYVAULT_NAME_IAAS_BASELINE=$(az deployment group show -g rg-bu0001a0008 -n vmss-stamp --query properties.outputs.keyVaultName.value -o tsv)
-   echo KEYVAULT_NAME_IAAS_BASELINE: $KEYVAULT_NAME_IAAS_BASELINE
+   KEYVAULT_NAME=$(az deployment group show -g rg-alz-bu04a42-compute -n deploy-workload-infrastructure --query properties.outputs.keyVaultName.value -o tsv)
+   echo KEYVAULT_NAME: $KEYVAULT_NAME
    ```
 
 1. Delete the resource groups as a way to delete all contained Azure resources.
@@ -19,7 +19,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
 
    ```bash
    az group delete -n rg-alz-bu04a42-compute -f Microsoft.Compute/virtualMachineScaleSets
-   az group delete -n rg-alz-bu04a42-spoke 
+   az group delete -n rg-alz-bu04a42-spoke
    az group delete -n rg-plz-connectivity-regional-hubs
    ```
 
@@ -28,7 +28,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    > Because this reference implementation enables soft delete on Key Vault, execute a purge so your next deployment of this implementation doesn't run into a naming conflict.
 
    ```bash
-   az keyvault purge -n $KEYVAULT_NAME_IAAS_BASELINE
+   az keyvault purge -n $KEYVAULT_NAME
    ```
 
 1. If any temporary changes were made to Azure AD or Azure RBAC permissions consider removing those as well.
