@@ -7,23 +7,6 @@ targetScope = 'resourceGroup'
 param targetVnetResourceId string
 
 @description('IaaS region. This needs to be the same region as the virtual network provided in these parameters.')
-@allowed([
-  'australiaeast'
-  'canadacentral'
-  'centralus'
-  'eastus'
-  'eastus2'
-  'westus2'
-  'francecentral'
-  'germanywestcentral'
-  'northeurope'
-  'southafricanorth'
-  'southcentralus'
-  'uksouth'
-  'westeurope'
-  'japaneast'
-  'southeastasia'
-])
 param location string
 
 @description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')

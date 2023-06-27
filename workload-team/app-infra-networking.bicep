@@ -6,24 +6,7 @@ targetScope = 'resourceGroup'
 @minLength(79)
 param workloadLogWorkspaceResourceId string
 
-@allowed([
-  'australiaeast'
-  'canadacentral'
-  'centralus'
-  'eastus'
-  'eastus2'
-  'westus2'
-  'francecentral'
-  'germanywestcentral'
-  'northeurope'
-  'southafricanorth'
-  'southcentralus'
-  'uksouth'
-  'westeurope'
-  'japaneast'
-  'southeastasia'
-])
-@description('The spokes\'s regional affinity, must be the same as the hub\'s location. All resources tied to this spoke will also be homed in this region. The network team maintains this approved regional list which is a subset of zones with Availability Zone support.')
+@description('The spokes\'s regional affinity, must be the same as the hub\'s location.')
 param location string
 
 /*** EXISTING RESOURCES ***/
