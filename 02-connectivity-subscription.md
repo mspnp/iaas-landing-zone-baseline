@@ -61,7 +61,7 @@ The hub will be a virtual network based hub, containing common shared resources 
    az deployment group create -g rg-plz-connectivity-regional-hubs -f platform-team/hub-default.bicep -p location=${REGION_IAAS_BASELINE}
 
    export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-connectivity-regional-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
-   echo "RESOURCEID_VNET_HUB_IAAS_BASELINE: ${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
+   echo RESOURCEID_VNET_HUB_IAAS_BASELINE: $RESOURCEID_VNET_HUB_IAAS_BASELINE
    ```
 
 ### Save your work-in-progress
