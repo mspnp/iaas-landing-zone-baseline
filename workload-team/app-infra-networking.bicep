@@ -75,6 +75,8 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' = 
   location: location
 }
 
+// TODO: All subnets have unrestricted outbound, tighten up.
+
 @description('Network security group for the front end virtual machines subnet. Feel free to constrict further if your workload allows.')
 resource frontEndSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-frontend'
