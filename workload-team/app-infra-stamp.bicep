@@ -634,7 +634,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             properties: {
               publisher: 'Microsoft.Azure.KeyVault'
               type: 'KeyVaultForWindows'
-              typeHandlerVersion: '3.0'
+              typeHandlerVersion: '3.1'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -653,6 +653,10 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                   ]
                   linkOnRenewal: true
                   pollingIntervalInS: '3600'
+                }
+                authenticationSettings: {
+                  msiEndpoint: 'http://169.254.169.254/metadata/identity/oauth2/token'
+                  msiClientId: miVmssBackend.properties.clientId
                 }
               }
             }
