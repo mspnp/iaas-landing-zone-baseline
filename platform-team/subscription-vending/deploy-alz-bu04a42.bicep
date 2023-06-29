@@ -18,21 +18,38 @@ targetScope = 'subscription'
 param hubVnetResourceId string
 
 @allowed([
-  'australiaeast'
-  'canadacentral'
-  'centralus'
-  'eastus'
-  'eastus2'
-  'westus2'
-  'francecentral'
-  'germanywestcentral'
-  'northeurope'
-  'southafricanorth'
-  'southcentralus'
-  'uksouth'
-  'westeurope'
-  'japaneast'
-  'southeastasia'
+  // Only those regions that support all deployed resources, and have a paired region that
+  // also supports the deployed resources, and both regions support availability zones.
+  // Data as of: 27-June-2023
+  'brazilsouth'    // paired to: southcentralus
+  'centralus'      // paired to: eastus2
+  'eastasia'       // paired to: southeastasia
+  'eastus'         // paired to: westus
+  'eastus2'        // paired to: centralus
+  'northcentralus' // paired to: southcentralus
+  'northeurope'    // paired to: westeurope
+  'southcentralus' // paired to: northcentralus
+  'southeastasia'  // paired to: eastasia
+  'westeurope'     // paired to: northeurope
+  'westus'         // paired to: eastus
+  'westus3'        // paired to: eastus
+
+  // The following regions all support availability zones, but their paired regions do not.
+  // Consider your architectral impact in selecting one of these regions in a failover situation.
+  // 'australiaeast'      // paired to: australiasoutheast
+  // 'canadacentral'      // paired to: canadaeast
+  // 'westus2'            // paired to: westcentralus
+  // 'francecentral'      // paired to: francesouth
+  // 'germanywestcentral' // paired to: germanynorth
+  // 'southafricanorth'   // paired to: southafericawest
+  // 'swedencentral'      // paired to: swedensouth
+  // 'uksouth'            // paired to: ukwest
+  // 'japaneast'          // paired to: japanwest
+  // 'centralindia'       // paired to: southindia
+  // 'koreacentral'       // paired to: koreasouth
+  // 'norwayeast'         // paired to: norwaywest
+  // 'switzerlandnorth'   // paired to: switzerlandwest
+  // 'uaenorth'           // paired to: uaecentral
 ])
 @description('The spokes\'s regional affinity, must be the same as the existing hub\'s location.')
 param location string

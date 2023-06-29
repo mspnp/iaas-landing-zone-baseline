@@ -6,23 +6,6 @@ targetScope = 'resourceGroup'
 @minLength(79)
 param hubVnetResourceId string
 
-@allowed([
-  'australiaeast'
-  'canadacentral'
-  'centralus'
-  'eastus'
-  'eastus2'
-  'westus2'
-  'francecentral'
-  'germanywestcentral'
-  'northeurope'
-  'southafricanorth'
-  'southcentralus'
-  'uksouth'
-  'westeurope'
-  'japaneast'
-  'southeastasia'
-])
 @description('The spokes\'s regional affinity, must be the same as the hub\'s location.')
 param location string
 

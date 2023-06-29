@@ -1,4 +1,4 @@
-# Prep for Azure Active Directory based VM user authentication [Platform team]
+# Prep for Azure Active Directory based virtual machine user authentication [Platform team]
 
 Now that you have an [application landing zone awaiting your workload](./04-subscription-vending-execute.md), we'll prepare Azure AD for role-based access control (RBAC) for user access to the virtual machines. This will ensure the application team will have an Azure AD security group(s) and user(s) assigned for group-based remote access, through Azure Bastion.
 

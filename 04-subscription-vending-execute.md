@@ -52,7 +52,7 @@ Sample relevant Azure policies will be deployed to represent the types of polici
    az deployment sub create -l centralus -f platform-team/subscription-vending/deploy-alz-bu04a42.bicep -p location=${REGION_IAAS_BASELINE} hubVnetResourceId="${RESOURCEID_VNET_HUB_IAAS_BASELINE}"
 
    export RESOURCEID_VNET_SPOKE_IAAS_BASELINE=$(az deployment sub show -n deploy-alz-bu04a42 --query properties.outputs.spokeVirtualNetworkResourceId.value -o tsv)
-   echo "RESOURCEID_VNET_SPOKE_IAAS_BASELINE: $RESOURCEID_VNET_SPOKE_IAAS_BASELINE"
+   echo RESOURCEID_VNET_SPOKE_IAAS_BASELINE: $RESOURCEID_VNET_SPOKE_IAAS_BASELINE
    ```
 
    > :book: The application landing zone has been created, almost ready for the workload team to use for their scenario. The application team nows has a subscription dedicated to their scenario, with core networking components in place, connected to its regional hub, enrolled in cost management, and placed under organizational governance. Initial RBAC permissions have been assigned as well. As the application requirements evolve, their will undoubtedly be future requests from the application team to the platform team, such as Azure Firewall changes to support new egress flows. Likewise, the application team may submit troubleshooting requests for Connectivity resources. When the platform team has new Azure policy assignments or updates to roll out, there would be conversations to the impacted application team.

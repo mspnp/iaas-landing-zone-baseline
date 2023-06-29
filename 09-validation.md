@@ -1,6 +1,6 @@
 # Perform end-to-end validation [Workload team]
 
-Now that you have [validated the compute infrastructure is operational](./08-boostrap-validation.md), you can start validating and exploring the rest of the reference implementation of the [IaaS baseline](./). In addition to the workload, there are some observability validation you can perform as well.
+Now that you have [validated the compute infrastructure is operational and remote access can be established](./08-boostrap-validation.md), you can start validating and exploring the rest of the reference implementation of the [IaaS baseline](./). In addition to the workload, there are some observability validation you can perform as well.
 
 ## Validate the Contoso web app
 
@@ -52,27 +52,28 @@ Your workload is placed behind a Web Application Firewall (WAF), which has rules
 1. Observe that your request was blocked by Application Gateway's WAF rules and your workload never saw this potentially dangerous request.
 1. Blocked requests (along with other gateway data) will be visible in the attached Log Analytics workspace.
 
-   Browse to the Application Gateway in the resource group `rg-bu0001-a0008` and navigate to the _Logs_ blade. Execute the following query below to show WAF logs and see that the request was rejected due to a _SQL Injection Attack_ (field _Message_).
+   Browse to the Application Gateway in the resource group `rg-alz-bu04a42-compute` and navigate to the _Logs_ blade. Execute the following query below to show WAF logs and see that the request was rejected due to a _SQL Injection Attack_ (field _Message_).
 
    > :warning: Note that it may take a couple of minutes until the logs are transferred from the Application Gateway to the Log Analytics Workspace. So be a little patient if the query does not immediatly return results after sending the https request in the former step.
 
    ```
    AzureDiagnostics
    | where ResourceProvider == "MICROSOFT.NETWORK" and Category == "ApplicationGatewayFirewallLog"
+   | order by TimeGenerated desc
    ```
 
-## Validate Azure Monitor VM insights and logs
+## Validate Virtual Machine logs and diagnostics
 
-Monitoring your compute infrastructure is critical, especially when you're running in production. Therefore, your VMs are configured with [boot diagnostics](https://learn.microsoft.com/troubleshoot/azure/virtual-machines/boot-diagnostics) and to send [diagnostic information](https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings?tabs=portal) to the Log Analytics Workspace deployed as part of the [bootstrapping step](./05-bootstrap-prep.md).
+Monitoring your compute infrastructure is critical, especially when you're running in production. Therefore, your virtual machines are configured with [boot diagnostics](https://learn.microsoft.com/troubleshoot/azure/virtual-machines/boot-diagnostics) and Azure Monitor and VM Insights sends sends logs and metrics to the Log Analytics Workspace deployed with your compute.
 
 ```bash
-az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-bu0001a0008 --query "[].id" -o tsv)
+az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-alz-bu04a42-compute --query "[0].id" -o tsv)
 ```
 
 ### Steps
 
-1. In the Azure Portal, navigate to your VM resources.
-1. Click _Insights_ to see captured data. For more information please take a look at <https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview>
+1. In the Azure Portal, navigate to any of your virtual machine resources.
+1. Click _Insights_ to see captured metric and connection data. For more information please take a look at <https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview>
 
 You can also execute [queries](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-tutorial) on the [VM Insights logs captured](https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-log-query).
 

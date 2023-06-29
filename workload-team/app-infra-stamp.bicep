@@ -7,23 +7,6 @@ targetScope = 'resourceGroup'
 param targetVnetResourceId string
 
 @description('IaaS region. This needs to be the same region as the virtual network provided in these parameters.')
-@allowed([
-  'australiaeast'
-  'canadacentral'
-  'centralus'
-  'eastus'
-  'eastus2'
-  'westus2'
-  'francecentral'
-  'germanywestcentral'
-  'northeurope'
-  'southafricanorth'
-  'southcentralus'
-  'uksouth'
-  'westeurope'
-  'japaneast'
-  'southeastasia'
-])
 param location string
 
 @description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
@@ -80,30 +63,6 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2018-0
 resource virtualMachineAdminLoginRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
   scope: subscription()
   name: '1c0163c0-47e6-4577-8991-ea5c82e286e4'
-}
-
-@description('Built-in Monitoring Contributor Azure RBAC role.')
-resource monitoringContributorRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  name: '749f88d5-cbae-40b8-bcfc-e573ddc772fa'
-}
-
-@description('Built-in Log Analytics Contributor Azure RBAC role.')
-resource logAnalyticsContributorRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  name: '92aaf0da-9dab-42b6-94a3-d43ce8d16293'
-}
-
-@description('Built-in: Azure Backup should be enabled for Virtual Machines.')
-resource configureLinuxMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing = {
-  scope: tenant()
-  name: '2ea82cdd-f2e8-4500-af75-67a2e084ca74'
-}
-
-@description('Built-in: Azure Backup should be enabled for Virtual Machines.')
-resource configureWindowsMachinesWithDataCollectionRulePolicy 'Microsoft.Authorization/policyDefinitions@2021-06-01' existing = {
-  scope: tenant()
-  name: 'eab1f514-22e3-42e3-9a1f-e1dc9199355c'
 }
 
 @description('Existing resource group that holds our application landing zone\'s network.')
@@ -187,376 +146,7 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
   name: 'asg-keyvault'
 }
 
-@description('Consistent prefix on all assignments to facilitate deleting assignments in the cleanup process.')
-var policyAssignmentNamePrefix = '[IaaS baseline bu04a42] -'
-
 /*** RESOURCES ***/
-
-/* TODO: private endpoint disk access 
-resource x 'Microsoft.Compute/diskAccesses@2022-07-02' = {
-  name: ''
-  location: location
-  properties: {
-  }
-}
-*/
-@description('Deny deploying hybrid networking resources.')
-resource configureLinuxMachinesWithDataCollectionRulePolicyAssignment 'Microsoft.Authorization/policyAssignments@2022-06-01' = {
-  name: guid('workload', 'dca-ct-linux', configureLinuxMachinesWithDataCollectionRulePolicy.id, resourceGroup().id)
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    displayName: take('${policyAssignmentNamePrefix} Configure Linux virtual machines with change tracking', 120)
-    description: take(configureLinuxMachinesWithDataCollectionRulePolicy.properties.description, 500)
-    enforcementMode: 'Default'
-    policyDefinitionId: configureLinuxMachinesWithDataCollectionRulePolicy.id
-    parameters: {
-      effect: {
-        value: 'DeployIfNotExists'
-      }
-      dcrResourceId: {
-        value: changeTrackingDataCollectionRule.id
-      }
-      resourceType: {
-        value: changeTrackingDataCollectionRule.type
-      }
-    }
-  }
-}
-
-@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
-resource dineLinuxDcrPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(resourceGroup().id, logAnalyticsContributorRole.id, configureLinuxMachinesWithDataCollectionRulePolicyAssignment.id)
-  properties: {
-    principalId: configureLinuxMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
-    roleDefinitionId: logAnalyticsContributorRole.id
-    principalType: 'ServicePrincipal'
-  }
-}
-
-@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
-resource dineLinuxDcrPolicyMonitoringContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(resourceGroup().id, monitoringContributorRole.id, configureLinuxMachinesWithDataCollectionRulePolicyAssignment.id)
-  properties: {
-    principalId: configureLinuxMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
-    roleDefinitionId: monitoringContributorRole.id
-    principalType: 'ServicePrincipal'
-  }
-}
-
-@description('Deny deploying hybrid networking resources.')
-resource configureWindowsMachinesWithDataCollectionRulePolicyAssignment 'Microsoft.Authorization/policyAssignments@2022-06-01' = {
-  name: guid('workload', 'dca-ct-windows', configureWindowsMachinesWithDataCollectionRulePolicy.id, resourceGroup().id)
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    displayName: take('${policyAssignmentNamePrefix} Configure Windows virtual machines with change tracking', 120)
-    description: take(configureWindowsMachinesWithDataCollectionRulePolicy.properties.description, 500)
-    enforcementMode: 'Default'
-    policyDefinitionId: configureWindowsMachinesWithDataCollectionRulePolicy.id
-    parameters: {
-      effect: {
-        value: 'DeployIfNotExists'
-      }
-      dcrResourceId: {
-        value: changeTrackingDataCollectionRule.id
-      }
-      resourceType: {
-        value: changeTrackingDataCollectionRule.type
-      }
-    }
-  }
-}
-
-@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
-resource dineWindowsDcrPolicyLogAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(resourceGroup().id, logAnalyticsContributorRole.id, configureWindowsMachinesWithDataCollectionRulePolicyAssignment.id)
-  properties: {
-    principalId: configureWindowsMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
-    roleDefinitionId: logAnalyticsContributorRole.id
-    principalType: 'ServicePrincipal'
-  }
-}
-
-@description('Ensure the managed identity for DCR DINE policies is has needed permissions.')
-resource dineWindowsDcrPolicyMonitoringContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: resourceGroup()
-  name: guid(resourceGroup().id, monitoringContributorRole.id, configureWindowsMachinesWithDataCollectionRulePolicyAssignment.id)
-  properties: {
-    principalId: configureWindowsMachinesWithDataCollectionRulePolicyAssignment.identity.principalId
-    roleDefinitionId: monitoringContributorRole.id
-    principalType: 'ServicePrincipal'
-  }
-}
-
-@description('Change tracking data collection rule')
-resource changeTrackingDataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
-  name: 'dcrVirtualMachineChangeTracking'
-  location: location
-  properties: {
-    description: 'Data collection rule for change tracking.'
-    destinations: {
-      logAnalytics: [
-        {
-          name: workloadLogAnalytics.name
-          workspaceResourceId: workloadLogAnalytics.id
-        }
-      ]
-    }
-    dataSources: {
-      extensions: [
-        {
-          name: 'CTDataSource-Windows'
-          extensionName: 'ChangeTracking-Windows'
-          streams: [
-            'Microsoft-ConfigurationChange'
-            'Microsoft-ConfigurationChangeV2'
-            'Microsoft-ConfigurationData'
-          ]
-          extensionSettings: {
-            enableFiles: true
-            enableSoftware: true
-            enableRegistry: true
-            enableServices: true
-            enableInventory: true
-            registrySettings: {
-              registryCollectionFrequency: 3000
-              registryInfo: [
-                {
-                  name: 'Registry_1'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Group Policy\\Scripts\\Startup'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_2'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Group Policy\\Scripts\\Shutdown'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_3'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Run'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_4'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_5'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Classes\\Directory\\ShellEx\\ContextMenuHandlers'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_6'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Classes\\Directory\\Background\\ShellEx\\ContextMenuHandlers'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_7'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Classes\\Directory\\Shellex\\CopyHookHandlers'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_8'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_9'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_10'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_11'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_12'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Internet Explorer\\Extensions'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_13'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Internet Explorer\\Extensions'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_14'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_15'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\Software\\Wow6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_16'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\KnownDlls'
-                  valueName: ''
-                }
-                {
-                  name: 'Registry_17'
-                  groupTag: 'Recommended'
-                  enabled: false
-                  recurse: true
-                  description: ''
-                  keyName: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\Notify'
-                  valueName: ''
-                }
-              ]
-            }
-            fileSettings: {
-              fileCollectionFrequency: 2700
-            }
-            softwareSettings: {
-              softwareCollectionFrequency: 1800
-            }
-            inventorySettings: {
-              inventoryCollectionFrequency: 36000
-            }
-            servicesSettings: {
-              serviceCollectionFrequency: 1800
-            }
-          }
-        }
-        {
-          name: 'CTDataSource-Linux'
-          extensionName: 'ChangeTracking-Linux'
-          streams: [
-            'Microsoft-ConfigurationChange'
-            'Microsoft-ConfigurationChangeV2'
-            'Microsoft-ConfigurationData'
-          ]
-          extensionSettings: {
-            enableFiles: true
-            enableSoftware: true
-            enableRegistry: false
-            enableServices: true
-            enableInventory: true
-            fileSettings: {
-              fileCollectionFrequency: 900
-              fileInfo: [
-                {
-                  name: 'ChangeTrackingLinuxPath_default'
-                  enabled: true
-                  destinationPath: '/etc/.*.conf'
-                  useSudo: true
-                  recurse: true
-                  maxContentsReturnable: 5000000
-                  pathType: 'File'
-                  type: 'File'
-                  links: 'Follow'
-                  maxOutputSize: 500000
-                  groupTag: 'Recommended'
-                }
-              ]
-            }
-            softwareSettings: {
-              softwareCollectionFrequency: 300
-            }
-            inventorySettings: {
-              inventoryCollectionFrequency: 36000
-            }
-            servicesSettings: {
-              serviceCollectionFrequency: 300
-            }
-          }
-        }
-      ]
-    }
-    dataFlows: [
-      {
-        destinations: [
-          workloadLogAnalytics.name
-        ]
-        streams: [
-          'Microsoft-ConfigurationChange'
-          'Microsoft-ConfigurationChangeV2'
-          'Microsoft-ConfigurationData'
-        ]
-      }
-    ]
-  }
-}
 
 @description('Sets up the provided group object id to have access to SSH or RDP into all virtual machines with the AAD login extension installed in this resource group.')
 resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -663,7 +253,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           disablePasswordAuthentication: true
           provisionVMAgent: true
           patchSettings: {
-            assessmentMode: 'AutomaticByPlatform'
+            assessmentMode: 'ImageDefault'
             automaticByPlatformSettings: {
               bypassPlatformSafetyChecksOnUserSchedule: false
               rebootSetting: 'IfRequired'
@@ -693,8 +283,8 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         }
         imageReference: {
           publisher: 'Canonical'
-          offer: 'UbuntuServer'
-          sku: '18.04-LTS' /* TODO: Move this to a supported version, 18.04 is no longer in support */
+          offer: '0001-com-ubuntu-server-focal'
+          sku: '20_04-lts-gen2'
           version: 'latest'
         }
       }
@@ -771,19 +361,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             }
           }
           {
-            name: 'AzureSecurityLinuxAgent'
-            properties: {
-              provisionAfterExtensions: [
-                'AzureMonitorLinuxAgent'
-              ]
-              publisher: 'Microsoft.Azure.Security.Monitoring'
-              type: 'AzureSecurityLinuxAgent'
-              typeHandlerVersion: '2.0'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-            }
-          }
-          {
             name: 'DependencyAgentLinux'
             properties: {
               provisionAfterExtensions: [
@@ -794,6 +371,9 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '9.10'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
+              settings: {
+                enableAMA: true
+              }
             }
           }
           {
@@ -864,7 +444,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                 //fileUris: [
                 //  'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/content-pass/workload-team/workload/configure-nginx-frontend.sh'
                 //]
-                script: 'H4sIAAAAAAACA7VU22rcMBB991dMk8AmEFtJmz60SQohbCHkUsimhVKKkeWxLaKVjDR7cdP8e0f25tIQ6I36QcLSzJmjM0dafyEKbUUhQ5Mk63Ds2g4mwYBCTwEq76Zwit0nOTOU4LJ1nmDy+fzs5OI0Px5fXl0cnY8PNzbDrHRgAoi59MLoQiykrNGSONfKu+Aqyo6+zTxmd1jZhJxHAd+h9thCqiEdw1q2cP7aOFmm7awwWqWt13NJmEY2axzcoCwh3d1K+oKuRRuY6/L1zhuGsH9cfuPm6VluIXUzAoGkBEOLXgZha22XXIC5hsAzobfSpFrKcL9KJmTK08/MfJD/idhKmd+mdo1d7O/HtuQskC2BkqrBbODL/2mNBLN+Owae2EDSGLiI+E+i9Gov7aAvPxjHVrrmowwZsNDUgHeOoOUTbwNz3o7tM7zgXYGAtmwd890GaUvwOEcfMO4tu0RJgnfDWfsCImjCkKKVhcFSVM4vpC/h4ADGH94nAT0nw00C/BkdCC3s7b2KJff7tSEgt3KK0dGskS3TnZ3ssUiZ4nXuCM/TVVYweWy/rrSKmv29J57Fy7kj/9TOB1QWjZxyfP+uzibz3WHM7uaX+8mgjOOy2rEZV1LFr9c7b2UI0BC14a3gp0Bd/0IgsX8PEGZFXmnDPGH05U7cryMYbWw2LlDUfGv0XHjurEJwVTVs3j4heQiiknPNRTMeHjHGaUtdXuvqAVQqxQRz4+rHeLdJNAdb8xLZrvxuDcYkfqj4hQFqECwuQK2M25cdfB469tBUEd/fVWrfliz6SCtMfgAd7CO5NAUAAA=='
+                script: 'H4sICEdWm2QAA2NvbmZpZ3VyZS1uZ2lueC1mcm9udGVuZC5zaAC1VO9P2zAQ/Z6/4gZIBamJC2MfVmATgk5CFJhot2mapsh1LolV145s90fG+N93TjpgCGls0/whVuy7d8/Pz7f5gk2kZhPuyijahBNT1TAaDUGg9Q5ya2ZwjjV85HPlaX98dXrVh09lDdLpjgdfSgdS04yQYR6iQBnBvTS6C0uKMwu0VmYZ6hCHK4/a0ebbCFeVsR5Gny+GZ5fn6cngenx5fDE42tp288yAcsAW3DIlJ2zJeYHaswsprHEm98nxt7nFhJg1xJKRNxYZfIfCYgWxhHgAG8nS2KkyPIur+URJEVdWLrjHOJxtg4JL5BnEuztRU9BUxMwpWL3qvSYI/cflt24en+UWYjP3wNALRtCsEZXpQuoVFSCuztHs0WquYsm5u1v1yiXC+l+ZWcf/E7G1Ms+mNsU6uOVDlVEW8MqD4KLEpOVL/3GBnmrA6ftp0e8PjZj2+2M5Q6p6tLvXg3mTGTDOtPNcKbgMpZ8PINdpcQ0N6da8OpcFCdCCwVL6EqwxHirSqQt00m64dPJoZc0EAXVWGTplF7jOwCJZ1WHYW9UReRjetAo1BZiTHl2Mmk8UZiw3dsltBoeHMLh6Fzm0lAw3EdBQ0pHLYX//ZSh50Ky1AanmMwyvipTVWdzrJQ+lTQSt0z3SPFtnOZUG08hciqD03zvpSbyU7vGfTHCPSqJ5Iwy92vFwtNhN9g6iVot1MwC2FieMRuG04s5B6X3l+owakJj+RhJ2cAfg5pM0l4qYQefLTzm/dqCztV0a54PKO52nwlOjBYLJ83bz9hHJI2A5X0gqmtDnAWOcVb5OC5nfg3IhiGCqTPEQ7zYKdiAzXiMZlPpba0VPDY06UdMnNS5BrK3alG1N72pyzUx4eufr1OYikuAcKTD6AStQcUeqBQAA'
               }
             }
           }
@@ -900,8 +480,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
-    dineLinuxDcrPolicyLogAnalyticsRoleAssignment
-    dineLinuxDcrPolicyMonitoringContributorRoleAssignment
   ]
 }
 
@@ -954,8 +532,8 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               bypassPlatformSafetyChecksOnUserSchedule: false
               rebootSetting: 'IfRequired'
             }
-            assessmentMode: 'AutomaticByPlatform'
-            enableHotpatching: true
+            assessmentMode: 'ImageDefault'
+            enableHotpatching: false
           }
         }
         adminUsername: defaultAdminUserName
@@ -968,7 +546,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           osType: 'Windows'
           diffDiskSettings: {
             option: 'Local'
-            placement: 'ResourceDisk'
+            placement: 'CacheDisk'
           }
           caching: 'ReadOnly'
           createOption: 'FromImage'
@@ -981,7 +559,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         imageReference: {
           publisher: 'MicrosoftWindowsServer'
           offer: 'WindowsServer'
-          sku: '2022-datacenter-azure-edition-core-smalldisk'
+          sku: '2022-datacenter-azure-edition-smalldisk'
           version: 'latest'
         }
         dataDisks: [
@@ -1040,11 +618,23 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       extensionProfile: {
         extensions: [
           {
+            name: 'AADLogin'
+            properties: {
+              autoUpgradeMinorVersion: true
+              publisher: 'Microsoft.Azure.ActiveDirectory'
+              type: 'AADLoginForWindows'
+              typeHandlerVersion: '2.0'
+              settings: {
+                mdmId: ''
+              }
+            }
+          }
+          {
             name: 'KeyVaultForWindows'
             properties: {
               publisher: 'Microsoft.Azure.KeyVault'
               type: 'KeyVaultForWindows'
-              typeHandlerVersion: '3.0'
+              typeHandlerVersion: '3.1'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
               settings: {
@@ -1063,6 +653,10 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
                   ]
                   linkOnRenewal: true
                   pollingIntervalInS: '3600'
+                }
+                authenticationSettings: {
+                  msiEndpoint: 'http://169.254.169.254/metadata/identity/oauth2/token'
+                  msiClientId: miVmssBackend.properties.clientId
                 }
               }
             }
@@ -1120,19 +714,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             }
           }
           {
-            name: 'AzureSecurityWindowsAgent'
-            properties: {
-              provisionAfterExtensions: [
-                'AzureMonitorWindowsAgent'
-              ]
-              publisher: 'Microsoft.Azure.Security.Monitoring'
-              type: 'AzureSecurityWindowsAgent'
-              typeHandlerVersion: '1.0'
-              autoUpgradeMinorVersion: true
-              enableAutomaticUpgrade: true
-            }
-          }
-          {
             name: 'DependencyAgentWindows'
             properties: {
               provisionAfterExtensions: [
@@ -1143,6 +724,9 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               typeHandlerVersion: '9.10'
               autoUpgradeMinorVersion: true
               enableAutomaticUpgrade: true
+              settings: {
+                enableAMA: true
+              }
             }
           }
 
@@ -1177,8 +761,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     contosoPrivateDnsZone::vnetlnk
     contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
-    dineWindowsDcrPolicyLogAnalyticsRoleAssignment
-    dineWindowsDcrPolicyMonitoringContributorRoleAssignment
   ]
 }
 
@@ -1350,23 +932,6 @@ resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   // at via our imposed management groups (in this reference implementation, faked by being applied
   // directly on our resource group to limit impact to the rest of your sandbox subscription).
   // TODO: Evaluate impact on guidance.
-
-  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
-  // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step. 
-  /* resource pdnszg 'privateDnsZoneGroups' = {
-    name: 'default'
-    properties: {
-      privateDnsZoneConfigs: [
-        {
-          name: 'privatelink-akv-net'
-          properties: {
-            privateDnsZoneId: keyVaultDnsZone.id
-          }
-        }
-      ]
-    }
-  } */
 }
 
 // Application Gateway does not inhert the virtual network DNS settings for the parts of the service that
