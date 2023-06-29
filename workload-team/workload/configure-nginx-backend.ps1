@@ -41,10 +41,9 @@ $keyBytes = $rsaKey.Key.Export([System.Security.Cryptography.CngKeyBlobFormat]::
 ) | Out-File -FilePath w:/nginx/ssl/nginx-ingress-internal-iaas-ingress-tls.key -Encoding ascii
 
 # Create home page.
-# TODO: Update this to our repo
-Invoke-WebRequest 'https://raw.githubusercontent.com/mspnp/aks-baseline/main/workload/index.html' -OutFile 'w:/nginx/html/index.html'
+Invoke-WebRequest 'https://raw.githubusercontent.com/mspnp/iaas-landing-zone-baseline/main/workload-team/workload/index.html' -OutFile 'w:/nginx/html/index.html'
 
-# Configure Nginx with root page, ssl, healt probe endpoint, and reverse proxy
+# Configure Nginx with root page, SSL, health probe endpoint, and reverse proxy
 @"
 worker_processes  1;
 
