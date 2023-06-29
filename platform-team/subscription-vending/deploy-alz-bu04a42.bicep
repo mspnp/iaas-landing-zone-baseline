@@ -18,33 +18,38 @@ targetScope = 'subscription'
 param hubVnetResourceId string
 
 @allowed([
-  'brazilsouth'    // paired to: southcentralus which also supports availability zones
-  'centralus'      // paired to: eastus2 which also supports availability zones
-  'eastasia'       // paired to: southeastasia' which also supports availability zones
-  'eastus'         // paired to: westus which also supports availability zones
-  'eastus2'        // paired to: centralus which also supports availability zones
-  'northcentralus' // paired to: southcentralus which also supports availability zones
-  'northeurope'    // paired to: westeurope which also supports availability zones
-  'southcentralus' // paired to: northcentralus which also supports availability zones
-  'southeastasia'  // paired to: eastasia which also supports availability zones
-  'westeurope'     // paired to: northeurope which also supports availability zones
-  'westus'         // paired to: eastus which also supports availability zones
-  'westus3'        // paired to: eastus which also supports availability zones
+  // Only those regions that support all deployed resources, and have a paired region that
+  // also supports the deployed resources, and both regions support availability zones.
+  // Data as of: 27-June-2023
+  'brazilsouth'    // paired to: southcentralus
+  'centralus'      // paired to: eastus2
+  'eastasia'       // paired to: southeastasia
+  'eastus'         // paired to: westus
+  'eastus2'        // paired to: centralus
+  'northcentralus' // paired to: southcentralus
+  'northeurope'    // paired to: westeurope
+  'southcentralus' // paired to: northcentralus
+  'southeastasia'  // paired to: eastasia
+  'westeurope'     // paired to: northeurope
+  'westus'         // paired to: eastus
+  'westus3'        // paired to: eastus
 
-  // 'australiaeast'      // paired to: australiasoutheast which doesn't support availability zones
-  // 'canadacentral'      // paired to: canadaeast which doesn't support availability zones
-  // 'westus2'            // paired to: westcentralus which doesn't support availability zones
-  // 'francecentral'      // paired to: francesouth which doesn't support availability zones
-  // 'germanywestcentral' // paired to: germanynorth which doesn't support availability zones
-  // 'southafricanorth'   // paired to: southafericawest which doesn't support availability zones
-  // 'swedencentral'      // paired to: swedensouth which doesn't support availability zones
-  // 'uksouth'            // paired to: ukwest which doesn't support availability zones
-  // 'japaneast'          // paired to: japanwest which doesn't support availability zones
-  // 'centralindia'       // paired to: southindia which doesn't support availability zones
-  // 'koreacentral'       // paired to: koreasouth which doesn't support availability zones
-  // 'norwayeast'         // paired to: norwaywest which doesn't support availability zones
-  // 'switzerlandnorth'   // paired to: switzerlandwest which doesn't support availability zones
-  // 'uaenorth'           // paired to: uaecentral which doesn't support availability zones  
+  // The following regions all support availability zones, but their paired regions do not.
+  // Consider your architectral impact in selecting one of these regions in a failover situation.
+  // 'australiaeast'      // paired to: australiasoutheast
+  // 'canadacentral'      // paired to: canadaeast
+  // 'westus2'            // paired to: westcentralus
+  // 'francecentral'      // paired to: francesouth
+  // 'germanywestcentral' // paired to: germanynorth
+  // 'southafricanorth'   // paired to: southafericawest
+  // 'swedencentral'      // paired to: swedensouth
+  // 'uksouth'            // paired to: ukwest
+  // 'japaneast'          // paired to: japanwest
+  // 'centralindia'       // paired to: southindia
+  // 'koreacentral'       // paired to: koreasouth
+  // 'norwayeast'         // paired to: norwaywest
+  // 'switzerlandnorth'   // paired to: switzerlandwest
+  // 'uaenorth'           // paired to: uaecentral
 ])
 @description('The spokes\'s regional affinity, must be the same as the existing hub\'s location.')
 param location string
