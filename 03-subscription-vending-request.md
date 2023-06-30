@@ -4,7 +4,7 @@ In the prior step, you [deployed a basic network hub](./02-connectivity-subscrip
 
 ## Expected results
 
-We're going to take the core workload requirements from the [IaaS baseline](https://github.com/mspnp/iaas-baseline) and capture them as if it was part of the IT service management (ITSM) tooling or portal experience that your application landing zone subscripting vending process follows.
+We're going to take the core workload requirements from the IaaS baseline architecture and capture them as if it was part of the IT service management (ITSM) tooling or portal experience that your application landing zone subscripting vending process follows.
 
 **There will be no resources deployed in this step.**
 

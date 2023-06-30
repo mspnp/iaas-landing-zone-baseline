@@ -1,5 +1,8 @@
 # Infrastructure-as-a-service baseline for Azure landing zones
 
+| :warning: | This repo is still under active development by Microsoft patterns & practices and is not yet considered in a release state. | :warning: |
+| :-------: | :-------------------------: | :------: |
+
 This reference implementation demonstrates a _recommended starting (baseline) infrastructure as a service (IaaS) architecture_ with special considerations for Azure landing zone integration. This implementation is a direct continuation of the [IaaS baseline reference implementation](https://github.com/mspnp/iaas-baseline), which did not have any Azure landing zone context.
 
 ## Azure landing zone workload team focus
@@ -123,4 +126,4 @@ Please see our [contributor guide](./CONTRIBUTING.md).
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact <opencode@microsoft.com> with any additional questions or comments.
 
-With :heart: from Microsoft Patterns & Practices, [Azure Architecture Center](https://aka.ms/architecture).
+With :heart: from Microsoft patterns & practices, [Azure Architecture Center](https://aka.ms/architecture).
