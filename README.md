@@ -5,6 +5,8 @@
 
 This reference implementation demonstrates a _recommended starting (baseline) infrastructure as a service (IaaS) architecture_ with special considerations for Azure landing zone integration. This implementation is a direct continuation of the [IaaS baseline reference implementation](https://github.com/mspnp/iaas-baseline), which did not have any Azure landing zone context.
 
+![Network diagram depicting a hub-spoke network with two peered virtual networks and main Azure resources used in the architecture.](./networking/iaas-alz-components-overview.png)
+
 ## Azure landing zone workload team focus
 
 This repository and its deployment guide primarily addresses the **workload team** looking to build our their solution expected to be homed within an [application landing zone](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-landing-zones-vs-application-landing-zones). The **platform team** will be referenced throughout where their role in this solution would typically be required. However, their role will be abstracted out through proxy deployments and hypotheticals.
@@ -51,10 +53,6 @@ This implementation uses [Nginx](https://nginx.org) as an example workload in th
   - Azure Firewall managed egress
 - Azure Application Gateway (WAF)
 - Internal Load Balancers
-
-**TODO: Need to replace image with a landing zone aligned image and this actual architecture.**
-
-![Network diagram depicting a hub-spoke network with two peered virtual networks and main Azure resources used in the architecture.](https://learn.microsoft.com/azure/architecture/reference-architectures/containers/aks/images/secure-baseline-architecture.svg)
 
 ## Which Azure landing zone implementation?
 
