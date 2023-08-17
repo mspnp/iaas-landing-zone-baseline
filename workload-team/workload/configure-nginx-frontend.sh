@@ -7,10 +7,10 @@ sudo openssl x509 -in /var/lib/waagent/Microsoft.Azure.KeyVault.Store/${SYMLINK_
 sudo openssl rsa -in /var/lib/waagent/Microsoft.Azure.KeyVault.Store/${SYMLINK_CERTNAME} -out /etc/ssl/private/nginx-ingress-internal-iaas-ingress-tls.key
 
 # Update apt cache.
-sudo apt-get -o DPkg::Lock::Timeout=120 update
+sudo apt-get update
 
 # Install Nginx.
-sudo apt-get -o DPkg::Lock::Timeout=120 install -y nginx
+sudo apt-get install -y nginx
 
 # Configure Nginx with root page, SSL, health probe endpoint, and reverse proxy
 cat > /etc/nginx/sites-enabled/forward << EOF
