@@ -287,6 +287,18 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           sku: '20_04-lts-gen2'
           version: 'latest'
         }
+        dataDisks: [
+          {
+            caching: 'None'
+            createOption: 'Empty'
+            deleteOption: 'Delete'
+            diskSizeGB: 4
+            lun: 0
+            managedDisk: {
+              storageAccountType: 'Premium_LRS'
+            }
+          }
+        ]
       }
       networkProfile: {
         networkApiVersion: '2020-11-01'
@@ -570,7 +582,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
               storageAccountType: 'Premium_LRS'
             }
           }
-
         ]
       }
       networkProfile: {
