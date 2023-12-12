@@ -560,7 +560,7 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           caching: 'ReadOnly'
           createOption: 'FromImage'
           managedDisk: {
-            storageAccountType: 'Standard_LRS'
+            storageAccountType: 'Premium_ZRS'
           }
           deleteOption: 'Delete'
           diskSizeGB: 30
