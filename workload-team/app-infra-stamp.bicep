@@ -1306,6 +1306,27 @@ resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
   }
 }
 
+@description('Azure Diagnostics for Internal Load Balancer.')
+resource workloadLoadBalancer_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: loadBalancer
+  name: 'default'
+  properties: {
+    workspaceId: workloadLogAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
 /*** OUTPUTS ***/
 
 output keyVaultName string = workloadKeyVault.name
