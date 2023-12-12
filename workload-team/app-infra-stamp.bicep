@@ -394,6 +394,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             properties: {
               provisionAfterExtensions: [
                 'NetworkWatcherAgentLinux'
+                'CustomScript'
               ]
               publisher: 'Microsoft.Azure.ActiveDirectory'
               type: 'AADSSHLoginForLinux'
@@ -404,9 +405,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           {
             name: 'KeyVaultForLinux'
             properties: {
-              provisionAfterExtensions: [
-                'AADSSHLogin'
-              ]
               publisher: 'Microsoft.Azure.KeyVault'
               type: 'KeyVaultForLinux'
               typeHandlerVersion: '2.2'
@@ -618,6 +616,9 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         extensions: [
           {
             name: 'AADLogin'
+            provisionAfterExtensions: [
+              'CustomScript'
+            ]
             properties: {
               autoUpgradeMinorVersion: true
               publisher: 'Microsoft.Azure.ActiveDirectory'
