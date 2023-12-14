@@ -1,6 +1,6 @@
 # Generate your client-facing and service-to-service certificates [Workload team]
 
-Now that you have an [application landing zone awaiting your workload](./04-subscription-vending-execute.md) and [Azure AD configured for compute user access](./05-aad.md), follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
+Now that you have an [application landing zone awaiting your workload](./04-subscription-vending-execute.md) and [Entra ID configured for compute user access](./05-entra-id.md), follow the steps below to create the TLS certificate Azure Application Gateway will serve clients connecting to your web app, and the certificate to implement TLS communication among the VMs in the environment. If you already have access to appropriate certificates, or can procure them from your organization, consider doing so and skipping the certificate generation steps. The following will describe using self-signed certs for instruction purposes only.
 
 ## Steps
 

@@ -5,7 +5,7 @@ Contoso, a fictitious technology company, is investing in modernizing its legend
 External clients access the web app hosted on frontend servers, which in turn relies on a web API hosted in backend servers. The application experiences high seasonality in traffic. Contoso wants to leverage the elasticity of cloud infrastructure to scale in or out their frontend virtual machines based on fluctuations in traffic while keeping the backend virtual machines at a reserved capacity. This ensures that the backend servers are always ready to handle any workload without compromising on performance. With Azure's help, Contoso can easily adjust their resources as needed to meet their clients' demands and provide a seamless user experience. Here's the brief hybrid on-premises and cloud profile:
 
 - Have two workloads running and operating on premises.
-- Use Azure Active Directory for identity management.
+- Use Entra ID for identity management.
 - They are investing in getting knowledgeable about containers but as a first step they plan to land in the cloud using Infrastructure as a Service (virtual machine) resources.
 - Aware of Virtual Machine Scale Sets and their capabilities for orchestration.
 

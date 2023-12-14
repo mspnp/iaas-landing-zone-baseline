@@ -89,7 +89,7 @@ All application landing zone deployments need the actual subscription(s) the sol
 
 - [ ] [Request your application landing zone](./03-subscription-vending-request.md)
 - [ ] [Deploy a mock application landing zone subscription](./04-subscription-vending-execute.md)
-- [ ] [Prep for Azure Active Directory based user authentication](./05-aad.md)
+- [ ] [Prep for Entra ID based user authentication](./05-entra-id.md)
 
 ### 3. Deploy the solution infrastructure
 

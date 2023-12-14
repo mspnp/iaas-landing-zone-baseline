@@ -69,7 +69,7 @@ Sample relevant Azure policies will be deployed to represent the types of polici
 
 ### Next step
 
-:arrow_forward: [Configure user access for application team](./05-aad.md)
+:arrow_forward: [Configure user access for application team](./05-entra-id.md)
 
 
 

@@ -41,7 +41,7 @@ We're going to take the core workload requirements from the IaaS baseline archit
      - Windows virtual machines
      - Azure Application Gateway (with WAF)
    - Azure Bastion Access: **Yes**, platform provided
-     - Existing compute admin Azure Active Directory security group: **None**, please create.
+     - Existing compute admin Entra ID security group: **None**, please create.
    - Solution uses Private Link: **Yes**
      - Azure Key Vault
    - … plenty more such as: environment, latency sensitivity, user and service principal auth needs, etc.
