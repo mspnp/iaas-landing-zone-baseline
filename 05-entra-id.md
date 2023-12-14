@@ -33,18 +33,18 @@ The platform identity team probably manages your Entra ID groups and group membe
 
    ```bash
    export COMPUTEADMIN_TYPE_IAAS_BASELINE="Group"
-   export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="Paste your existing compute admin group Object ID (guid) in these quotes."
+   export OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="Paste your existing compute admin group Object ID (guid) in these quotes."
    echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
-   echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
+   echo OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
    ```
 
    If you want to create a new one instead, and have the permissions to do so, you can use the following commands:
 
    ```bash
    export COMPUTEADMIN_TYPE_IAAS_BASELINE="Group"
-   export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE=$(az ad group create --display-name 'compute-admins-bu04a42' --mail-nickname 'compute-admins-bu04a42' --description "Principals in this group are compute admins in the bu04a42 virtual machines." --query id -o tsv)
+   export OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE=$(az ad group create --display-name 'compute-admins-bu04a42' --mail-nickname 'compute-admins-bu04a42' --description "Principals in this group are compute admins in the bu04a42 virtual machines." --query id -o tsv)
    echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
-   echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
+   echo OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
    ```
 
    This Entra ID group object ID will be used later while creating the virtual machines so that once the virtual machines gets deployed the identified group will get the proper Azure role assignment to be able to login.
@@ -56,7 +56,7 @@ The platform identity team probably manages your Entra ID groups and group membe
    If instead followed the instructions above to create a new security group, you can use the follow command to add yourself:
 
    ```bash
-   az ad group member add -g $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE --member-id $(az ad signed-in-user show --query id -o tsv)
+   az ad group member add -g $OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE --member-id $(az ad signed-in-user show --query id -o tsv)
    ```
 
 ### Alternative if group management access is not possible in your environment
@@ -65,9 +65,9 @@ If an existing suitable group is not available or access to do the above is not 
 
 ```bash
 export COMPUTEADMIN_TYPE_IAAS_BASELINE="User"
-export AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="$(az ad signed-in-user show --query "id" -o tsv)"
+export OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE="$(az ad signed-in-user show --query "id" -o tsv)"
 echo COMPUTEADMIN_TYPE_IAAS_BASELINE: $COMPUTEADMIN_TYPE_IAAS_BASELINE
-echo AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $AADOBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
+echo OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE: $OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE
 ```
 
 ### Final thoughts
