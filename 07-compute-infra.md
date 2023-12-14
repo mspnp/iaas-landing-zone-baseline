@@ -32,7 +32,7 @@ Azure Application Gateway, for this reference implementation, is placed in the s
 
 1. Assign system managed identities to all virtual machines.
 
-   The virtual machines each need a system managed identity assigned to [support Azure Active Directory authentication](https://learn.microsoft.com/azure/active-directory/devices/howto-vm-sign-in-azure-ad-linux#virtual-machine). This is not possible to assign within the Bicep, unless implemented similarly through a deploymentScript in the template. Generally speaking, you should strive to minimize mixing declarative deployments (Bicep) and imperative control (az cli, DINE policies, portal) in your workload.
+   The virtual machines each need a system managed identity assigned to [support Entra ID authentication](https://learn.microsoft.com/azure/active-directory/devices/howto-vm-sign-in-azure-ad-linux#virtual-machine). This is not possible to assign within the Bicep, unless implemented similarly through a deploymentScript in the template. Generally speaking, you should strive to minimize mixing declarative deployments (Bicep) and imperative control (az cli, DINE policies, portal) in your workload.
 
    ```bash
    # [This takes about one minute.]

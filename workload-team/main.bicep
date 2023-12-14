@@ -57,7 +57,7 @@ param vmssWildcardTlsPublicAndKeyCertificates string
 @secure()
 param adminPassword string
 
-@description('The Azure Active Directory group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
+@description('The Entra ID group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
 @minLength(36)
 param adminAadSecurityPrincipalObjectId string
 

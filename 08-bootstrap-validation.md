@@ -61,7 +61,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
    echo AB_NAME_HUB: $AB_NAME_HUB
    ```
 
-1. Remote SSH to a Linux virtual machine using Azure Bastion and Azure AD auth. _(optional)_
+1. Remote SSH to a Linux virtual machine using Azure Bastion and Entra ID auth. _(optional)_
 
    ```bash
    az extension add -n ssh --upgrade
@@ -94,7 +94,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
       rm -Rf $TEMPDIR_SSH_CONFIG
       ```
 
-1. Remote RPD to a Windows virtual machine using Azure Bastion and Azure AD auth. _(optional)_
+1. Remote RPD to a Windows virtual machine using Azure Bastion and Entra ID auth. _(optional)_
 
    ```bash
    az network bastion rdp -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_BACKEND_IAAS_BASELINE --query '[0].id' -o tsv)

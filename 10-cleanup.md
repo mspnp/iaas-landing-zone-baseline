@@ -31,7 +31,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    az keyvault purge -n $KEYVAULT_NAME
    ```
 
-1. If any temporary changes were made to Azure AD or Azure RBAC permissions consider removing those as well.
+1. If any temporary changes were made to Entra ID or Azure RBAC permissions consider removing those as well.
 
 ## Automation
 
