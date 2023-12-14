@@ -29,14 +29,14 @@ param subComputeRgUniqueString string
 
 @description('The Entra ID group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
 @minLength(36)
-param adminAadSecurityPrincipalObjectId string
+param adminSecurityPrincipalObjectId string
 
-@description('The principal type of the adminAadSecurityPrincipalObjectId ID.')
+@description('The principal type of the adminSecurityPrincipalObjectId ID.')
 @allowed([
   'User'
   'Group'
 ])
-param adminAddSecurityPrincipalType string
+param adminSecurityPrincipalType string
 
 /*** VARIABLES ***/
 
@@ -151,11 +151,11 @@ resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' ex
 @description('Sets up the provided group object id to have access to SSH or RDP into all virtual machines with the Entra ID login extension installed in this resource group.')
 resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
-  name: guid(resourceGroup().id, adminAadSecurityPrincipalObjectId, virtualMachineAdminLoginRole.id)
+  name: guid(resourceGroup().id, adminSecurityPrincipalObjectId, virtualMachineAdminLoginRole.id)
   properties: {
-    principalId: adminAadSecurityPrincipalObjectId
+    principalId: adminSecurityPrincipalObjectId
     roleDefinitionId: virtualMachineAdminLoginRole.id
-    principalType: adminAddSecurityPrincipalType
+    principalType: adminSecurityPrincipalType
     description: 'Allows all users in this group access to log into virtual machines that use the Entra ID login extension.'
   }
 }

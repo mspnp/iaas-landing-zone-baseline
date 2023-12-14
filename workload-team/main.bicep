@@ -59,14 +59,14 @@ param adminPassword string
 
 @description('The Entra ID group/user object id (guid) that will be assigned as the admin users for all deployed virtual machines.')
 @minLength(36)
-param adminAadSecurityPrincipalObjectId string
+param adminSecurityPrincipalObjectId string
 
-@description('The principal type of the adminAadSecurityPrincipalObjectId ID.')
+@description('The principal type of the adminSecurityPrincipalObjectId ID.')
 @allowed([
   'User'
   'Group'
 ])
-param adminAddSecurityPrincipalType string
+param adminSecurityPrincipalType string
 
 /*** VARIABLES ***/
 
@@ -125,8 +125,8 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     vmssWildcardTlsPublicAndKeyCertificates: vmssWildcardTlsPublicAndKeyCertificates
     vmssWildcardTlsPublicCertificate: vmssWildcardTlsPublicCertificate
     subComputeRgUniqueString: subComputeRgUniqueString
-    adminAadSecurityPrincipalObjectId: adminAadSecurityPrincipalObjectId
-    adminAddSecurityPrincipalType: adminAddSecurityPrincipalType
+    adminSecurityPrincipalObjectId: adminSecurityPrincipalObjectId
+    adminSecurityPrincipalType: adminSecurityPrincipalType
   }
   dependsOn: [
     applySubnetsAndUdrs
