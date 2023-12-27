@@ -67,7 +67,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
    az extension add -n ssh --upgrade
    az extension add -n bastion --upgrade
 
-   TEMPDIR_SSH_CONFIG=$(mktemp -d -t aadsshcertXXXXXXXX)
+   TEMPDIR_SSH_CONFIG=$(mktemp -d -t entrasshcertXXXXXXXX)
    chmod 700 $TEMPDIR_SSH_CONFIG
    az ssh cert -f ${TEMPDIR_SSH_CONFIG}/id_rsa-aadcert.pub
    chmod 400 $TEMPDIR_SSH_CONFIG/id_rsa
