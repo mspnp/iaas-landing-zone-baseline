@@ -40,6 +40,10 @@ param adminSecurityPrincipalObjectId string
 ])
 param adminSecurityPrincipalType string
 
+@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
+@minLength(100)
+param frontendCloudInitAsBase64 string
+
 /*** VARIABLES ***/
 
 var agwName = 'agw-public-ingress'
@@ -272,6 +276,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           }
         }
         adminUsername: defaultAdminUserName
+        customData: frontendCloudInitAsBase64
       }
       storageProfile: {
         osDisk: {

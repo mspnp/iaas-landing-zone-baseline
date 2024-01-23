@@ -18,11 +18,16 @@ Azure Application Gateway, for this reference implementation, is placed in the s
 
 ## Steps
 
+1. Convert your frontend cloud-init (users) file to Base64.
+
+   ```bash
+   FRONTEND_CLOUDINIT_BASE64=$(base64 workload-team/workload/frontendCloudInit.yml | tr -d '\n')
+   ```
 1. Deploy the compute infrastructure ARM template.
 
    ```bash
    # [This takes about 18 minutes.]
-   az deployment sub create -l centralus -n deploy-bu04a42-infra -f workload-team/main.bicep -p targetVnetResourceId=${RESOURCEID_VNET_SPOKE_IAAS_BASELINE} location=${REGION_IAAS_BASELINE} appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE} vmssWildcardTlsPublicCertificate=${VMSS_WILDCARD_CERTIFICATE_BASE64_IAAS_BASELINE} vmssWildcardTlsPublicAndKeyCertificates=${VMSS_WILDCARD_CERT_PUBLIC_PRIVATE_KEYS_BASE64_IAAS_BASELINE} adminSecurityPrincipalObjectId=${OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE} adminSecurityPrincipalType=${COMPUTEADMIN_TYPE_IAAS_BASELINE}
+   az deployment sub create -l centralus -n deploy-bu04a42-infra -f workload-team/main.bicep -p targetVnetResourceId=${RESOURCEID_VNET_SPOKE_IAAS_BASELINE} location=${REGION_IAAS_BASELINE} appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_IAAS_BASELINE} vmssWildcardTlsPublicCertificate=${VMSS_WILDCARD_CERTIFICATE_BASE64_IAAS_BASELINE} vmssWildcardTlsPublicAndKeyCertificates=${VMSS_WILDCARD_CERT_PUBLIC_PRIVATE_KEYS_BASE64_IAAS_BASELINE} adminSecurityPrincipalObjectId=${OBJECTID_PRINCIPAL_COMPUTEADMIN_IAAS_BASELINE} adminSecurityPrincipalType=${COMPUTEADMIN_TYPE_IAAS_BASELINE} frontendCloudInitAsBase64="${FRONTEND_CLOUDINIT_BASE64}"
 
    export RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE=$(az deployment sub show -n deploy-bu04a42-infra --query properties.outputs.frontendVmssResourceId.value -o tsv)
    export RESOURCEID_VMSS_BACKEND_IAAS_BASELINE=$(az deployment sub show -n deploy-bu04a42-infra --query properties.outputs.backendVmssResourceId.value -o tsv)
