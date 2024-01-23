@@ -498,7 +498,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
@@ -781,7 +780,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
@@ -1052,21 +1050,6 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
       registrationEnabled: false
     }
   }
-
-  // TODO: This is going to need to be solved. As this is configured below, it will not work in this topology.
-  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
-  // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step.
-  resource linkToHub 'virtualNetworkLinks' = {
-    name: 'to_${hubVirtualNetwork.name}'
-    location: 'global'
-    properties: {
-      virtualNetwork: {
-        id: hubVirtualNetwork.id
-      }
-      registrationEnabled: false
-    }
-  }
 }
 
 @description('The Azure Application Gateway that fronts our workload.')
@@ -1231,7 +1214,6 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
   }
   dependsOn: [
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     contosoPrivateDnsZone::vmssBackend
     peKv
     peKeyVaultForAppGw::pdnszg
