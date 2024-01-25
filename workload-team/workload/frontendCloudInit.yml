@@ -1,12 +1,13 @@
 #cloud-config
 write_files:
-  - owner: root:root
-    path: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+  - path: /etc/netplan/99-dns.yaml
+    permissions: '0644'
     content: |
       network:
-         config: disabled
+        ethernets:
+          eth0:
+            nameservers:
+              search: [backend-00.iaas-ingress.contoso.com]
+              addresses: [168.63.129.16]
 runcmd:
-  - [ sed, -i, '/set-name:/a \            nameservers:', /etc/netplan/50-cloud-init.yaml ]
-  - [ sed, -i, '/nameservers:/a \                addresses: [168.63.129.16]', /etc/netplan/50-cloud-init.yaml ]
-  - [ sed, -i, '/addresses:/a \                search: [backend.iaas-ingress.contoso.com]', /etc/netplan/50-cloud-init.yaml ]
   - [ netplan, apply ]
