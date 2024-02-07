@@ -90,4 +90,4 @@ For your eventual actual workload deployment, follow your organization's best pr
 
 This is the last step in which you'll be directly acting in the role of someone on the platform team. Thanks for role playing that role. From this point forward, you now will be deploying the IaaS baseline architecture into your prepared application landing zone.
 
-:arrow_forward: Let's start by [getting your TLS certificates ready for workload deployment](./05-ca-certificates.md)
+:arrow_forward: Let's start by [getting your TLS certificates ready for workload deployment](./06-ca-certificates.md)
