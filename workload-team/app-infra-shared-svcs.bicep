@@ -81,7 +81,7 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
   }
 }
 
-source windowsVmLogsDataCollectionEndpoints 'Microsoft.Insights/dataCollectionEndpoints@2021-09-01-preview' = {
+resource windowsVmLogsDataCollectionEndpoints 'Microsoft.Insights/dataCollectionEndpoints@2021-09-01-preview' = {
   name: 'dceWindowsLogs'
   location: location
   kind: 'Windows'
