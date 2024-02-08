@@ -17,12 +17,12 @@ A web server is enabled on both tiers of this deployment so that you can test en
    ```output
    Zone    Name                       Size             OS       OS Disk (GB)    Data Disk Type    Data Disk (GB)    State
    ------  -------------------------  ---------------  -------  --------------  ----------------  ----------------  ------------------
-   1       vmss-frontend-00_b9ea8bd7  Standard_D4s_v3  Linux    30                                                  PowerState/running
-   1       vmss-backend-00_6a916c6e   Standard_E2s_v3  Windows  30              Premium_LRS       4                 PowerState/running
-   2       vmss-frontend-00_8c869f9c  Standard_D4s_v3  Linux    30                                                  PowerState/running
-   2       vmss-backend-00_201d3445   Standard_E2s_v3  Windows  30              Premium_LRS       4                 PowerState/running
-   3       vmss-frontend-00_c059ce7d  Standard_D4s_v3  Linux    30                                                  PowerState/running
-   3       vmss-backend-00_e7d46ff2   Standard_E2s_v3  Windows  30              Premium_LRS       4                 PowerState/running
+   1       vmss-frontend-00_b9ea8bd7  Standard_D4s_v3  Linux    30              Premium_ZRS       4                 PowerState/running
+   1       vmss-backend-00_6a916c6e   Standard_E2s_v3  Windows  30              Premium_ZRS       4                 PowerState/running
+   2       vmss-frontend-00_8c869f9c  Standard_D4s_v3  Linux    30              Premium_ZRS       4                 PowerState/running
+   2       vmss-backend-00_201d3445   Standard_E2s_v3  Windows  30              Premium_ZRS       4                 PowerState/running
+   3       vmss-frontend-00_c059ce7d  Standard_D4s_v3  Linux    30              Premium_ZRS       4                 PowerState/running
+   3       vmss-backend-00_e7d46ff2   Standard_E2s_v3  Windows  30              Premium_ZRS       4                 PowerState/running
    ```
 
    :bulb: From the `Zone` column you can understand how your virtual machines were spread at provisioning time across Azure Availability Zones. Additionally, you will notice that only backend machines are attached with managed data disks. This list also gives you the current power state of every machine.
@@ -71,7 +71,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
    chmod 700 $TEMPDIR_SSH_CONFIG
    az ssh cert -f ${TEMPDIR_SSH_CONFIG}/id_rsa-aadcert.pub
    chmod 400 $TEMPDIR_SSH_CONFIG/id_rsa
-   
+
    az network bastion tunnel -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --port 4222 --resource-port 22 --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE --query '[0].id' -o tsv) &
    sleep 10
    az ssh vm --ip localhost -i ${TEMPDIR_SSH_CONFIG}/id_rsa -p ${TEMPDIR_SSH_CONFIG}/id_rsa.pub --port 4222
