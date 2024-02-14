@@ -273,6 +273,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
       }
       storageProfile: {
         osDisk: {
+          osType: 'Linux'
           diffDiskSettings: {
             option: 'Local'
             placement: 'CacheDisk'
@@ -280,6 +281,9 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           diskSizeGB: 30
           caching: 'ReadOnly'
           createOption: 'FromImage'
+          managedDisk: {
+            storageAccountType: 'Standard_LRS'
+          }
         }
         imageReference: {
           publisher: 'Canonical'
@@ -287,6 +291,18 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           sku: '20_04-lts-gen2'
           version: 'latest'
         }
+        dataDisks: [
+          {
+            caching: 'None'
+            createOption: 'Empty'
+            deleteOption: 'Delete'
+            diskSizeGB: 4
+            lun: 0
+            managedDisk: {
+              storageAccountType: 'Premium_ZRS'
+            }
+          }
+        ]
       }
       networkProfile: {
         networkApiVersion: '2020-11-01'
@@ -567,10 +583,9 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
             diskSizeGB: 4
             lun: 0
             managedDisk: {
-              storageAccountType: 'Premium_LRS'
+              storageAccountType: 'Premium_ZRS'
             }
           }
-
         ]
       }
       networkProfile: {
