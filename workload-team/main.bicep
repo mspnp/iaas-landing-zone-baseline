@@ -70,7 +70,7 @@ param adminSecurityPrincipalObjectId string
 ])
 param adminSecurityPrincipalType string
 
-@description('A cloud init file (starting with #cloud-config) as a base 64 encoded string used to perform image customization on the jump box VMs. Used for user-management in this context.')
+@description('A cloud init file (starting with #cloud-config) as a Base64 encoded string used to perform OS configuration on the VMs as part of bootstrapping. Used for network configuration in this context.')
 @minLength(100)
 param frontendCloudInitAsBase64 string
 

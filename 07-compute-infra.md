@@ -18,11 +18,12 @@ Azure Application Gateway, for this reference implementation, is placed in the s
 
 ## Steps
 
-1. Convert your frontend cloud-init (users) file to Base64.
+1. Convert your frontend cloud-init (network configuration) file to Base64.
 
    ```bash
    FRONTEND_CLOUDINIT_BASE64=$(base64 workload-team/workload/frontendCloudInit.yml | tr -d '\n')
    ```
+
 1. Deploy the compute infrastructure ARM template.
 
    ```bash
