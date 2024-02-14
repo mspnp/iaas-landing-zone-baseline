@@ -116,7 +116,9 @@ cd w:/nginx
 ./nginx.exe -s reopen
 
 # Process rotated log
-`$lastProcessedRequestCount = (Get-Content w:/nginx/logs/bu0001a0008.log.rot | Measure-Object -Line).Lines
+`$lastProcessedRequestContent = (Get-Content w:/nginx/logs/bu0001a0008.log.rot)
+
+`$lastProcessedRequestCount = (`$lastProcessedRequestContent | Measure-Object -Line).Lines
 
 # Get current number of processed requests
 `$currentProcessedRequestCount = (Get-Content w:/nginx/data/bu0001a0008.data)
@@ -131,6 +133,9 @@ cd w:/nginx
 # Update workload content with total processed requests
 `$updatedCount = [string]::Format('<h2>Welcome to the Contoso WebApp! Your request has been load balanced through [frontend] and [backend] {{Total Processed Requests: {0}, Last Update Time: {1}}}.</h2>', `$totalProcessedRequestCount, [string]`$lastWriteTime)
 ((Get-Content W:\nginx\html\index.html) -replace '(\s*)<h2>[\s\S]+</h2>(\s*)', `$updatedCount) | Set-Content -Path w:/nginx/html/index.html
+
+# Append recent rotated log content to a daily rotated log file
+`$lastProcessedRequestContent | Out-File -FilePath w:/nginx/data/bu0001a0008-`$(Get-Date -format 'yyyy-MM-dd').log -Append -Encoding ascii
 "@ | Out-File -FilePath w:/nginx/rotate-process-nginx-backend-logs.ps1 -Encoding ascii
 
 #Task Scheduler
