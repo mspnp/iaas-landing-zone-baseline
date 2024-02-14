@@ -90,12 +90,6 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
   name: 'log-${subComputeRgUniqueString}'
 }
 
-@description('TEMP: TODO: Provide a solution.')
-resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  scope: hubResourceGroup
-  name: 'vnet-${location}-hub'
-}
-
 @description('The existing public IP address to be used by Application Gateway for public ingress.')
 resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' existing = {
   scope: spokeResourceGroup
