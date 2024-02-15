@@ -27,7 +27,7 @@ Azure Application Gateway, for this reference implementation, is placed in the s
    export RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE=$(az deployment sub show -n deploy-bu04a42-infra --query properties.outputs.frontendVmssResourceId.value -o tsv)
    export RESOURCEID_VMSS_BACKEND_IAAS_BASELINE=$(az deployment sub show -n deploy-bu04a42-infra --query properties.outputs.backendVmssResourceId.value -o tsv)
    export RESOURCEIDS_ALL_VIRTUAL_MACHINES_IAAS_BASELINE="$(az vm list --vmss ${RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE} --query '[[].id]' -o tsv) $(az vm list --vmss ${RESOURCEID_VMSS_BACKEND_IAAS_BASELINE} --query '[[].id]' -o tsv)"
-   echo RESOURCEIDS_ALL_VIRTUAL_MACHINES_IAAS_BASELINE: $RESOURCEID_ALL_VIRTUAL_MACHINES_IAAS_BASELINE
+   echo RESOURCEIDS_ALL_VIRTUAL_MACHINES_IAAS_BASELINE: $RESOURCEIDS_ALL_VIRTUAL_MACHINES_IAAS_BASELINE
    ```
 
 1. Assign system managed identities to all virtual machines.
