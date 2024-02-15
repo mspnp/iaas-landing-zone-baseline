@@ -12,7 +12,7 @@ write_files:
         ethernets:
           eth0:
             nameservers:
-              search: [backend-00.iaas-ingress.contoso.com]
+              search: [~backend-00.iaas-ingress.contoso.com]
               addresses: [168.63.129.16]
 runcmd:
   - [ netplan, apply ]
