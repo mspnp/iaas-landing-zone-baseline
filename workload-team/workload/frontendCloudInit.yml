@@ -1,5 +1,10 @@
 #cloud-config
 write_files:
+  - path: /etc/systemd/resolved.conf
+    permissions: '0644'
+    content: |
+      [Resolve]
+      DNS=10.200.0.4
   - path: /etc/netplan/99-dns.yaml
     permissions: '0644'
     content: |
@@ -11,3 +16,4 @@ write_files:
               addresses: [168.63.129.16]
 runcmd:
   - [ netplan, apply ]
+  - [ service, systemd-resolved, restart ]
