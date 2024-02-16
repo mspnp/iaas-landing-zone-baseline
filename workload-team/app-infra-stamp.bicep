@@ -633,10 +633,10 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         extensions: [
           {
             name: 'AADLogin'
-            provisionAfterExtensions: [
-              'CustomScript'
-            ]
             properties: {
+              provisionAfterExtensions: [
+                'CustomScript'
+              ]
               autoUpgradeMinorVersion: true
               publisher: 'Microsoft.Azure.ActiveDirectory'
               type: 'AADLoginForWindows'
