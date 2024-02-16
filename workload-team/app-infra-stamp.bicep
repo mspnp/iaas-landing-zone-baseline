@@ -10,12 +10,14 @@ param targetVnetResourceId string
 param location string
 
 @description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
+@secure()
 param appGatewayListenerCertificate string
 
 @description('The Base64 encoded VMSS web server public certificate (as .crt or .cer) to be stored in Azure Key Vault as secret and referenced by Azure Application Gateway as a trusted root certificate.')
 param vmssWildcardTlsPublicCertificate string
 
 @description('The Base64 encoded VMSS web server public and private certificates (formatterd as .pem or .pfx) to be stored in Azure Key Vault as secret and downloaded into the frontend and backend Vmss instances for the workloads ssl certificate configuration.')
+@secure()
 param vmssWildcardTlsPublicAndKeyCertificates string
 
 @description('The admin password for the Windows backend machines.')
