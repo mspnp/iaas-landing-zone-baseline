@@ -4,7 +4,8 @@ write_files:
     permissions: '0644'
     content: |
       [Resolve]
-      DNS=10.200.0.4
+      DNS=168.63.129.16
+      Domains=~backend-00.iaas-ingress.contoso.com
   - path: /etc/netplan/99-dns.yaml
     permissions: '0644'
     content: |
@@ -12,8 +13,7 @@ write_files:
         ethernets:
           eth0:
             nameservers:
-              search: [~backend-00.iaas-ingress.contoso.com]
-              addresses: [168.63.129.16]
+              search: [~.]
 runcmd:
   - [ netplan, apply ]
   - [ service, systemd-resolved, restart ]
