@@ -13,7 +13,7 @@ write_files:
         ethernets:
           eth0:
             match:
-              driver: hv_netvsc
+              name: eth*
             nameservers:
               search: [~.]
 runcmd:
