@@ -12,6 +12,8 @@ write_files:
       network:
         ethernets:
           eth0:
+            match:
+              name: eth*
             nameservers:
               search: [~.]
 runcmd:
