@@ -11,7 +11,7 @@ write_files:
     content: |
       network:
         ethernets:
-          eth0:
+          alleths:
             match:
               name: eth*
             nameservers:
