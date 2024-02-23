@@ -79,6 +79,36 @@ A web server is enabled on both tiers of this deployment so that you can test en
 
    > Ideally you'd just run `az network bastion ssh -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --target-resource-id <VM_RESOURCE_ID> --auth-type AAD` but due to a [known bug](https://github.com/Azure/azure-cli-extensions/issues/6408) you must connect using the above Azure Bastion tunnel method.
 
+   1. Validate DNS resolution from the frontend VM.
+
+      ```bash
+      sudo tcpdump -w /tmp/dns.pcap -i eth0 port 53 &
+      host azure.com && host backend-00.iaas-ingress.contoso.com
+      ```
+
+     > Note: the Frontend VMs are configured to route-only backend-00.iaas-ingress.contoso.com via Azure Provided DNS (168.63.129.16). The rest of the DNS queries should be resolved via hub DNS IP.
+
+   1. Kill the background proccess for capturing your network traffic
+
+      ```bash
+      fg
+      <ctrl+c>
+      ```
+
+   1. Examine the captured packets
+
+      ```bash
+      tcpdump -tnr /tmp/dns.pcap | grep -E 'backend-00.iaas-ingress.contoso.com|azure.com'
+      ```
+
+      > Note: the results should reflect that your backend VM and azure FQDNs are resolved using diffrent DNS IPs.
+
+      ```outcome
+      IP 10.240.0.4.60236 > 10.200.0.4.53: 3399+ [1au] A? azure.com. (38)
+      ...
+      IP 10.240.0.4.37207 > 168.63.129.16.53: 38878+ [1au] A? backend-00.iaas-ingress.contoso.com. (64)
+      ```
+
    1. Validate your frontend workload (an Nginx instance) is running on the virtual machine.
 
       ```bash
