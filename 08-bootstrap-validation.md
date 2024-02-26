@@ -86,7 +86,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
       host azure.com && host backend-00.iaas-ingress.contoso.com
       ```
 
-     > Note: the Frontend VMs are configured to route-only backend-00.iaas-ingress.contoso.com via Azure Provided DNS (168.63.129.16). The rest of the DNS queries should be resolved via hub DNS IP.
+     > The frontend VMs are configured to resolve backend-00.iaas-ingress.contoso.com via Azure DNS (168.63.129.16). All other DNS queries are resolved by the virtual network provided (DHCP) DNS IP, which is the Azure Firewall DNS proxy in the hub.
 
    1. Kill the background proccess for capturing your network traffic
 
@@ -101,7 +101,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
       tcpdump -tnr /tmp/dns.pcap | grep -E 'backend-00.iaas-ingress.contoso.com|azure.com'
       ```
 
-      > Note: the results should reflect that your backend VM and azure FQDNs are resolved using diffrent DNS IPs.
+      > The results should reflect that your backend FQDN and other FQDNs are resolved using different DNS IPs.
 
       ```outcome
       IP 10.240.0.4.60236 > 10.200.0.4.53: 3399+ [1au] A? azure.com. (38)
