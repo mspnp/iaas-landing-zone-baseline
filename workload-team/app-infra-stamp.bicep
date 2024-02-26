@@ -40,6 +40,10 @@ param adminSecurityPrincipalObjectId string
 ])
 param adminSecurityPrincipalType string
 
+@description('A cloud init file (starting with #cloud-config) as a Base64 encoded string used to perform OS configuration on the VMs as part of bootstrapping. Used for network configuration in this context.')
+@minLength(100)
+param frontendCloudInitAsBase64 string
+
 /*** VARIABLES ***/
 
 var agwName = 'agw-public-ingress'
@@ -84,12 +88,6 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 @description('Existing log sink for the workload.')
 resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: 'log-${subComputeRgUniqueString}'
-}
-
-@description('TEMP: TODO: Provide a solution.')
-resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  scope: hubResourceGroup
-  name: 'vnet-${location}-hub'
 }
 
 @description('The existing public IP address to be used by Application Gateway for public ingress.')
@@ -272,6 +270,7 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
           }
         }
         adminUsername: defaultAdminUserName
+        customData: frontendCloudInitAsBase64
       }
       storageProfile: {
         osDisk: {
@@ -493,7 +492,6 @@ resource vmssFrontend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
@@ -633,10 +631,10 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
         extensions: [
           {
             name: 'AADLogin'
-            provisionAfterExtensions: [
-              'CustomScript'
-            ]
             properties: {
+              provisionAfterExtensions: [
+                'CustomScript'
+              ]
               autoUpgradeMinorVersion: true
               publisher: 'Microsoft.Azure.ActiveDirectory'
               type: 'AADLoginForWindows'
@@ -776,7 +774,6 @@ resource vmssBackend 'Microsoft.Compute/virtualMachineScaleSets@2023-03-01' = {
     peKv
     contosoPrivateDnsZone::vmssBackend
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     grantAdminRbacAccessToRemoteIntoVMs
   ]
 }
@@ -1047,21 +1044,6 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
       registrationEnabled: false
     }
   }
-
-  // TODO: This is going to need to be solved. As this is configured below, it will not work in this topology.
-  // THIS IS BEING DONE FOR SIMPLICTY IN DEPLOYMENT, NOT AS GUIDANCE.
-  // Normally a workload team wouldn't have this permission, and a DINE policy
-  // would have taken care of this step.
-  resource linkToHub 'virtualNetworkLinks' = {
-    name: 'to_${hubVirtualNetwork.name}'
-    location: 'global'
-    properties: {
-      virtualNetwork: {
-        id: hubVirtualNetwork.id
-      }
-      registrationEnabled: false
-    }
-  }
 }
 
 @description('The Azure Application Gateway that fronts our workload.')
@@ -1226,7 +1208,6 @@ resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' =
   }
   dependsOn: [
     contosoPrivateDnsZone::vnetlnk
-    contosoPrivateDnsZone::linkToHub
     contosoPrivateDnsZone::vmssBackend
     peKv
     peKeyVaultForAppGw::pdnszg

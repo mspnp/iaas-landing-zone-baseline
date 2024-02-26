@@ -70,6 +70,10 @@ param adminSecurityPrincipalObjectId string
 ])
 param adminSecurityPrincipalType string
 
+@description('A cloud init file (starting with #cloud-config) as a Base64 encoded string used to perform OS configuration on the VMs as part of bootstrapping. Used for network configuration in this context.')
+@minLength(100)
+param frontendCloudInitAsBase64 string
+
 /*** VARIABLES ***/
 
 var subComputeRgUniqueString = uniqueString('bu04a42', computeResourceGroup.id)
@@ -129,6 +133,7 @@ module deployWorkloadInfrastructure 'app-infra-stamp.bicep' = {
     subComputeRgUniqueString: subComputeRgUniqueString
     adminSecurityPrincipalObjectId: adminSecurityPrincipalObjectId
     adminSecurityPrincipalType: adminSecurityPrincipalType
+    frontendCloudInitAsBase64: frontendCloudInitAsBase64
   }
   dependsOn: [
     applySubnetsAndUdrs

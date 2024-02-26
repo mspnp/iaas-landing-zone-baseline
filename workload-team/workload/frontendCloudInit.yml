@@ -1,0 +1,21 @@
+#cloud-config
+write_files:
+  - path: /etc/systemd/resolved.conf
+    permissions: '0644'
+    content: |
+      [Resolve]
+      DNS=168.63.129.16
+      Domains=~backend-00.iaas-ingress.contoso.com
+  - path: /etc/netplan/99-dns.yaml
+    permissions: '0644'
+    content: |
+      network:
+        ethernets:
+          eth0:
+            match:
+              name: eth*
+            nameservers:
+              search: [~.]
+runcmd:
+  - [ netplan, apply ]
+  - [ service, systemd-resolved, restart ]
