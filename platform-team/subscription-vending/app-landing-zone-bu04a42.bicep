@@ -7,7 +7,7 @@ targetScope = 'resourceGroup'
 param hubVnetResourceId string
 
 @description('The spokes\'s regional affinity, must be the same as the hub\'s location.')
-param location string
+param location string = resourceGroup().location
 
 /*** EXISTING HUB RESOURCES ***/
 

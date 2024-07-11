@@ -72,13 +72,13 @@ resource regionalHubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01
 
 @description('Spoke resource group. This typically would be in a dedicated subscription for the workload.')
 resource appLandingZoneSpokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: 'rg-alz-bu04a42-spoke'
+  name: 'rg-alz-bu04a42-spoke-${location}'
   location: location
 }
 
 @description('This is rg-alz-bu04a42-compute, which wouldn\'t technically exist at this point. We need a fake reference to it to scope Azure Policy assignments to simulate policies being applied from the Online management group.')
 resource knownFutureAppResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: 'rg-alz-bu04a42-compute'
+  name: 'rg-alz-bu04a42-compute-${location}'
   location: location
 }
 

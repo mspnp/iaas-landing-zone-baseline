@@ -10,7 +10,7 @@ The following resource group will be created and populated with the IaaS baselin
 
 | Name                   | Purpose                                   |
 | :--------------------- | :---------------------------------------- |
-| rg-alz-bu04a42-compute | This contains your application landing zone resources related to your infrastructure. It contains load balancing, compute, and related resources. |
+| rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} | This contains your application landing zone resources related to your infrastructure. It contains load balancing, compute, and related resources. |
 
 ### Application Gateway placement
 

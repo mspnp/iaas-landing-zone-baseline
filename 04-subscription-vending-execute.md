@@ -14,7 +14,7 @@ The following resource group will be created and populated with core networking 
 
 | Name                 | Purpose                                   |
 | :------------------- | :---------------------------------------- |
-| rg-alz-bu04a42-spoke | This is a stand-in for part of your application landing zone subscription. This specifically contains the virtual network in which your architecture will reside within. |
+| rg-alz-bu04a42-spoke-${REGION_IAAS_BASELINE} | This is a stand-in for part of your application landing zone subscription. This specifically contains the virtual network in which your architecture will reside within. |
 
 #### Resource group naming convention
 
