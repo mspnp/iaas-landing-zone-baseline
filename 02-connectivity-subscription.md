@@ -14,7 +14,7 @@ The following resource group will be created and populated with networking resou
 
 | Name                              | Purpose                                   |
 | :-------------------------------- | :---------------------------------------- |
-| rg-plz-connectivity-regional-hubs | Contains all of your organization's regional hubs. A regional hubs include an egress firewall and Log Analytics for network logging. This is a stand-in for resources typically found in your Connectivity subscription. |
+| rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} | Contains all of your organization's regional hubs. A regional hubs include an egress firewall and Log Analytics for network logging. This is a stand-in for resources typically found in your Connectivity subscription. |
 
 #### Resource group naming convention
 
@@ -47,7 +47,7 @@ The hub will be a virtual network based hub, containing common shared resources 
 
    ```bash
    # [This takes less than one minute to run.]
-   az group create -n rg-plz-connectivity-regional-hubs -l centralus
+   az group create -n rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} -l ${REGION_IAAS_BASELINE}
    ```
 
 1. Create the regional network hub.
@@ -58,9 +58,9 @@ The hub will be a virtual network based hub, containing common shared resources 
 
    ```bash
    # [This takes about ten minutes to run.]
-   az deployment group create -g rg-plz-connectivity-regional-hubs -f platform-team/hub-default.bicep -p location=${REGION_IAAS_BASELINE}
+   az deployment group create -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} -f platform-team/hub-default.bicep -p location=${REGION_IAAS_BASELINE}
 
-   export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-connectivity-regional-hubs -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
+   export RESOURCEID_VNET_HUB_IAAS_BASELINE=$(az deployment group show -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} -n hub-default --query properties.outputs.hubVnetId.value -o tsv)
    echo RESOURCEID_VNET_HUB_IAAS_BASELINE: $RESOURCEID_VNET_HUB_IAAS_BASELINE
    ```
 

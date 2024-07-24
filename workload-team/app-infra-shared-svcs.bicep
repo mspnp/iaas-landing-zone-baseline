@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 /*** PARAMETERS ***/
 
 @description('The region for IaaS resources, and supporting managed services (i.e. KeyVault, App Gateway, etc) . This needs to be the same region as the target virtual network provided.')
-param location string
+param location string = resourceGroup().location
 
 @description('A common uniquestring reference used for resources that benefit from having a unique component.')
 @maxLength(13)

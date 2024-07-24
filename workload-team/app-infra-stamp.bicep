@@ -7,7 +7,7 @@ targetScope = 'resourceGroup'
 param targetVnetResourceId string
 
 @description('IaaS region. This needs to be the same region as the virtual network provided in these parameters.')
-param location string
+param location string = resourceGroup().location
 
 @description('The certificate data for Azure Application Gateway TLS termination. It is Base64 encoded.')
 @secure()
@@ -80,7 +80,7 @@ resource spokeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' exis
 @description('Existing resource group that has our regional hub network. This is owned by the platform team, and usually is in another subscription.')
 resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existing = {
   scope: subscription()
-  name: 'rg-plz-connectivity-regional-hubs'
+  name: 'rg-plz-connectivity-regional-hubs-${location}'
 }
 
 /*** EXISTING RESOURCES ***/

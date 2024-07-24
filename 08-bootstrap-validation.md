@@ -6,10 +6,10 @@ A web server is enabled on both tiers of this deployment so that you can test en
 
 ## Steps
 
-1. Check all your recently created virtual machines in rg-alz-bu04a42-compute are in `running` power state.
+1. Check all your recently created virtual machines in rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} are in `running` power state.
 
    ```bash
-   az graph query -q "where type =~ 'Microsoft.Compute/virtualMachines' and resourceGroup contains 'rg-alz-bu04a42-compute' | project ['Zone'] = tostring(zones[0]), ['Name'] = name, ['Size'] = tostring(properties.hardwareProfile.vmSize), ['OS'] = tostring(properties.storageProfile.osDisk.osType), ['OS Disk (GB)'] = properties.storageProfile.osDisk.diskSizeGB, ['Data Disk Type'] = tostring(properties.storageProfile.dataDisks[0].managedDisk.storageAccountType), ['Data Disk (GB)'] = tostring(properties.storageProfile.dataDisks[0].diskSizeGB), ['State'] = properties.extended.instanceView.powerState.code | sort by ['Zone'] asc, ['OS'] asc" --query 'data[]' -o table
+   az graph query -q "where type =~ 'Microsoft.Compute/virtualMachines' and resourceGroup contains 'rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE}' | project ['Zone'] = tostring(zones[0]), ['Name'] = name, ['Size'] = tostring(properties.hardwareProfile.vmSize), ['OS'] = tostring(properties.storageProfile.osDisk.osType), ['OS Disk (GB)'] = properties.storageProfile.osDisk.diskSizeGB, ['Data Disk Type'] = tostring(properties.storageProfile.dataDisks[0].managedDisk.storageAccountType), ['Data Disk (GB)'] = tostring(properties.storageProfile.dataDisks[0].diskSizeGB), ['State'] = properties.extended.instanceView.powerState.code | sort by ['Zone'] asc, ['OS'] asc" --query 'data[]' -o table
    ````
 
    > The command above requires the **resource-graph** CLI extension and prompt you to install it if not already installed.
@@ -30,7 +30,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
 1. Validate all your virtual machines have been able to successfully install all their extensions.
 
    ```bash
-   az graph query -q "resources | where type == 'microsoft.compute/virtualmachines' and resourceGroup contains 'rg-alz-bu04a42-compute' | extend JoinID = toupper(id), ComputerName = tostring(properties.osProfile.computerName), VMName = name | join kind=leftouter( resources | where type == 'microsoft.compute/virtualmachines/extensions' | extend VMId = toupper(substring(id, 0, indexof(id, '/extensions'))), ExtensionName = name ) on \$left.JoinID == \$right.VMId | order by ExtensionName asc | summarize Extensions = make_list(ExtensionName) by VMName, ComputerName | order by tolower(ComputerName) asc" --query 'data[].[VMName, ComputerName, Extensions]' -o table
+   az graph query -q "resources | where type == 'microsoft.compute/virtualmachines' and resourceGroup contains 'rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE}' | extend JoinID = toupper(id), ComputerName = tostring(properties.osProfile.computerName), VMName = name | join kind=leftouter( resources | where type == 'microsoft.compute/virtualmachines/extensions' | extend VMId = toupper(substring(id, 0, indexof(id, '/extensions'))), ExtensionName = name ) on \$left.JoinID == \$right.VMId | order by ExtensionName asc | summarize Extensions = make_list(ExtensionName) by VMName, ComputerName | order by tolower(ComputerName) asc" --query 'data[].[VMName, ComputerName, Extensions]' -o table
    ```
 
    ```output
@@ -57,7 +57,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
 1. Get the regional hub Azure Bastion name.
 
    ```bash
-   AB_NAME_HUB=$(az deployment group show -g rg-plz-connectivity-regional-hubs -n hub-default --query properties.outputs.regionalBastionHostName.value -o tsv)
+   AB_NAME_HUB=$(az deployment group show -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} -n hub-default --query properties.outputs.regionalBastionHostName.value -o tsv)
    echo AB_NAME_HUB: $AB_NAME_HUB
    ```
 
@@ -72,12 +72,12 @@ A web server is enabled on both tiers of this deployment so that you can test en
    az ssh cert -f ${TEMPDIR_SSH_CONFIG}/id_rsa-aadcert.pub
    chmod 400 $TEMPDIR_SSH_CONFIG/id_rsa
 
-   az network bastion tunnel -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --port 4222 --resource-port 22 --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE --query '[0].id' -o tsv) &
+   az network bastion tunnel -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} --port 4222 --resource-port 22 --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_FRONTEND_IAAS_BASELINE --query '[0].id' -o tsv) &
    sleep 10
    az ssh vm --ip localhost -i ${TEMPDIR_SSH_CONFIG}/id_rsa -p ${TEMPDIR_SSH_CONFIG}/id_rsa.pub --port 4222
    ```
 
-   > Ideally you'd just run `az network bastion ssh -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --target-resource-id <VM_RESOURCE_ID> --auth-type AAD` but due to a [known bug](https://github.com/Azure/azure-cli-extensions/issues/6408) you must connect using the above Azure Bastion tunnel method.
+   > Ideally you'd just run `az network bastion ssh -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} --target-resource-id <VM_RESOURCE_ID> --auth-type AAD` but due to a [known bug](https://github.com/Azure/azure-cli-extensions/issues/6408) you must connect using the above Azure Bastion tunnel method.
 
    1. Validate DNS resolution from the frontend VM.
 
@@ -127,7 +127,7 @@ A web server is enabled on both tiers of this deployment so that you can test en
 1. Remote RPD to a Windows virtual machine using Azure Bastion and Entra ID auth. _(optional)_
 
    ```bash
-   az network bastion rdp -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_BACKEND_IAAS_BASELINE --query '[0].id' -o tsv)
+   az network bastion rdp -n $AB_NAME_HUB -g rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} --target-resource-id $(az vm list --vmss $RESOURCEID_VMSS_BACKEND_IAAS_BASELINE --query '[0].id' -o tsv)
    ```
 
    :warning: The bastion RDP command will only work from another Windows machine.

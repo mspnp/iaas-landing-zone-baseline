@@ -95,7 +95,7 @@ resource landingZoneVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01
 
 @description('The resource group that holds most of the resources in this architecture not provided by the platform landing zone team.')
 resource computeResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' = {
-  name: 'rg-alz-bu04a42-compute'
+  name: 'rg-alz-bu04a42-compute-${location}'
   location: location
 }
 

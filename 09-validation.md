@@ -14,7 +14,7 @@ This section will help you to validate the workload is exposed correctly and res
 
    ```bash
    # query the Azure Application Gateway Public Ip
-   APPGW_PUBLIC_IP=$(az deployment group show -g rg-alz-bu04a42-spoke -n apply-networking --query properties.outputs.appGwPublicIpAddress.value -o tsv)
+   APPGW_PUBLIC_IP=$(az deployment group show -g rg-alz-bu04a42-spoke-${REGION_IAAS_BASELINE} -n apply-networking --query properties.outputs.appGwPublicIpAddress.value -o tsv)
    echo APPGW_PUBLIC_IP: $APPGW_PUBLIC_IP
    ```
 
@@ -52,7 +52,7 @@ Your workload is placed behind a Web Application Firewall (WAF), which has rules
 1. Observe that your request was blocked by Application Gateway's WAF rules and your workload never saw this potentially dangerous request.
 1. Blocked requests (along with other gateway data) will be visible in the attached Log Analytics workspace.
 
-   Browse to the Application Gateway in the resource group `rg-alz-bu04a42-compute` and navigate to the _Logs_ blade. Execute the following query below to show WAF logs and see that the request was rejected due to a _SQL Injection Attack_ (field _Message_).
+   Browse to the Application Gateway in the resource group `rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE}` and navigate to the _Logs_ blade. Execute the following query below to show WAF logs and see that the request was rejected due to a _SQL Injection Attack_ (field _Message_).
 
    > :warning: Note that it may take a couple of minutes until the logs are transferred from the Application Gateway to the Log Analytics Workspace. So be a little patient if the query does not immediatly return results after sending the https request in the former step.
 
@@ -67,7 +67,7 @@ Your workload is placed behind a Web Application Firewall (WAF), which has rules
 Monitoring your compute infrastructure is critical, especially when you're running in production. Therefore, your virtual machines are configured with [boot diagnostics](https://learn.microsoft.com/troubleshoot/azure/virtual-machines/boot-diagnostics) and Azure Monitor and VM Insights sends sends logs and metrics to the Log Analytics Workspace deployed with your compute.
 
 ```bash
-az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-alz-bu04a42-compute --query "[0].id" -o tsv)
+az vm boot-diagnostics get-boot-log --ids $(az vm list -g rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} --query "[0].id" -o tsv)
 ```
 
 ### Steps

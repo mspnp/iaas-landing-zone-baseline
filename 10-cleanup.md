@@ -7,7 +7,7 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
 1. Obtain the Azure KeyVault resource name
 
    ```bash
-   KEYVAULT_NAME=$(az deployment group show -g rg-alz-bu04a42-compute -n deploy-workload-infrastructure --query properties.outputs.keyVaultName.value -o tsv)
+   KEYVAULT_NAME=$(az deployment group show -g rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} -n deploy-workload-infrastructure --query properties.outputs.keyVaultName.value -o tsv)
    echo KEYVAULT_NAME: $KEYVAULT_NAME
    ```
 
@@ -18,9 +18,9 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-alz-bu04a42-compute -f Microsoft.Compute/virtualMachineScaleSets
-   az group delete -n rg-alz-bu04a42-spoke
-   az group delete -n rg-plz-connectivity-regional-hubs
+   az group delete -n rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} -f Microsoft.Compute/virtualMachineScaleSets
+   az group delete -n rg-alz-bu04a42-spoke-${REGION_IAAS_BASELINE}
+   az group delete -n rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE}
    ```
 
 1. Purge Azure Key Vault
