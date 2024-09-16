@@ -21,7 +21,7 @@ targetScope = 'resourceGroup'
     https://github.com/Azure/Enterprise-Scale/wiki/ALZ-Policies
 */
 
-param location string
+param location string = resourceGroup().location
 
 @description('The ID of the resource group that contains the private DNS zones. In this deployment, it\'s the hub resource group.')
 param dnsZoneResourceGroupId string

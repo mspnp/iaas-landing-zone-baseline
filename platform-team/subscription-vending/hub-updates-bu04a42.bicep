@@ -7,7 +7,7 @@ targetScope = 'resourceGroup'
 param spokeVirtualNetworkResourceId string
 
 @description('The existing hub\'s regional affinity.')
-param location string
+param location string = resourceGroup().location
 
 // A designator that represents a business unit id and application id
 var orgAppId = 'bu04a42'
