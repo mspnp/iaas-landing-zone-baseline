@@ -18,7 +18,7 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 }
 
 @description('The regional hub network in the Connectivity subscription.')
-resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: hubResourceGroup
   name: last(split(hubVnetResourceId,'/'))
 
@@ -28,7 +28,7 @@ resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existi
 }
 
 @description('The regional firewall in the Connectivity subscription.')
-resource hubFirewall 'Microsoft.Network/azureFirewalls@2022-11-01' existing = {
+resource hubFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' existing = {
   scope: hubResourceGroup
   name: 'fw-${location}'
 }
@@ -42,7 +42,7 @@ resource laHub 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = 
 /*** RESOURCES ***/
 
 @description('Deploy the UDR to force tunnel traffic to the Azure Firewall')
-resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2022-11-01' = {
+resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2024-07-01' = {
   name: 'route-to-connectivity-${location}-hub-fw'
   location: location
   properties: {
@@ -61,7 +61,7 @@ resource routeNextHopToFirewall 'Microsoft.Network/routeTables@2022-11-01' = {
 }
 
 @description('Application landing zone network, sized to the application team\'s vending request. No subnets, as expected.')
-resource vnetSpoke 'Microsoft.Network/virtualNetworks@2022-11-01' = {
+resource vnetSpoke 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: 'vnet-spoke-bu04a42-00'
   location: location
   properties: {
@@ -82,7 +82,7 @@ resource vnetSpoke 'Microsoft.Network/virtualNetworks@2022-11-01' = {
 }
 
 @description('Peer the spoke to the hub.')
-resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2022-11-01' = {
+resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01' = {
   name: take('peer-${vnetSpoke.name}-to-${hubVirtualNetwork.name}', 64)
   parent: vnetSpoke
   properties: {
@@ -112,7 +112,7 @@ resource vnetSpoke_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@202
 }
 
 @description('IP Group that contains this landing zone\'s bastion host IP ranges to allow in their NSGs.')
-resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2022-11-01' = {
+resource ipGroupBastionRangesInHub 'Microsoft.Network/ipGroups@2024-07-01' = {
   name: 'ipg-bastion-hosts'
   location: location
   properties: {

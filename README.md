@@ -6,7 +6,7 @@ This reference implementation demonstrates a _recommended starting (baseline) in
 
 ## Azure landing zone workload team focus
 
-This repository and its deployment guide primarily addresses the **workload team** looking to build our their solution expected to be homed within an [application landing zone](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-landing-zones-vs-application-landing-zones). The **platform team** will be referenced throughout where their role in this solution would typically be required. However, their role will be abstracted out through proxy deployments and hypotheticals.
+This repository and its deployment guide primarily addresses the **workload team** looking to build their solution expected to be homed within an [application landing zone](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/#platform-landing-zones-vs-application-landing-zones). The **platform team** will be referenced throughout where their role in this solution would typically be required. However, their role will be abstracted out through proxy deployments and hypotheticals.
 
 This deployment guide is written as if it will be deployed into a single sandbox subscription. Functions normally provided by your **platform team** will be included in this deployment, but purely a stand-in for your individualized Azure landing zone implementation.
 
@@ -14,7 +14,7 @@ You will walk through the deployment here in a rather _verbose_ method to help y
 
 ## Azure Architecture Center guidance
 
-This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://aka.ms/architecture/iaas-lz-baseline). If you haven't reviewed it, please first read it to learn about the considerations applied in the implementation. Ultimately, this repository is the direct implementation of that specific architectural guidance.
+This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://learn.microsoft.com/en-us/azure/architecture/virtual-machines/baseline-landing-zone). If you haven't reviewed it, please first read it to learn about the considerations applied in the implementation. Ultimately, this repository is the direct implementation of that specific architectural guidance.
 
 ## Architecture
 

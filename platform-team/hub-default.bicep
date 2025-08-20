@@ -120,7 +120,7 @@ resource laHub_diagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-0
 }
 
 @description('The network security group for the Azure Bastion subnet.')
-resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+resource nsgBastionSubnet 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
   name: 'nsg-${location}-bastion'
   location: location
   properties: {
@@ -305,7 +305,7 @@ resource nsgBastionSubnet_diagnosticSettings 'Microsoft.Insights/diagnosticSetti
 }
 
 @description('Regional hub network')
-resource vnetHub 'Microsoft.Network/virtualNetworks@2022-11-01' = {
+resource vnetHub 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: 'vnet-${location}-hub'
   location: location
   properties: {
@@ -319,6 +319,7 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'AzureFirewallSubnet'
         properties: {
           addressPrefix: hubVirtualNetworkAzureFirewallSubnetAddressSpace
+          defaultOutboundAccess: false
           networkSecurityGroup: null
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
@@ -329,6 +330,7 @@ resource vnetHub 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'GatewaySubnet'
         properties: {
           addressPrefix: hubVirtualNetworkGatewaySubnetAddressSpace
+          defaultOutboundAccess: false
           networkSecurityGroup: null
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
@@ -378,7 +380,7 @@ resource vnetHub_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-
 var numFirewallIpAddressesToAssign = 3
 
 @description('Azure Firewall often has multiple IPs associated to avoid port exhaustion on egress. This applies three.')
-resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2022-11-01' = [for i in range(0, numFirewallIpAddressesToAssign): {
+resource pipsAzureFirewall 'Microsoft.Network/publicIPAddresses@2024-07-01' = [for i in range(0, numFirewallIpAddressesToAssign): {
   name: 'pip-fw-${location}-${padLeft(i, 2, '0')}'
   location: location
   sku: {
@@ -414,7 +416,7 @@ resource pipAzureFirewall_diagnosticSetting 'Microsoft.Insights/diagnosticSettin
 }]
 
 @description('Azure Firewall configuration. DNS proxy is enabled. The network and application policies are generic and do not account for any specific application landing zones.')
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2024-07-01' = {
   name: 'fw-policies-${location}'
   location: location
   properties: {
@@ -591,7 +593,7 @@ resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' = {
 }
 
 @description('This is the regional Azure Firewall that all regional spoke networks in application landing zones can egress through.')
-resource hubFirewall 'Microsoft.Network/azureFirewalls@2022-11-01' = {
+resource hubFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' = {
   name: 'fw-${location}'
   location: location
   zones: pickZones('Microsoft.Network', 'azureFirewalls', location, 3)
@@ -722,7 +724,7 @@ resource allPrivateDnsZoneLinks 'Microsoft.Network/privateDnsZones/virtualNetwor
 }]
 
 @description('The public IP for the regional hub\'s Azure Bastion service.')
-resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+resource pipRegionalBastionHost 'Microsoft.Network/publicIPAddresses@2024-07-01' = {
   name: 'pip-ab-${location}'
   location: location
   sku: {
@@ -759,7 +761,7 @@ resource pipRegionalBastionHost_diagnosticSetting 'Microsoft.Insights/diagnostic
 }
 
 @description('This regional hub\'s Azure Bastion service.')
-resource regionalBastionHost 'Microsoft.Network/bastionHosts@2022-11-01' = {
+resource regionalBastionHost 'Microsoft.Network/bastionHosts@2024-07-01' = {
   name: 'ab-${location}'
   location: location
   sku: {

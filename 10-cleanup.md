@@ -18,9 +18,9 @@ After you are done exploring your deployed [IaaS baseline](./09-validation.md), 
    :warning: Ensure you are using the correct subscription, and validate that the only resources that exist in these groups are ones you're okay deleting.
 
    ```bash
-   az group delete -n rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} -f Microsoft.Compute/virtualMachineScaleSets
-   az group delete -n rg-alz-bu04a42-spoke-${REGION_IAAS_BASELINE}
-   az group delete -n rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE}
+   az group delete -n rg-alz-bu04a42-compute-${REGION_IAAS_BASELINE} -f Microsoft.Compute/virtualMachineScaleSets -y
+   az group delete -n rg-alz-bu04a42-spoke-${REGION_IAAS_BASELINE} -y
+   az group delete -n rg-plz-connectivity-regional-hubs-${REGION_IAAS_BASELINE} -y
    ```
 
 1. Purge Azure Key Vault
