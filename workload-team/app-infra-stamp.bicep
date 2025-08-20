@@ -91,14 +91,14 @@ resource workloadLogAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-
 }
 
 @description('The existing public IP address to be used by Application Gateway for public ingress.')
-resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' existing = {
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' existing = {
   scope: spokeResourceGroup
   name: 'pip-bu04a42-00'
 }
 
 // Spoke virtual network
 @description('Existing spoke virtual network, as deployed by the platform team into our landing zone and with subnets added by the workload team.')
-resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: spokeResourceGroup
   name: last(split(targetVnetResourceId, '/'))
 
@@ -129,19 +129,19 @@ resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' exis
 }
 
 @description('Application security group for the frontend compute.')
-resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
+resource asgVmssFrontend 'Microsoft.Network/applicationSecurityGroups@2024-07-01' existing = {
   scope: spokeResourceGroup
   name: 'asg-frontend'
 }
 
 @description('Application security group for the backend compute.')
-resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
+resource asgVmssBackend 'Microsoft.Network/applicationSecurityGroups@2024-07-01' existing = {
   scope: spokeResourceGroup
   name: 'asg-backend'
 }
 
 @description('Application security group for the backend compute.')
-resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2022-11-01' existing = {
+resource asgKeyVault 'Microsoft.Network/applicationSecurityGroups@2024-07-01' existing = {
   scope: spokeResourceGroup
   name: 'asg-keyvault'
 }
@@ -161,7 +161,7 @@ resource grantAdminRbacAccessToRemoteIntoVMs 'Microsoft.Authorization/roleAssign
 }
 
 @description('Azure WAF policy to apply to our workload\'s inbound traffic.')
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2022-11-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-07-01' = {
   name: 'waf-ingress-policy'
   location: location
   properties: {
@@ -916,7 +916,7 @@ resource kvMiVmssBackendKeyVaultReader_roleAssignment 'Microsoft.Authorization/r
 }
 
 @description('Private Endpoint for Key Vault. All compute in the virtual network will use this endpoint.')
-resource peKv 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource peKv 'Microsoft.Network/privateEndpoints@2024-07-01' = {
   name: 'pe-${workloadKeyVault.name}'
   location: location
   properties: {
@@ -972,7 +972,7 @@ resource keyVaultSpokeDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 @description('Private Endpoint for Key Vault exclusively for the use of Application Gateway, which doesn\'t seem to pick up on DNS settings for Key Vault access.')
-resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource peKeyVaultForAppGw 'Microsoft.Network/privateEndpoints@2024-07-01' = {
   name: 'pe-${workloadKeyVault.name}-appgw'
   location: location
   properties: {
@@ -1047,7 +1047,7 @@ resource contosoPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = 
 }
 
 @description('The Azure Application Gateway that fronts our workload.')
-resource workloadAppGateway 'Microsoft.Network/applicationGateways@2022-11-01' = {
+resource workloadAppGateway 'Microsoft.Network/applicationGateways@2024-07-01' = {
   name: agwName
   location: location
   identity: {
@@ -1239,7 +1239,7 @@ resource workloadAppGateway_Diag 'Microsoft.Insights/diagnosticSettings@2021-05-
 }
 
 @description('Internal load balancer that sits between the front end and back end compute.')
-resource loadBalancer 'Microsoft.Network/loadBalancers@2022-11-01' = {
+resource loadBalancer 'Microsoft.Network/loadBalancers@2024-07-01' = {
   name: lbName
   location: location
   sku: {

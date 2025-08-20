@@ -63,7 +63,7 @@ resource hubResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' existi
 }
 
 @description('This is the existing hub virtual network found in rg-plz-connectivity-regional-hubs.')
-resource regionalHubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource regionalHubVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: hubResourceGroup
   name: (last(split(hubVnetResourceId, '/')))
 }

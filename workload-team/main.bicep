@@ -86,7 +86,7 @@ resource networkResourceGroup 'Microsoft.Resources/resourceGroups@2022-09-01' ex
 }
 
 @description('The existing application landing zone virtual network. We do not have full access to this virtual network, just subnets.')
-resource landingZoneVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource landingZoneVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: networkResourceGroup
   name: last(split(targetVnetResourceId, '/'))
 }

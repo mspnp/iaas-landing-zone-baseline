@@ -14,12 +14,12 @@ var orgAppId = 'bu04a42'
 
 /*** EXISTING HUB RESOURCES ***/
 
-resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource hubVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   name: 'vnet-${location}-hub'
 }
 
 @description('Existing Azure Firewall policy for this regional firewall.')
-resource fwPolicy 'Microsoft.Network/firewallPolicies@2022-11-01' existing = {
+resource fwPolicy 'Microsoft.Network/firewallPolicies@2024-07-01' existing = {
   name: 'fw-policies-${location}'
 }
 
@@ -30,14 +30,14 @@ resource spokeVirtualNetworkResourceGroup 'Microsoft.Resources/resourceGroups@20
   name: split(spokeVirtualNetworkResourceId, '/')[4]
 }
 
-resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource spokeVirtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   scope: spokeVirtualNetworkResourceGroup
   name: split(spokeVirtualNetworkResourceId, '/')[8]
 }
 
 /*** RESOURCES ***/
 
-resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-11-01' = {
+resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2024-07-01' = {
   parent: fwPolicy
   name: 'alz-${orgAppId}'
   properties: {
@@ -290,7 +290,7 @@ resource appLzNetworkRulesCollectionGroup 'Microsoft.Network/firewallPolicies/ru
 }
 
 // Peer to hub
-resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2022-11-01' = {
+resource peerToHub 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2024-07-01' = {
   parent: hubVirtualNetwork
   name: take('peer-${hubVirtualNetwork.name}-to-${spokeVirtualNetwork.name}', 64)
   properties: {
