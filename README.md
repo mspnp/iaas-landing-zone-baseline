@@ -14,7 +14,7 @@ You will walk through the deployment here in a rather _verbose_ method to help y
 
 ## Azure Architecture Center guidance
 
-This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://learn.microsoft.com/en-us/azure/architecture/virtual-machines/baseline-landing-zone). If you haven't reviewed it, please first read it to learn about the considerations applied in the implementation. Ultimately, this repository is the direct implementation of that specific architectural guidance.
+This project has a companion reference architecture article that describe the architecture, design patterns, and other guidance for this implementation. You can find this article on the Azure Architecture Center at [Infrastructure as a Service baseline for Azure landing zones](https://learn.microsoft.com/azure/architecture/virtual-machines/baseline-landing-zone). If you haven't reviewed it, please first read it to learn about the considerations applied in the implementation. Ultimately, this repository is the direct implementation of that specific architectural guidance.
 
 ## Architecture
 
